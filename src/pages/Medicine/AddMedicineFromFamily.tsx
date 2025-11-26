@@ -22,7 +22,6 @@ export default function AddMedicineFromFamily() {
   const [selectedId, setSelectedId] = useState<string>("");
 
   const [name, setName] = useState("");
-  const [pricePerUnit, setPricePerUnit] = useState<number | "">("");
   const [packages, setPackages] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
   const [looseQuantity, setLooseQuantity] = useState<number | "">("");
@@ -49,7 +48,6 @@ export default function AddMedicineFromFamily() {
   const resetForm = () => {
     setSelectedId("");
     setName("");
-    setPricePerUnit("");
     setPackages("");
     setUnitsPerPackage("");
     setLooseQuantity("");
@@ -70,7 +68,7 @@ export default function AddMedicineFromFamily() {
         if (packages !== "") payload.packages = Number(packages);
         if (unitsPerPackage !== "") payload.unitsPerPackage = Number(unitsPerPackage);
         if (looseQuantity !== "") payload.addQuantity = Number(looseQuantity);
-        if (pricePerUnit !== "") payload.pricePerUnit = Number(pricePerUnit);
+
 
         const res = await axios.put(
           `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
@@ -86,7 +84,6 @@ export default function AddMedicineFromFamily() {
         // ✅ kreiraj novi lek
         const payload: any = {
           name,
-          pricePerUnit: typeof pricePerUnit === "number" ? pricePerUnit : Number(pricePerUnit),
           fromFamily: true,
         };
 
@@ -122,10 +119,9 @@ export default function AddMedicineFromFamily() {
       } else {
         setUnitsPerPackage("");
       }
-      setPricePerUnit(selectedMedicine.pricePerUnit);
+
     } else {
       setUnitsPerPackage("");
-      setPricePerUnit("");
     }
     setPackages("");
     setLooseQuantity("");
@@ -163,15 +159,6 @@ export default function AddMedicineFromFamily() {
               placeholder="Naziv leka"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Cena po komadu (RSD)"
-              value={pricePerUnit}
-              onChange={(e) =>
-                setPricePerUnit(e.target.value === "" ? "" : Number(e.target.value))
-              }
               required
             />
           </>
