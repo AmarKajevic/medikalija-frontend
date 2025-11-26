@@ -7,7 +7,6 @@ import Input from "../../components/form/input/InputField";
 interface Medicine {
   _id: string;
   name: string;
-  pricePerUnit: number;
   quantity: number;
   familyQuantity?: number;
   unitsPerPackage?: number;
