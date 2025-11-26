@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useState } from "react";
 import axios from "axios";
 import { usePatientSpecification } from "../../hooks/Patient/usePatientSpecification";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function PatientSpecification({ patientId }: { patientId: string }) {
   const { data, isLoading, isError, refetch } = usePatientSpecification(patientId);
