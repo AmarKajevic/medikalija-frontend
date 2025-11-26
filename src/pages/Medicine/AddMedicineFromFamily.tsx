@@ -1,5 +1,4 @@
-// pages/Medicine/AddFamilyMedicine.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import Input from "../../components/form/input/InputField";
@@ -10,15 +9,13 @@ interface Medicine {
   quantity: number;
   familyQuantity?: number;
   unitsPerPackage?: number;
-  packageCount?: number;
-  familyPackageCount?: number;
 }
 
 export default function AddMedicineFromFamily() {
   const { token } = useAuth();
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
 
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [selectedId, setSelectedId] = useState("");
 
   const [name, setName] = useState("");
   const [packages, setPackages] = useState<number | "">("");
@@ -28,22 +25,49 @@ export default function AddMedicineFromFamily() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const fetchMedicines = async () => {
-      try {
-        const res = await axios.get("https://medikalija-api.vercel.app/api/medicine", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data.success) {
-          setMedicines(res.data.medicines);
-        }
-      } catch (err) {
-        console.error(err);
+  // ============================
+  // LOAD EXISTING MEDICINES
+  // ============================
+  const loadMedicines = async () => {
+    try {
+      const res = await axios.get(
+        "https://medikalija-api.vercel.app/api/medicine",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        setMedicines(res.data.medicines);
       }
-    };
-    fetchMedicines();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadMedicines();
   }, [token]);
 
+  // ============================
+  // SELECTED MEDICINE MEMO
+  // ============================
+  const selectedMedicine = useMemo(
+    () => medicines.find((m) => m._id === selectedId),
+    [selectedId, medicines]
+  );
+
+  useEffect(() => {
+    if (selectedMedicine?.unitsPerPackage) {
+      setUnitsPerPackage(selectedMedicine.unitsPerPackage);
+    } else {
+      setUnitsPerPackage("");
+    }
+    setPackages("");
+    setLooseQuantity("");
+  }, [selectedMedicine]);
+
+  // ============================
+  // RESET FORM
+  // ============================
   const resetForm = () => {
     setSelectedId("");
     setName("");
@@ -52,6 +76,9 @@ export default function AddMedicineFromFamily() {
     setLooseQuantity("");
   };
 
+  // ============================
+  // SUBMIT HANDLER
+  // ============================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -59,15 +86,12 @@ export default function AddMedicineFromFamily() {
 
     try {
       if (selectedId) {
-        // ✅ dodaj količinu postojećem leku
-        const payload: any = {
-          fromFamily: true,
-        };
+        // UPDATE EXISTING MEDICINE
+        const payload: any = { fromFamily: true };
 
-        if (packages !== "") payload.packages = Number(packages);
-        if (unitsPerPackage !== "") payload.unitsPerPackage = Number(unitsPerPackage);
-        if (looseQuantity !== "") payload.addQuantity = Number(looseQuantity);
-
+        if (packages) payload.packages = Number(packages);
+        if (unitsPerPackage) payload.unitsPerPackage = Number(unitsPerPackage);
+        if (looseQuantity) payload.addQuantity = Number(looseQuantity);
 
         const res = await axios.put(
           `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
@@ -76,19 +100,17 @@ export default function AddMedicineFromFamily() {
         );
 
         if (res.data.success) {
-          setMessage("Količina uspešno dodata (od porodice).");
+          setMessage("Uspešno dodata količina (porodica).");
+          await loadMedicines();
           resetForm();
         }
       } else {
-        // ✅ kreiraj novi lek
-        const payload: any = {
-          name,
-          fromFamily: true,
-        };
+        // ADD NEW MEDICINE
+        const payload: any = { name, fromFamily: true };
 
-        if (packages !== "") payload.packages = Number(packages);
-        if (unitsPerPackage !== "") payload.unitsPerPackage = Number(unitsPerPackage);
-        if (looseQuantity !== "") payload.quantity = Number(looseQuantity);
+        if (packages) payload.packages = Number(packages);
+        if (unitsPerPackage) payload.unitsPerPackage = Number(unitsPerPackage);
+        if (looseQuantity) payload.quantity = Number(looseQuantity);
 
         const res = await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
@@ -97,112 +119,91 @@ export default function AddMedicineFromFamily() {
         );
 
         if (res.data.success) {
-          setMessage("Lek uspešno dodat (od porodice).");
+          setMessage("Lek uspešno dodat (porodica).");
+          await loadMedicines();
           resetForm();
         }
       }
     } catch (error: any) {
       console.error(error);
-      setMessage(error.response?.data?.message || "Greška prilikom dodavanja leka.");
+      setMessage(error.response?.data?.message || "Greška prilikom dodavanja.");
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedMedicine = medicines.find((m) => m._id === selectedId);
-
-  useEffect(() => {
-    if (selectedMedicine) {
-      if (selectedMedicine.unitsPerPackage) {
-        setUnitsPerPackage(selectedMedicine.unitsPerPackage);
-      } else {
-        setUnitsPerPackage("");
-      }
-
-    } else {
-      setUnitsPerPackage("");
-    }
-    setPackages("");
-    setLooseQuantity("");
-  }, [selectedMedicine]);
-
+  // ============================
+  // RENDER
+  // ============================
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
-      <h2 className="text-xl font-bold mb-2">
+      <h2 className="text-xl font-bold">
         {selectedId ? "Dodaj količinu (porodica)" : "Dodaj novi lek (porodica)"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1">
+
+        {/* SELECT */}
+        <div>
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
           </label>
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full border px-3 py-2 rounded-lg text-sm"
+            className="w-full border px-3 py-2 rounded-lg"
           >
             <option value="">— Novi lek —</option>
             {medicines.map((m) => (
               <option key={m._id} value={m._id}>
-                {m.name} (Dom: {m.quantity.toFixed(2)} | Porodica: {m.familyQuantity?.toFixed(2) ?? 0})
+                {m.name} (Dom: {m.quantity} | Porodica: {m.familyQuantity ?? 0})
               </option>
             ))}
           </select>
         </div>
 
         {!selectedId && (
-          <>
-            <Input
-              type="text"
-              placeholder="Naziv leka"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </>
+          <Input
+            type="text"
+            placeholder="Naziv leka"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             type="number"
-            placeholder="Broj pakovanja (npr. 2)"
+            placeholder="Pakovanja"
             value={packages}
             onChange={(e) => setPackages(e.target.value === "" ? "" : Number(e.target.value))}
           />
           <Input
-            type="number" required
-            placeholder="Tableta po pakovanju (npr. 12)"
+            type="number"
+            placeholder="Tableta po pakovanju"
             value={unitsPerPackage}
-            onChange={(e) =>
-              setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))
-            }
+            onChange={(e) => setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))}
           />
         </div>
 
         <Input
           type="number"
-          placeholder="Dodatne tablete (bez pakovanja)"
+          placeholder="Dodatne tablete"
           value={looseQuantity}
-          onChange={(e) =>
-            setLooseQuantity(e.target.value === "" ? "" : Number(e.target.value))
-          }
+          onChange={(e) => setLooseQuantity(e.target.value === "" ? "" : Number(e.target.value))}
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
         >
           {loading ? "Čuvanje..." : "Sačuvaj"}
         </button>
       </form>
 
-      {message && (
-        <p className="mt-3 text-center text-sm text-gray-700">
-          {message}
-        </p>
-      )}
+      {message && <p className="text-center text-sm">{message}</p>}
     </div>
   );
 }
