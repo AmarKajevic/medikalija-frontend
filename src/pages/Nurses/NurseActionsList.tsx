@@ -23,7 +23,7 @@ export default function NurseActionsList() {
 
   const fetchActions = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/nurse-actions", {
+      const response = await axios.get("https://medikalija-api.vercel.app/api/nurse-actions", {
         headers: { Authorization: `Bearer ${token}` }
       });
 

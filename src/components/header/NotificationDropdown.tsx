@@ -23,7 +23,7 @@ export default function NotificationDropdown() {
     if (!token) return;
 
     try {
-      const res = await axios.get("http://localhost:5000/api/notifications", {
+      const res = await axios.get("https://medikalija-api.vercel.app/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -58,7 +58,7 @@ export default function NotificationDropdown() {
     if (!isOpen && unreadCount > 0) {
       try {
         await axios.put(
-          "http://localhost:5000/api/notifications/read-all",
+          "https://medikalija-api.vercel.app/api/notifications/read-all",
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );

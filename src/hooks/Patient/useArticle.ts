@@ -32,7 +32,7 @@ export default function useArticles() {
   const getArticles = useQuery({
     queryKey: ["articles"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:5000/api/articles", {
+      const res = await axios.get("https://medikalija-api.vercel.app/api/articles", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -51,7 +51,7 @@ export default function useArticles() {
       fromFamily?: boolean;
     }) => {
       const { data } = await axios.post(
-        "http://localhost:5000/api/articles/add",
+        "https://medikalija-api.vercel.app/api/articles/add",
         article,
         {
           headers: {
@@ -68,7 +68,7 @@ export default function useArticles() {
 
   const deleteArticle = useMutation({
     mutationFn: async (articleId: string) => {
-      await axios.delete(`http://localhost:5000/api/articles/${articleId}`, {
+      await axios.delete(`https://medikalija-api.vercel.app/api/articles/${articleId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     },
@@ -91,7 +91,7 @@ export default function useArticles() {
       fromFamily?: boolean;
     }) => {
       await axios.put(
-        `http://localhost:5000/api/articles/${article.articleId}`,
+        `https://medikalija-api.vercel.app/api/articles/${article.articleId}`,
         article,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -113,7 +113,7 @@ export default function useArticles() {
       amount: number;
     }) => {
       const { patientId, articleId, amount } = params;
-      await axios.post(`http://localhost:5000/api/articles/use`, { articleId, amount, patientId },
+      await axios.post(`https://medikalija-api.vercel.app/api/articles/use`, { articleId, amount, patientId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -134,7 +134,7 @@ export default function useArticles() {
   enabled: !!patientId, // ✅ osiguraj da se ne šalje kad je undefined
   queryFn: async () => {
     const res = await axios.get(
-      `http://localhost:5000/api/articles/patientArticles/${patientId}`,
+      `https://medikalija-api.vercel.app/api/articles/patientArticles/${patientId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

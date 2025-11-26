@@ -13,7 +13,7 @@
     
 //     try {
 //       setLoading(true);
-//       const response = await axios.get(`http://localhost:5000/api/patient/${patientId}`, {
+//       const response = await axios.get(`https://medikalija-api.vercel.app/api/patient/${patientId}`, {
 //         headers: {
 //           Authorization: `Bearer ${token}`
 //         }
@@ -59,7 +59,7 @@ export default function usePatient(patientId: string) {
   return useQuery({
     queryKey: ["patient", patientId],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:5000/api/patient/${patientId}`, {
+      const res = await axios.get(`https://medikalija-api.vercel.app/api/patient/${patientId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

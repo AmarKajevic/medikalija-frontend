@@ -34,7 +34,7 @@ function PatientList() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/patient", {
+      const response = await axios.get("https://medikalija-api.vercel.app/api/patient", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -63,7 +63,7 @@ function PatientList() {
       const isoDate = new Date(date).toISOString();
 
       await axios.patch(
-        `http://localhost:5000/api/patient/${patientId}/discharge`,
+        `https://medikalija-api.vercel.app/api/patient/${patientId}/discharge`,
         { dischargeDate: isoDate },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -16,7 +16,7 @@ export default function EditAnalysis({ analysisId, currentPrice, onUpdated }: Pr
   const handleUpdate = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/analysis/${analysisId}`,
+        `https://medikalija-api.vercel.app/api/analysis/${analysisId}`,
         { price },
         { headers: { Authorization: `Bearer ${token}` } }
       );

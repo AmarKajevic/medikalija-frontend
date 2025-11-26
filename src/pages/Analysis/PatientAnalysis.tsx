@@ -22,7 +22,7 @@ export default function PatientAnalysis({ patientId, onAdded }: PatientAnalysisP
   useEffect(() => {
     const fetchAnalyses = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/analysis", {
+        const res = await axios.get("https://medikalija-api.vercel.app/api/analysis", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
@@ -53,7 +53,7 @@ export default function PatientAnalysis({ patientId, onAdded }: PatientAnalysisP
   try {
     for (const a of selectedAnalyses) {
       const res = await axios.post(
-        "http://localhost:5000/api/analysis/patient", // bez "/" na kraju
+        "https://medikalija-api.vercel.app/api/analysis/patient", // bez "/" na kraju
         {
           patientId,
           analysisId: a._id,

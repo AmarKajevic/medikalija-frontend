@@ -42,7 +42,7 @@ export default function SpecificationViewPage() {
   const addCosts = async () => {
     try {
       await axios.post(
-        `http://localhost:5000/api/specification/${spec._id}/add-costs`,
+        `https://medikalija-api.vercel.app/api/specification/${spec._id}/add-costs`,
         { lodgingPrice, extraCostAmount, extraCostLabel },
         { headers: { Authorization: `Bearer ${token}` } }
       );

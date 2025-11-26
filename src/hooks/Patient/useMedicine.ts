@@ -37,7 +37,7 @@ export const useMedicine = (patientId: string) => {
     queryKey: ["usedMedicine", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `http://localhost:5000/api/medicine/patient/${patientId}`,
+        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // backend vraća data.usedMedicine, default na prazan niz
@@ -49,7 +49,7 @@ export const useMedicine = (patientId: string) => {
   const addMedicine = useMutation({
     mutationFn: async (medicine: { medicineId: string; amount: number }) => {
       const { data } = await axios.post(
-        `http://localhost:5000/api/medicine/use`,
+        `https://medikalija-api.vercel.app/api/medicine/use`,
         { patientId, ...medicine },
         { headers: { Authorization: `Bearer ${token}` } }
       );

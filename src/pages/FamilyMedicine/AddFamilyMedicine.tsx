@@ -21,7 +21,7 @@ export default function AddFamilyMedicine() {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/patient", {
+      const response = await axios.get("https://medikalija-api.vercel.app/api/patient", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

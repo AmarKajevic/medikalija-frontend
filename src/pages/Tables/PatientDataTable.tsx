@@ -55,7 +55,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
+        `https://medikalija-api.vercel.app/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -75,7 +75,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/medicine/patient/${patientId}/medicines/delete-all`,
+        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/medicines/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -95,7 +95,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
+        `https://medikalija-api.vercel.app/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -115,7 +115,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/articles/patient/${patientId}/articles/delete-all`,
+        `https://medikalija-api.vercel.app/api/articles/patient/${patientId}/articles/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

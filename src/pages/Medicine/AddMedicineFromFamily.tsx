@@ -33,7 +33,7 @@ export default function AddMedicineFromFamily() {
   useEffect(() => {
     const fetchMedicines = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/medicine", {
+        const res = await axios.get("https://medikalija-api.vercel.app/api/medicine", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
@@ -73,7 +73,7 @@ export default function AddMedicineFromFamily() {
         if (pricePerUnit !== "") payload.pricePerUnit = Number(pricePerUnit);
 
         const res = await axios.put(
-          `http://localhost:5000/api/medicine/${selectedId}`,
+          `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -95,7 +95,7 @@ export default function AddMedicineFromFamily() {
         if (looseQuantity !== "") payload.quantity = Number(looseQuantity);
 
         const res = await axios.post(
-          "http://localhost:5000/api/medicine/add",
+          "https://medikalija-api.vercel.app/api/medicine/add",
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );

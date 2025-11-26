@@ -12,7 +12,7 @@ export default function DeleteMedicine({ medicineId, onDeleted }: DeleteMedicine
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/medicine/${medicineId}`,
+        `https://medikalija-api.vercel.app/api/medicine/${medicineId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

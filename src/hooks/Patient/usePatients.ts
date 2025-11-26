@@ -9,7 +9,7 @@ export default function usePatients() {
     return useQuery({
         queryKey: ["patients"],
         queryFn: async () => {
-            const res = await axios.get("http://localhost:5000/api/patient", {
+            const res = await axios.get("https://medikalija-api.vercel.app/api/patient", {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

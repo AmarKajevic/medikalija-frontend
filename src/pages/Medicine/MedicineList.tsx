@@ -32,7 +32,7 @@ export default function MedicineList() {
   const fetchMedicines = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/medicine", {
+      const response = await axios.get("https://medikalija-api.vercel.app/api/medicine", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data.success) {

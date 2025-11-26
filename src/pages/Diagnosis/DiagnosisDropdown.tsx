@@ -22,7 +22,7 @@ export default function DiagnosisDropdown({ onSelect }: Props) {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/diagnosisTemplate", {
+        const response = await axios.get("https://medikalija-api.vercel.app/api/diagnosisTemplate", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data.success) {

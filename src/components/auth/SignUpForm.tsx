@@ -25,7 +25,7 @@ export default function SignUpForm() {
       const token = localStorage.getItem("token"); // uzmi admin token
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        "https://medikalija-api.vercel.app/api/auth/register",
         { name,lastName, email, password, role },
         {
           headers: {

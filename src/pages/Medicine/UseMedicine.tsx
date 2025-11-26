@@ -44,7 +44,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const { data: medicines = [], isLoading } = useQuery<Medicine[]>({
     queryKey: ["medicines", patientId],
     queryFn: async () => {
-      const { data } = await axios.get("http://localhost:5000/api/medicine", {
+      const { data } = await axios.get("https://medikalija-api.vercel.app/api/medicine", {
         headers: { Authorization: `Bearer ${token}` },
       });
       return data.medicines;
@@ -54,7 +54,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const addMedicine = useMutation({
     mutationFn: async (payload: { medicineId: string; amount: number }) => {
       const { data } = await axios.post(
-        "http://localhost:5000/api/medicine/use",
+        "https://medikalija-api.vercel.app/api/medicine/use",
         { patientId, ...payload },
         { headers: { Authorization: `Bearer ${token}` } }
       );

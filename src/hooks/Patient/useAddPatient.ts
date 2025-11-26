@@ -9,7 +9,7 @@ export default function useAddPatient(){
 
     return useMutation({
         mutationFn: async (newPatient: Omit<Patient, "_id" | "createdBy">) => {
-            const res = await axios.post("http://localhost:5000/api/patient/addPatient", newPatient, {
+            const res = await axios.post("https://medikalija-api.vercel.app/api/patient/addPatient", newPatient, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

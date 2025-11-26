@@ -3,7 +3,7 @@ import { AuthResponse, User } from "./types";
 import { useAuth } from "./context/AuthContext";
 
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://medikalija-api.vercel.app";
 
 // Kreiramo axios instancu
 const api = axios.create({

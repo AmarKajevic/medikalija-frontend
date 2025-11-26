@@ -18,7 +18,7 @@ export default function AllNotificationsPage() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/notifications", {
+      const res = await axios.get("https://medikalija-api.vercel.app/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -32,7 +32,7 @@ export default function AllNotificationsPage() {
   const markAllAsRead = async () => {
     try {
       await axios.put(
-        "http://localhost:5000/api/notifications/read-all",
+        "https://medikalija-api.vercel.app/api/notifications/read-all",
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -47,7 +47,7 @@ export default function AllNotificationsPage() {
   const markOneAsRead = async (id: string) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/notifications/${id}/read`,
+        `https://medikalija-api.vercel.app/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

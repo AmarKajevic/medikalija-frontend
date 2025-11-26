@@ -29,7 +29,7 @@ export default function EditArticle({
       const data = { price: newPrice };
 
       const res = await axios.put(
-        `http://localhost:5000/api/articles/${articleId}`,
+        `https://medikalija-api.vercel.app/api/articles/${articleId}`,
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +61,7 @@ export default function EditArticle({
       }
 
       const res = await axios.put(
-        `http://localhost:5000/api/articles/${articleId}`,
+        `https://medikalija-api.vercel.app/api/articles/${articleId}`,
         data,
         {
           headers: { Authorization: `Bearer ${token}` },

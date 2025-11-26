@@ -15,7 +15,7 @@ export default function AnalysisList() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
 
   const fetchAnalyses = async () => {
-    const res = await axios.get("http://localhost:5000/api/analysis", {
+    const res = await axios.get("https://medikalija-api.vercel.app/api/analysis", {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.data.success) {
@@ -28,7 +28,7 @@ export default function AnalysisList() {
   }, [token]);
 
   const handleDelete = async (id: string) => {
-    await axios.delete(`http://localhost:5000/api/analysis/${id}`, {
+    await axios.delete(`https://medikalija-api.vercel.app/api/analysis/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     fetchAnalyses();
