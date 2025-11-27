@@ -98,9 +98,10 @@ export default function AddMedicine() {
         const payload: any = {
           name,
           pricePerUnit:
-            typeof pricePerUnit === "number"
-              ? pricePerUnit
-              : Number(pricePerUnit),
+          typeof pricePerUnit === "number"
+            ? parseFloat(pricePerUnit.toFixed(2))
+            : parseFloat(Number(pricePerUnit).toFixed(2)),
+
           fromFamily,
         };
 
@@ -192,6 +193,7 @@ export default function AddMedicine() {
 
             <Input
               type="number"
+              step={0.01}
               placeholder="Cena po komadu (RSD)"
               value={pricePerUnit}
               onChange={(e) =>
