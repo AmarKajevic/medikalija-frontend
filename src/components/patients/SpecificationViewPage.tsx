@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router";
+import { useParams } from "react-router";
 import { useState } from "react";
 import axios from "axios";
 import { useSingleSpecification } from "../../hooks/Patient/usePatientSpecification";
