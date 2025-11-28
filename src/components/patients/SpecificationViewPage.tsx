@@ -20,24 +20,55 @@ export default function SpecificationViewPage() {
   const { specificationId } = useParams();
   const { data: spec, isLoading, isError, refetch } =
     useSingleSpecification(specificationId || "");
+
   const { token } = useAuth();
 
-  // Extra troškovi (unose se u RSD)
+  // ❗ OVO OSTAJE – dodatni troškovi u RSD (backend)
   const [extraCostAmount, setExtraCostAmount] = useState<number>(0);
   const [extraCostLabel, setExtraCostLabel] = useState<string>("");
 
-  // Dug i smeštaj — unosi se u EUR
-  const [previousDebtEUR, setPreviousDebtEUR] = useState<number>(0);
-  const [nextLodgingEUR, setNextLodgingEUR] = useState<number>(0);
+  // ❗ NOVO — OBA IZNOSE UNOSIMO U EUR
+  const [previousDebtEUR, setPreviousDebtEUR] = useState<number>(0); // dug iz prethodnog perioda
+  const [nextLodgingEUR, setNextLodgingEUR] = useState<number>(0); // smeštaj za naredni period
 
-  // Kursevi
+  // kurs
   const [lowerExchangeRate, setLowerExchangeRate] = useState<number>(0);
   const [middleExchangeRate, setMiddleExchangeRate] = useState<number>(0);
 
   if (isLoading) return <p>Učitavanje...</p>;
-  if (isError || !spec) return <p>Greška pri učitavanju specifikacije.</p>;
+  if (isError) return <p>Greška pri učitavanju.</p>;
+  if (!spec) return <p>Specifikacija nije pronađena.</p>;
 
-  // Sledeći period: 30 dana posle kraja ove specifikacije
+  // postojeće stavke
+const extraItem = spec.items.find((i: any) => i.category === "extra");
+
+const extraExistingAmount = extraItem ? extraItem.price ?? 0 : 0;
+const extraExistingLabel = extraItem ? extraItem.name ?? "" : "";
+
+
+
+  // -----------------------------------------------
+  // DODAVANJE TROŠKOVA (backend)
+  // -----------------------------------------------
+  const addCosts = async () => {
+    try {
+      await axios.post(
+        `https://medikalija-api.vercel.app/api/specification/${spec._id}/add-costs`,
+        { extraCostAmount, extraCostLabel },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await refetch();
+      setExtraCostAmount(0);
+      setExtraCostLabel("");
+    } catch (err) {
+      console.error("Greška pri dodavanju:", err);
+    }
+  };
+
+  // -----------------------------------------------
+  // PERIOD SLEDEĆEG SMEŠTAJA
+  // -----------------------------------------------
   const currentEndDate = new Date(spec.endDate);
   const nextStartDate = new Date(currentEndDate);
   nextStartDate.setDate(nextStartDate.getDate() + 1);
@@ -46,11 +77,12 @@ export default function SpecificationViewPage() {
   nextEndDate.setDate(nextEndDate.getDate() + 29);
 
   const nextPeriodLabel =
-    nextStartDate.toLocaleDateString("sr-RS") +
-    " — " +
+    `${nextStartDate.toLocaleDateString("sr-RS")} — ` +
     nextEndDate.toLocaleDateString("sr-RS");
 
-  // RSD vrednosti
+  // -----------------------------------------------
+  // OBRAČUN (EUR & RSD)
+  // -----------------------------------------------
   const specTotalRSD = spec.totalPrice ?? 0;
 
   const debtRSD =
@@ -59,62 +91,27 @@ export default function SpecificationViewPage() {
   const lodgingNextRSD =
     middleExchangeRate > 0 ? nextLodgingEUR * middleExchangeRate : 0;
 
-  // EUR vrednosti
   const specEUR =
     lowerExchangeRate > 0 ? specTotalRSD / lowerExchangeRate : 0;
 
-  const debtEUR = previousDebtEUR;
-  const lodgingNextEUR = nextLodgingEUR;
-
   const totalRSD = specTotalRSD + debtRSD + lodgingNextRSD;
-  const totalEUR = specEUR + debtEUR + lodgingNextEUR;
+  const totalEUR = specEUR + previousDebtEUR + nextLodgingEUR;
 
-  // ----------------------------------------------------------
-  // DODAVANJE EXTRA TROŠKA U SPECIFIKACIJU
-  // ----------------------------------------------------------
-  const addCosts = async () => {
-    try {
-      await axios.post(
-        `https://medikalija-api.vercel.app/api/specification/${spec._id}/add-costs`,
-        { extraCostAmount, extraCostLabel },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      await refetch();
-      setExtraCostAmount(0);
-      setExtraCostLabel("");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ----------------------------------------------------------
+  // -----------------------------------------------
   // WORD EXPORT
-  // ----------------------------------------------------------
+  // -----------------------------------------------
   const generateWord = () => {
-    // GLAVNA TABELA
     const tableRows = [
       new TableRow({
         children: [
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Opis", bold: true })],
-              }),
-            ],
+            children: [new Paragraph({ children: [new TextRun("Opis")] })],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Količina", bold: true })],
-              }),
-            ],
+            children: [new Paragraph({ children: [new TextRun("Količina")] })],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Cena (RSD)", bold: true })],
-              }),
-            ],
+            children: [new Paragraph({ children: [new TextRun("Cena (RSD)")] })],
           }),
         ],
       }),
@@ -125,39 +122,14 @@ export default function SpecificationViewPage() {
             children: [
               new TableCell({
                 children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text:
-                          item.formattedName ??
-                          item.name ??
-                          "Nepoznata stavka",
-                      }),
-                    ],
-                  }),
+                  new Paragraph(item.formattedName ?? item.name ?? "Stavka"),
                 ],
               }),
               new TableCell({
-                children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: (item.amount ?? 1).toString(),
-                      }),
-                    ],
-                  }),
-                ],
+                children: [new Paragraph(String(item.amount ?? 1))],
               }),
               new TableCell({
-                children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: (item.price ?? 0).toFixed(2),
-                      }),
-                    ],
-                  }),
-                ],
+                children: [new Paragraph((item.price ?? 0).toFixed(2))],
               }),
             ],
           })
@@ -166,50 +138,43 @@ export default function SpecificationViewPage() {
       new TableRow({
         children: [
           new TableCell({
-            children: [new Paragraph("")],
-          }),
-          new TableCell({
             children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Ukupno", bold: true })],
-              }),
+              new Paragraph(
+                `Dodatni trošak – ${extraExistingLabel || "nema"}`
+              ),
             ],
           }),
+          new TableCell({ children: [new Paragraph("—")] }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: specTotalRSD.toFixed(2) })],
-              }),
-            ],
+            children: [new Paragraph(extraExistingAmount.toFixed(2))],
+          }),
+        ],
+      }),
+
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph("")] }),
+          new TableCell({
+            children: [new Paragraph("Ukupno (RSD)")],
+          }),
+          new TableCell({
+            children: [new Paragraph(specTotalRSD.toFixed(2))],
           }),
         ],
       }),
     ];
 
-    // TABELA SA EUR/RSD OBRACUNOM
     const summaryRows = [
       new TableRow({
         children: [
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Stavka", bold: true })],
-              }),
-            ],
+            children: [new Paragraph("Ukupna specifikacija (niži kurs)")],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "RSD", bold: true })],
-              }),
-            ],
+            children: [new Paragraph(specTotalRSD.toFixed(2))],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "EUR", bold: true })],
-              }),
-            ],
+            children: [new Paragraph(specEUR.toFixed(2))],
           }),
         ],
       }),
@@ -217,43 +182,13 @@ export default function SpecificationViewPage() {
       new TableRow({
         children: [
           new TableCell({
-            children: [new Paragraph("Ukupna specifikacija")],
+            children: [new Paragraph("Dug iz prethodnog perioda (EUR)")],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(specTotalRSD.toFixed(2))],
-              }),
-            ],
+            children: [new Paragraph(debtRSD.toFixed(2))],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(specEUR.toFixed(2))],
-              }),
-            ],
-          }),
-        ],
-      }),
-
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [new Paragraph("Dug iz prethodnog perioda")],
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(debtRSD.toFixed(2))],
-              }),
-            ],
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(debtEUR.toFixed(2))],
-              }),
-            ],
+            children: [new Paragraph(previousDebtEUR.toFixed(2))],
           }),
         ],
       }),
@@ -262,52 +197,28 @@ export default function SpecificationViewPage() {
         children: [
           new TableCell({
             children: [
-              new Paragraph(`Smeštaj za narednih 30 dana (${nextPeriodLabel})`),
+              new Paragraph(
+                `Smeštaj za narednih 30 dana – ${nextPeriodLabel} (EUR)`
+              ),
             ],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(lodgingNextRSD.toFixed(2))],
-              }),
-            ],
+            children: [new Paragraph(lodgingNextRSD.toFixed(2))],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun(lodgingNextEUR.toFixed(2))],
-              }),
-            ],
+            children: [new Paragraph(nextLodgingEUR.toFixed(2))],
           }),
         ],
       }),
 
       new TableRow({
         children: [
+          new TableCell({ children: [new Paragraph("UKUPNO")] }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "UKUPNO", bold: true })],
-              }),
-            ],
+            children: [new Paragraph(totalRSD.toFixed(2))],
           }),
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: totalRSD.toFixed(2), bold: true }),
-                ],
-              }),
-            ],
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: totalEUR.toFixed(2), bold: true }),
-                ],
-              }),
-            ],
+            children: [new Paragraph(totalEUR.toFixed(2))],
           }),
         ],
       }),
@@ -318,28 +229,15 @@ export default function SpecificationViewPage() {
         {
           children: [
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Specifikacija pacijenta",
-                  bold: true,
-                  size: 32,
-                }),
-              ],
+              children: [new TextRun({ text: "Specifikacija pacijenta", bold: true })],
             }),
-
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Period: ${new Date(
-                    spec.startDate
-                  ).toLocaleDateString("sr-RS")} — ${new Date(
-                    spec.endDate
-                  ).toLocaleDateString("sr-RS")}`,
-                }),
-              ],
+              text: `Period: ${new Date(
+                spec.startDate
+              ).toLocaleDateString("sr-RS")} — ${new Date(
+                spec.endDate
+              ).toLocaleDateString("sr-RS")}`,
             }),
-
-            new Paragraph(""),
 
             new Table({
               rows: tableRows,
@@ -347,16 +245,6 @@ export default function SpecificationViewPage() {
             }),
 
             new Paragraph(""),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Obračun ukupne naplate (RSD / EUR)",
-                  bold: true,
-                  size: 26,
-                }),
-              ],
-            }),
 
             new Table({
               rows: summaryRows,
@@ -372,31 +260,28 @@ export default function SpecificationViewPage() {
     });
   };
 
-  // ----------------------------------------------------------
-  // UI
-  // ----------------------------------------------------------
   return (
     <div className="p-5">
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Specifikacija pacijenta</h2>
+
+        {/* FIX — nisu dozvoljeni brojevi u "to" */}
         <button
           onClick={() => window.history.back()}
           className="text-blue-600 hover:underline"
         >
           Nazad
         </button>
-
       </div>
 
       <p className="mb-4 text-sm text-gray-600">
-        Period: {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
+        Period:{" "}
+        {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
         {new Date(spec.endDate).toLocaleDateString("sr-RS")}
       </p>
 
-      {/* --------------------------------------------------------
-          GLAVNA TABELA SPECIFIKACIJE
-      -------------------------------------------------------- */}
-      <table className="w-full border border-gray-400 mb-6">
+      {/* GLAVNA TABELA */}
+      <table className="w-full border-collapse border border-gray-300 mb-6">
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2">Opis</th>
@@ -412,33 +297,32 @@ export default function SpecificationViewPage() {
               </td>
               <td className="border p-2 text-right">{item.amount ?? 1}</td>
               <td className="border p-2 text-right">
-                {(item.price ?? 0).toFixed(2)} RSD
+                {(item.price ?? 0).toFixed(2)}
               </td>
             </tr>
           ))}
 
-          <tr className="bg-gray-50 font-bold">
+          <tr className="font-bold bg-gray-50">
             <td></td>
-            <td className="border p-2 text-right">Ukupno:</td>
+            <td className="border p-2 text-right">Ukupno</td>
             <td className="border p-2 text-right">
-              {specTotalRSD.toFixed(2)} RSD
+              {specTotalRSD.toFixed(2)}
             </td>
           </tr>
         </tbody>
       </table>
 
-      {/* --------------------------------------------------------
-          DODAVANJE TROŠKA
-      -------------------------------------------------------- */}
-      <h3 className="text-lg font-semibold mb-2">Dodaj trošak</h3>
+      {/* DODATNI TROŠKOVI – ostaje isto, osim što je uklonjen "Cena smeštaja" */}
+      <h3 className="text-lg font-semibold mb-2">Dodaj troškove</h3>
 
-      <table className="w-full border border-gray-400 mb-4">
+      <table className="w-full border-collapse border border-gray-300 mb-6">
         <tbody>
           <tr>
-            <td className="border p-2">Opis troška</td>
+            <td className="border p-2 font-medium">Opis dodatnog troška</td>
             <td className="border p-2">
               <input
-                className="border p-1 w-full"
+                type="text"
+                className="border p-1 rounded w-full"
                 value={extraCostLabel}
                 onChange={(e) => setExtraCostLabel(e.target.value)}
               />
@@ -446,13 +330,15 @@ export default function SpecificationViewPage() {
           </tr>
 
           <tr>
-            <td className="border p-2">Iznos (RSD)</td>
+            <td className="border p-2 font-medium">Iznos (RSD)</td>
             <td className="border p-2 text-right">
               <input
                 type="number"
-                className="border p-1 w-32 text-right"
+                className="border p-1 w-32 rounded text-right"
                 value={extraCostAmount}
-                onChange={(e) => setExtraCostAmount(Number(e.target.value))}
+                onChange={(e) =>
+                  setExtraCostAmount(Number(e.target.value))
+                }
               />
             </td>
           </tr>
@@ -461,26 +347,26 @@ export default function SpecificationViewPage() {
 
       <button
         onClick={addCosts}
-        className="bg-green-600 text-white px-4 py-2 rounded mb-8"
+        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-8"
       >
-        Dodaj trošak
+        Dodaj troškove
       </button>
 
-      {/* --------------------------------------------------------
-          EUR OBRAČUN
-      -------------------------------------------------------- */}
-      <h3 className="text-lg font-semibold mb-2">
-        Obračun u EUR (dug + smeštaj)
+      {/* ----------------------------------------- */}
+      {/*   OBRAČUN — EUR I RSD                    */}
+      {/* ----------------------------------------- */}
+      <h3 className="text-lg font-semibold mt-8 mb-2">
+        Obračun celokupne naplate (EUR unos)
       </h3>
 
-      <table className="w-full border border-gray-400 mb-6">
+      <table className="w-full border-collapse border border-gray-400 mb-6">
         <tbody>
           <tr>
             <td className="border p-2">Dug iz prethodnog perioda (EUR)</td>
             <td className="border p-2 text-right">
               <input
                 type="number"
-                className="border p-1 w-32 text-right"
+                className="border rounded p-1 w-32 text-right"
                 value={previousDebtEUR}
                 onChange={(e) => setPreviousDebtEUR(Number(e.target.value))}
               />
@@ -498,7 +384,7 @@ export default function SpecificationViewPage() {
             <td className="border p-2 text-right">
               <input
                 type="number"
-                className="border p-1 w-32 text-right"
+                className="border rounded p-1 w-32 text-right"
                 value={nextLodgingEUR}
                 onChange={(e) => setNextLodgingEUR(Number(e.target.value))}
               />
@@ -510,7 +396,7 @@ export default function SpecificationViewPage() {
             <td className="border p-2 text-right">
               <input
                 type="number"
-                className="border p-1 w-32 text-right"
+                className="border rounded p-1 w-32 text-right"
                 value={lowerExchangeRate}
                 onChange={(e) =>
                   setLowerExchangeRate(Number(e.target.value))
@@ -524,7 +410,7 @@ export default function SpecificationViewPage() {
             <td className="border p-2 text-right">
               <input
                 type="number"
-                className="border p-1 w-32 text-right"
+                className="border rounded p-1 w-32 text-right"
                 value={middleExchangeRate}
                 onChange={(e) =>
                   setMiddleExchangeRate(Number(e.target.value))
@@ -535,32 +421,36 @@ export default function SpecificationViewPage() {
         </tbody>
       </table>
 
-      {/* --------------------------------------------------------
-          KONVERZIJA
-      -------------------------------------------------------- */}
+      {/* KONVERZIJA U EUR */}
       <h3 className="text-lg font-semibold mb-2">Konverzija</h3>
 
-      <table className="w-full border border-gray-400 mb-8">
+      <table className="w-full border-collapse border border-gray-400 mb-10">
         <tbody>
           <tr>
-            <td className="border p-2">Specifikacija (EUR)</td>
+            <td className="border p-2">Specifikacija (EUR, niži kurs)</td>
             <td className="border p-2 text-right">{specEUR.toFixed(2)}</td>
           </tr>
+
           <tr>
             <td className="border p-2">Dug (EUR)</td>
-            <td className="border p-2 text-right">{debtEUR.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td className="border p-2">Smeštaj (EUR)</td>
             <td className="border p-2 text-right">
-              {lodgingNextEUR.toFixed(2)}
+              {previousDebtEUR.toFixed(2)}
             </td>
           </tr>
-          <tr className="bg-gray-100 font-bold">
+
+          <tr>
+            <td className="border p-2">Smeštaj narednih 30 dana (EUR)</td>
+            <td className="border p-2 text-right">
+              {nextLodgingEUR.toFixed(2)}
+            </td>
+          </tr>
+
+          <tr className="font-bold bg-gray-50">
             <td className="border p-2">UKUPNO (RSD)</td>
             <td className="border p-2 text-right">{totalRSD.toFixed(2)}</td>
           </tr>
-          <tr className="bg-gray-100 font-bold">
+
+          <tr className="font-bold bg-gray-50">
             <td className="border p-2">UKUPNO (EUR)</td>
             <td className="border p-2 text-right">{totalEUR.toFixed(2)}</td>
           </tr>
@@ -569,7 +459,7 @@ export default function SpecificationViewPage() {
 
       <button
         onClick={generateWord}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         Preuzmi Word dokument
       </button>
