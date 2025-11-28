@@ -336,19 +336,14 @@ export default function SpecificationViewPage() {
         </tbody>
       </table>
 
-      <div className="flex justify-between mb-6">
+      <div className="flex justify-end mb-6">
         <button
           onClick={addCosts}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           Sačuvaj troškove
         </button>
-        <button
-          onClick={generateWord}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Preuzmi Word
-        </button>
+       
       </div>
 
       {/* NAPLATA U EUR */}
@@ -461,6 +456,14 @@ export default function SpecificationViewPage() {
           </tr>
         </tbody>
       </table>
+      <div className="flex justify-end mb-6">
+         <button
+          onClick={generateWord}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Preuzmi Word
+        </button>
+      </div>
     </div>
   );
 }
