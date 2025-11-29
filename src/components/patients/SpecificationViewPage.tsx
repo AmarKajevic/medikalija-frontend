@@ -36,6 +36,26 @@ export default function SpecificationViewPage() {
 
   const [lowerExchangeRate, setLowerExchangeRate] = useState<string>("");  // niži kurs
   const [middleExchangeRate, setMiddleExchangeRate] = useState<string>(""); // srednji kurs
+  // ------------------------------
+//  POPUNI STATE IZ billing (ako postoji u bazi)
+// ------------------------------
+useEffect(() => {
+  if (!spec || !spec.billing) return;
+
+  if (spec.billing.previousDebtEUR != null) {
+    setPreviousDebtEUR(spec.billing.previousDebtEUR.toString());
+  }
+  if (spec.billing.nextLodgingEUR != null) {
+    setNextLodgingEUR(spec.billing.nextLodgingEUR.toString());
+  }
+  if (spec.billing.lowerExchangeRate != null) {
+    setLowerExchangeRate(spec.billing.lowerExchangeRate.toString());
+  }
+  if (spec.billing.middleExchangeRate != null) {
+    setMiddleExchangeRate(spec.billing.middleExchangeRate.toString());
+  }
+}, [spec]);
+
 
   // ------------------------------
   //  STANJE UČITAVANJA
@@ -63,22 +83,7 @@ export default function SpecificationViewPage() {
   // ------------------------------
   //  POPUNI STATE IZ billing (ako postoji u bazi)
   // ------------------------------
-  useEffect(() => {
-    if (spec.billing) {
-      if (spec.billing.previousDebtEUR != null) {
-        setPreviousDebtEUR(spec.billing.previousDebtEUR.toString());
-      }
-      if (spec.billing.nextLodgingEUR != null) {
-        setNextLodgingEUR(spec.billing.nextLodgingEUR.toString());
-      }
-      if (spec.billing.lowerExchangeRate != null) {
-        setLowerExchangeRate(spec.billing.lowerExchangeRate.toString());
-      }
-      if (spec.billing.middleExchangeRate != null) {
-        setMiddleExchangeRate(spec.billing.middleExchangeRate.toString());
-      }
-    }
-  }, [spec._id]); // kada se promeni specifikacija, osveži polja
+// kada se promeni specifikacija, osveži polja
 
   // ------------------------------
   //  KONVERZIJE (logika koju si definisao)
