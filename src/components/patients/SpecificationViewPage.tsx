@@ -163,166 +163,207 @@ export default function SpecificationViewPage() {
   // ------------------------------
   //  WORD EXPORT
   // ------------------------------
-  const generateWord = () => {
-    const tableRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph("Opis")] }),
-          new TableCell({ children: [new Paragraph("Količina")] }),
-          new TableCell({ children: [new Paragraph("Cena (RSD)")] }),
-        ],
-      }),
-
-      ...spec.items.map(
-        (item: any) =>
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [
-                  new Paragraph(
-                    item.formattedName ?? item.name ?? "Nepoznata stavka"
-                  ),
-                ],
-              }),
-              new TableCell({
-                children: [new Paragraph(String(item.amount ?? 1))],
-              }),
-              new TableCell({
-                children: [
-                  new Paragraph((item.price ?? 0).toFixed(2).toString()),
-                ],
-              }),
-            ],
-          })
-      ),
-
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph("")] }),
-          new TableCell({ children: [new Paragraph("Ukupno (RSD)")] }),
-          new TableCell({
-            children: [new Paragraph(specTotalRSD.toFixed(2).toString())],
-          }),
-        ],
-      }),
-    ];
-
-    const summaryRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph("Stavka")] }),
-          new TableCell({ children: [new Paragraph("RSD")] }),
-          new TableCell({ children: [new Paragraph("EUR")] }),
-        ],
-      }),
-
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [new Paragraph("Specifikacija (niži kurs)")],
-          }),
-          new TableCell({
-            children: [new Paragraph(specTotalRSD.toFixed(2).toString())],
-          }),
-          new TableCell({
-            children: [new Paragraph(specEUR.toFixed(2).toString())],
-          }),
-        ],
-      }),
-
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [new Paragraph("Dug iz prethodnog perioda")],
-          }),
-          new TableCell({
-            children: [new Paragraph(debtRSD.toFixed(2).toString())],
-          }),
-          new TableCell({
-            children: [new Paragraph(debtEUR.toFixed(2).toString())],
-          }),
-        ],
-      }),
-
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [
-              new Paragraph(
-                `Smeštaj za narednih 30 dana (${nextPeriodLabel})`
-              ),
-            ],
-          }),
-          new TableCell({
-            children: [new Paragraph(lodgingRSD.toFixed(2).toString())],
-          }),
-          new TableCell({
-            children: [new Paragraph(lodgingEUR.toFixed(2).toString())],
-          }),
-        ],
-      }),
-
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph("UKUPNO")] }),
-          new TableCell({
-            children: [new Paragraph(totalRSD.toFixed(2).toString())],
-          }),
-          new TableCell({
-            children: [new Paragraph(totalEUR.toFixed(2).toString())],
-          }),
-        ],
-      }),
-    ];
-
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Specifikacija pacijenta",
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-            }),
-            new Paragraph({
-              text: `Period: ${new Date(
-                spec.startDate
-              ).toLocaleDateString("sr-RS")} — ${new Date(
-                spec.endDate
-              ).toLocaleDateString("sr-RS")}`,
-            }),
-            new Paragraph(""),
-            new Table({
-              rows: tableRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            }),
-            new Paragraph(""),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Obračun naplate (RSD / EUR)",
-                  bold: true,
-                  size: 26,
-                }),
-              ],
-            }),
-            new Table({
-              rows: summaryRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            }),
-          ],
-        },
+const generateWord = () => {
+  // ------------------------------
+  //  TABELA 1 — DUG + SMEŠTAJ
+  // ------------------------------
+  const tableDebtLodging = [
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Stavka")] }),
+        new TableCell({ children: [new Paragraph("RSD")] }),
+        new TableCell({ children: [new Paragraph("EUR")] }),
       ],
-    });
+    }),
 
-    Packer.toBlob(doc).then((blob) => {
-      saveAs(blob, `specifikacija-${spec._id}.docx`);
-    });
-  };
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Dug iz prethodnog perioda")] }),
+        new TableCell({ children: [new Paragraph(debtRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(debtEUR.toFixed(2))] }),
+      ],
+    }),
+
+    new TableRow({
+      children: [
+        new TableCell({
+          children: [
+            new Paragraph(`Smeštaj za narednih 30 dana (${nextPeriodLabel})`)
+          ]
+        }),
+        new TableCell({ children: [new Paragraph(lodgingRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(lodgingEUR.toFixed(2))] }),
+      ],
+    }),
+
+    // UKUPNO za prvu tabelu
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("UKUPNO")] }),
+        new TableCell({
+          children: [
+            new Paragraph((debtRSD + lodgingRSD).toFixed(2))
+          ]
+        }),
+        new TableCell({
+          children: [
+            new Paragraph((debtEUR + lodgingEUR).toFixed(2))
+          ]
+        }),
+      ],
+    }),
+  ];
+
+  // ------------------------------
+  //  TABELA 2 — SPECIFIKACIJA
+  // ------------------------------
+  const tableSpecification = [
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Opis")] }),
+        new TableCell({ children: [new Paragraph("Količina")] }),
+        new TableCell({ children: [new Paragraph("Cena (RSD)")] }),
+      ],
+    }),
+
+    ...spec.items.map((item: any) =>
+      new TableRow({
+        children: [
+          new TableCell({
+            children: [
+              new Paragraph(item.formattedName ?? item.name ?? "Nepoznata stavka")
+            ]
+          }),
+          new TableCell({ children: [new Paragraph(String(item.amount ?? 1))] }),
+          new TableCell({ children: [new Paragraph((item.price ?? 0).toFixed(2))] }),
+        ],
+      })
+    ),
+
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("")] }),
+        new TableCell({ children: [new Paragraph("Ukupno")] }),
+        new TableCell({
+          children: [new Paragraph(specTotalRSD.toFixed(2))]
+        }),
+      ],
+    }),
+  ];
+
+  // ------------------------------
+  //  TABELA 3 — KONAČAN OBRAČUN
+  // ------------------------------
+  const tableSummary = [
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Stavka")] }),
+        new TableCell({ children: [new Paragraph("RSD")] }),
+        new TableCell({ children: [new Paragraph("EUR")] }),
+      ],
+    }),
+
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Specifikacija (niži kurs)")] }),
+        new TableCell({ children: [new Paragraph(specTotalRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(specEUR.toFixed(2))] }),
+      ],
+    }),
+
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("Dug iz prethodnog perioda")] }),
+        new TableCell({ children: [new Paragraph(debtRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(debtEUR.toFixed(2))] }),
+      ],
+    }),
+
+    new TableRow({
+      children: [
+        new TableCell({
+          children: [
+            new Paragraph(
+              `Smeštaj narednih 30 dana (${nextPeriodLabel})`
+            )
+          ]
+        }),
+        new TableCell({ children: [new Paragraph(lodgingRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(lodgingEUR.toFixed(2))] }),
+      ],
+    }),
+
+    // FINAL TOTALS
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("UKUPNO")] }),
+        new TableCell({ children: [new Paragraph(totalRSD.toFixed(2))] }),
+        new TableCell({ children: [new Paragraph(totalEUR.toFixed(2))] }),
+      ],
+    }),
+  ];
+
+  // ------------------------------
+  //  KREIRANJE WORD-a
+  // ------------------------------
+  const doc = new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Specifikacija pacijenta",
+                bold: true,
+                size: 28,
+              }),
+            ],
+          }),
+
+          new Paragraph({
+            text: `Period: ${new Date(spec.startDate).toLocaleDateString(
+              "sr-RS"
+            )} — ${new Date(spec.endDate).toLocaleDateString("sr-RS")}`,
+          }),
+
+          // Tabela 1
+          new Paragraph(""),
+          new Paragraph({
+            children: [new TextRun({ text: "Dug + Smeštaj (EUR/RSD)", bold: true })]
+          }),
+          new Table({
+            rows: tableDebtLodging,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          }),
+
+          // Tabela 2
+          new Paragraph(""),
+          new Paragraph({
+            children: [new TextRun({ text: "Specifikacija", bold: true })]
+          }),
+          new Table({
+            rows: tableSpecification,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          }),
+
+          // Tabela 3
+          new Paragraph(""),
+          new Paragraph({
+            children: [new TextRun({ text: "Konačan obračun", bold: true })]
+          }),
+          new Table({
+            rows: tableSummary,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          }),
+        ],
+      },
+    ],
+  });
+
+  Packer.toBlob(doc).then((blob) => {
+    saveAs(blob, `specifikacija-${spec._id}.docx`);
+  });
+};
 
   // ------------------------------
   //  RENDER
