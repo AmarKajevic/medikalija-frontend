@@ -30,11 +30,11 @@ export default function AddArticleFromFamily() {
   const loadArticles = async () => {
     try {
       const res = await axios.get(
-        "https://medikalija-api.vercel.app/api/article",
+        "https://medikalija-api.vercel.app/api/articles",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (res.data.success) {
+      if (res.data.articles) {
         setArticles(res.data.articles);
       }
     } catch (err) {
@@ -90,12 +90,12 @@ export default function AddArticleFromFamily() {
       const total = Number(totalQuantity);
       const upp = Number(unitsPerPackage);
 
-      // 🔵 Izračunavanje pakovanja + ostatka
+      // Izračunavanje pakovanja + ostatka
       const packages = Math.floor(total / upp);
       const remainder = total % upp;
 
       if (selectedId) {
-        // 🔵 UPDATE POSTOJEĆEG ARTIKLA
+        // UPDATE POSTOJEĆEG
         const payload = {
           fromFamily: true,
           packages,
@@ -104,7 +104,7 @@ export default function AddArticleFromFamily() {
         };
 
         const res = await axios.put(
-          `https://medikalija-api.vercel.app/api/article/${selectedId}`,
+          `https://medikalija-api.vercel.app/api/articles/${selectedId}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -115,7 +115,7 @@ export default function AddArticleFromFamily() {
           resetForm();
         }
       } else {
-        // 🟢 NOVI ARTIKAL OD PORODICE
+        // NOVI ARTIKAL OD PORODICE
         const payload = {
           name,
           fromFamily: true,
@@ -125,7 +125,7 @@ export default function AddArticleFromFamily() {
         };
 
         const res = await axios.post(
-          "https://medikalija-api.vercel.app/api/article/add",
+          "https://medikalija-api.vercel.app/api/articles/add",
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -154,11 +154,10 @@ export default function AddArticleFromFamily() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
         {/* SELECT */}
         <div>
           <label className="text-sm font-medium text-gray-700">
-            Odaberi postojeći artikal ili unesi novi
+            Odaberi postojeći ili unesi novi artikal
           </label>
           <select
             value={selectedId}
@@ -189,9 +188,7 @@ export default function AddArticleFromFamily() {
           placeholder="broj komada u pakovanju"
           value={unitsPerPackage}
           onChange={(e) =>
-            setUnitsPerPackage(
-              e.target.value === "" ? "" : Number(e.target.value)
-            )
+            setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))
           }
         />
 
@@ -200,9 +197,7 @@ export default function AddArticleFromFamily() {
           placeholder="Ukupna količina"
           value={totalQuantity}
           onChange={(e) =>
-            setTotalQuantity(
-              e.target.value === "" ? "" : Number(e.target.value)
-            )
+            setTotalQuantity(e.target.value === "" ? "" : Number(e.target.value))
           }
         />
 
