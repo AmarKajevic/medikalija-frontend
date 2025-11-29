@@ -138,6 +138,7 @@ export const useSingleSpecification = (specificationId: string) => {
         // ✅ zbog prikaza perioda
         startDate: spec.startDate,
         endDate: spec.endDate,
+        billing: spec.billing ?? null,
       };
     },
   });

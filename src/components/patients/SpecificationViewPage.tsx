@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router";
-import { useState } from "react";
+import { useParams } from "react-router";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSingleSpecification } from "../../hooks/Patient/usePatientSpecification";
 import { useAuth } from "../../context/AuthContext";
@@ -22,23 +22,33 @@ export default function SpecificationViewPage() {
     useSingleSpecification(specificationId || "");
   const { token } = useAuth();
 
-  // BACKEND TROŠKOVI
-  const [lodgingPrice, setLodgingPrice] = useState<number | "">("");
+  // ------------------------------
+  //  BACKEND – DODATNI TROŠKOVI
+  // ------------------------------
   const [extraCostAmount, setExtraCostAmount] = useState<number | "">("");
   const [extraCostLabel, setExtraCostLabel] = useState<string>("");
 
-  // FRONTEND obračun (EUR)
-  const [previousDebtEUR, setPreviousDebtEUR] = useState<number | "">("");
-  const [nextLodgingEUR, setNextLodgingEUR] = useState<number | "">("");
+  // ------------------------------
+  //  FRONTEND / BILLING – EUR
+  // ------------------------------
+  const [previousDebtEUR, setPreviousDebtEUR] = useState<string>("");
+  const [nextLodgingEUR, setNextLodgingEUR] = useState<string>("");
 
-  const [lowerExchangeRate, setLowerExchangeRate] = useState<number | "">("");
-  const [middleExchangeRate, setMiddleExchangeRate] = useState<number | "">("");
+  const [lowerExchangeRate, setLowerExchangeRate] = useState<string>("");  // niži kurs
+  const [middleExchangeRate, setMiddleExchangeRate] = useState<string>(""); // srednji kurs
 
+  // ------------------------------
+  //  STANJE UČITAVANJA
+  // ------------------------------
   if (isLoading) return <p>Učitavanje...</p>;
-  if (isError) return <p>Greška pri učitavanju specifikacije.</p>;
-  if (!spec) return <p>Specifikacija nije pronađena.</p>;
+  if (isError || !spec) return <p>Greška pri učitavanju specifikacije.</p>;
 
-  // PERIOD NAREDNIH 30 DANA
+  // spec je "any" iz hook-a, pa ga ovde samo koristimo
+  const specTotalRSD: number = spec.totalPrice ?? 0;
+
+  // ------------------------------
+  //  PERIOD NAREDNIH 30 DANA
+  // ------------------------------
   const currentEndDate = new Date(spec.endDate);
   const nextStartDate = new Date(currentEndDate);
   nextStartDate.setDate(nextStartDate.getDate() + 1);
@@ -46,44 +56,60 @@ export default function SpecificationViewPage() {
   const nextEndDate = new Date(nextStartDate);
   nextEndDate.setDate(nextEndDate.getDate() + 29);
 
-  const nextPeriodLabel = `${nextStartDate.toLocaleDateString(
-    "sr-RS"
-  )} — ${nextEndDate.toLocaleDateString("sr-RS")}`;
+  const nextPeriodLabel =
+    `${nextStartDate.toLocaleDateString("sr-RS")} — ` +
+    nextEndDate.toLocaleDateString("sr-RS");
 
-  // -------------------------------------------------------
-  // KONVERZIJE
-  // -------------------------------------------------------
+  // ------------------------------
+  //  POPUNI STATE IZ billing (ako postoji u bazi)
+  // ------------------------------
+  useEffect(() => {
+    if (spec.billing) {
+      if (spec.billing.previousDebtEUR != null) {
+        setPreviousDebtEUR(spec.billing.previousDebtEUR.toString());
+      }
+      if (spec.billing.nextLodgingEUR != null) {
+        setNextLodgingEUR(spec.billing.nextLodgingEUR.toString());
+      }
+      if (spec.billing.lowerExchangeRate != null) {
+        setLowerExchangeRate(spec.billing.lowerExchangeRate.toString());
+      }
+      if (spec.billing.middleExchangeRate != null) {
+        setMiddleExchangeRate(spec.billing.middleExchangeRate.toString());
+      }
+    }
+  }, [spec._id]); // kada se promeni specifikacija, osveži polja
 
-  const specTotalRSD = spec.totalPrice ?? 0;
-
+  // ------------------------------
+  //  KONVERZIJE (logika koju si definisao)
+  // ------------------------------
   const debtEUR = previousDebtEUR === "" ? 0 : Number(previousDebtEUR);
   const lodgingEUR = nextLodgingEUR === "" ? 0 : Number(nextLodgingEUR);
 
   const lowRate = lowerExchangeRate === "" ? 0 : Number(lowerExchangeRate);
   const midRate = middleExchangeRate === "" ? 0 : Number(middleExchangeRate);
 
-  // SPECIFIKACIJA: RSD → EUR
+  // SPEC: RSD → EUR (NIŽI KURS)
   const specEUR = lowRate > 0 ? specTotalRSD / lowRate : 0;
 
-  // DUG: EUR → RSD
+  // DUG: EUR → RSD (SREDNJI KURS)
   const debtRSD = midRate > 0 ? debtEUR * midRate : 0;
 
-  // SMEŠTAJ: EUR → RSD
+  // SMEŠTAJ: EUR → RSD (SREDNJI KURS)
   const lodgingRSD = midRate > 0 ? lodgingEUR * midRate : 0;
 
-  // TOTAL
+  // UKUPNO
   const totalRSD = specTotalRSD + debtRSD + lodgingRSD;
   const totalEUR = specEUR + debtEUR + lodgingEUR;
 
-  // -------------------------------------------------------
-  // BACKEND ADD COSTS
-  // -------------------------------------------------------
+  // ------------------------------
+  //  BACKEND – DODAVANJE EXTRA TROŠKOVA
+  // ------------------------------
   const addCosts = async () => {
     try {
       await axios.post(
         `https://medikalija-api.vercel.app/api/specification/${spec._id}/add-costs`,
         {
-          lodgingPrice: lodgingPrice === "" ? 0 : Number(lodgingPrice),
           extraCostAmount:
             extraCostAmount === "" ? 0 : Number(extraCostAmount),
           extraCostLabel,
@@ -92,17 +118,38 @@ export default function SpecificationViewPage() {
       );
 
       await refetch();
-      setLodgingPrice("");
       setExtraCostAmount("");
       setExtraCostLabel("");
     } catch (err) {
-      console.error(err);
+      console.error("Greška pri dodavanju troškova:", err);
     }
   };
 
-  // -------------------------------------------------------
-  // WORD EXPORT
-  // -------------------------------------------------------
+  // ------------------------------
+  //  BACKEND – ČUVANJE BILLINGA
+  // ------------------------------
+  const saveBilling = async () => {
+    try {
+      await axios.post(
+        `https://medikalija-api.vercel.app/api/specification/${spec._id}/billing`,
+        {
+          previousDebtEUR: debtEUR,
+          nextLodgingEUR: lodgingEUR,
+          lowerExchangeRate: lowRate,
+          middleExchangeRate: midRate,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await refetch();
+    } catch (err) {
+      console.error("Greška pri čuvanju obračuna:", err);
+    }
+  };
+
+  // ------------------------------
+  //  WORD EXPORT
+  // ------------------------------
   const generateWord = () => {
     const tableRows = [
       new TableRow({
@@ -119,11 +166,13 @@ export default function SpecificationViewPage() {
             children: [
               new TableCell({
                 children: [
-                  new Paragraph(item.formattedName ?? item.name ?? "Stavka"),
+                  new Paragraph(
+                    item.formattedName ?? item.name ?? "Nepoznata stavka"
+                  ),
                 ],
               }),
               new TableCell({
-                children: [new Paragraph((item.amount ?? 1).toString())],
+                children: [new Paragraph(String(item.amount ?? 1))],
               }),
               new TableCell({
                 children: [
@@ -137,7 +186,7 @@ export default function SpecificationViewPage() {
       new TableRow({
         children: [
           new TableCell({ children: [new Paragraph("")] }),
-          new TableCell({ children: [new Paragraph("Ukupno")] }),
+          new TableCell({ children: [new Paragraph("Ukupno (RSD)")] }),
           new TableCell({
             children: [new Paragraph(specTotalRSD.toFixed(2).toString())],
           }),
@@ -187,7 +236,7 @@ export default function SpecificationViewPage() {
           new TableCell({
             children: [
               new Paragraph(
-                `Smeštaj narednih 30 dana (${nextPeriodLabel})`
+                `Smeštaj za narednih 30 dana (${nextPeriodLabel})`
               ),
             ],
           }),
@@ -203,8 +252,12 @@ export default function SpecificationViewPage() {
       new TableRow({
         children: [
           new TableCell({ children: [new Paragraph("UKUPNO")] }),
-          new TableCell({ children: [new Paragraph(totalRSD.toFixed(2).toString())] }),
-          new TableCell({ children: [new Paragraph(totalEUR.toFixed(2).toString())] }),
+          new TableCell({
+            children: [new Paragraph(totalRSD.toFixed(2).toString())],
+          }),
+          new TableCell({
+            children: [new Paragraph(totalEUR.toFixed(2).toString())],
+          }),
         ],
       }),
     ];
@@ -214,20 +267,40 @@ export default function SpecificationViewPage() {
         {
           children: [
             new Paragraph({
-              children: [new TextRun({ text: "Specifikacija pacijenta", bold: true, size: 28 })],
+              children: [
+                new TextRun({
+                  text: "Specifikacija pacijenta",
+                  bold: true,
+                  size: 28,
+                }),
+              ],
             }),
             new Paragraph({
-              text: `Period: ${new Date(spec.startDate).toLocaleDateString(
-                "sr-RS"
-              )} — ${new Date(spec.endDate).toLocaleDateString("sr-RS")}`,
+              text: `Period: ${new Date(
+                spec.startDate
+              ).toLocaleDateString("sr-RS")} — ${new Date(
+                spec.endDate
+              ).toLocaleDateString("sr-RS")}`,
             }),
             new Paragraph(""),
-            new Table({ rows: tableRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
             new Paragraph(""),
             new Paragraph({
-              children: [new TextRun({ text: "Obračun naplate", bold: true, size: 26 })],
+              children: [
+                new TextRun({
+                  text: "Obračun naplate (RSD / EUR)",
+                  bold: true,
+                  size: 26,
+                }),
+              ],
             }),
-            new Table({ rows: summaryRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
+            new Table({
+              rows: summaryRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
           ],
         },
       ],
@@ -238,24 +311,28 @@ export default function SpecificationViewPage() {
     });
   };
 
-  // -------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------
+  // ------------------------------
+  //  RENDER
+  // ------------------------------
   return (
     <div className="p-5">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Specifikacija pacijenta</h2>
-        <Link to={-1 as any} className="text-blue-600 hover:underline">
+        <button
+          onClick={() => window.history.back()}
+          className="text-blue-600 hover:underline"
+        >
           Nazad
-        </Link>
+        </button>
       </div>
 
       <p className="mb-4 text-sm text-gray-600">
-        Period: {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
+        Period:{" "}
+        {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
         {new Date(spec.endDate).toLocaleDateString("sr-RS")}
       </p>
 
-      {/* GLAVNA TABELA */}
+      {/* GLAVNA TABELA SPECIFIKACIJE */}
       <table className="w-full border-collapse border border-gray-300 mb-6">
         <thead>
           <tr className="bg-gray-100">
@@ -267,7 +344,9 @@ export default function SpecificationViewPage() {
         <tbody>
           {spec.items.map((item: any) => (
             <tr key={item._id}>
-              <td className="border p-2">{item.formattedName ?? item.name}</td>
+              <td className="border p-2">
+                {item.formattedName ?? item.name ?? "Nepoznata stavka"}
+              </td>
               <td className="border p-2 text-right">{item.amount ?? 1}</td>
               <td className="border p-2 text-right">
                 {(item.price ?? 0).toFixed(2)}
@@ -284,35 +363,20 @@ export default function SpecificationViewPage() {
         </tbody>
       </table>
 
-      {/* BACKEND TROŠKOVI */}
+      {/* DODAVANJE DODATNIH TROŠKOVA (BACKEND) */}
       <h3 className="text-lg font-semibold mb-2">Dodaj troškove</h3>
 
       <table className="w-full border-collapse border border-gray-300 mb-4">
         <tbody>
           <tr>
-            <td className="border p-2 font-medium">Cena smeštaja (RSD)</td>
-            <td className="border p-2 text-right">
-              <input
-                type="number"
-                value={lodgingPrice}
-                onChange={(e) =>
-                  setLodgingPrice(e.target.value === "" ? "" : Number(e.target.value))
-                }
-                placeholder="npr. 35000"
-                className="border p-1 rounded w-32 text-right"
-              />
-            </td>
-          </tr>
-
-          <tr>
             <td className="border p-2 font-medium">Dodatni trošak — opis</td>
-            <td className="border p-2 text-right">
+            <td className="border p-2">
               <input
                 type="text"
                 value={extraCostLabel}
                 onChange={(e) => setExtraCostLabel(e.target.value)}
+                placeholder="npr. dodatna terapija"
                 className="border p-1 rounded w-full"
-                placeholder="npr. terapija"
               />
             </td>
           </tr>
@@ -336,18 +400,17 @@ export default function SpecificationViewPage() {
         </tbody>
       </table>
 
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end gap-3 mb-8">
         <button
           onClick={addCosts}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           Sačuvaj troškove
         </button>
-       
       </div>
 
-      {/* NAPLATA U EUR */}
-      <h3 className="text-lg font-semibold mt-6 mb-2">
+      {/* OBRAČUN U EUR (UNOS) */}
+      <h3 className="text-lg font-semibold mt-4 mb-2">
         Obračun naplate (unos u EUR)
       </h3>
 
@@ -359,10 +422,8 @@ export default function SpecificationViewPage() {
               <input
                 type="number"
                 value={previousDebtEUR}
-                onChange={(e) =>
-                  setPreviousDebtEUR(e.target.value === "" ? "" : Number(e.target.value))
-                }
-                placeholder="npr. 50"
+                onChange={(e) => setPreviousDebtEUR(e.target.value)}
+                placeholder="unesi dug u evrima"
                 className="border p-1 rounded w-32 text-right"
               />
             </td>
@@ -370,36 +431,30 @@ export default function SpecificationViewPage() {
 
           <tr>
             <td className="border p-2">
-              Smeštaj narednih 30 dana (EUR)
+              Smeštaj za narednih 30 dana (EUR)
               <br />
-              <span className="text-xs text-gray-500">{nextPeriodLabel}</span>
+              <span className="text-xs text-gray-500">
+                Period: {nextPeriodLabel}
+              </span>
             </td>
             <td className="border p-2 text-right">
               <input
                 type="number"
                 value={nextLodgingEUR}
-                onChange={(e) =>
-                  setNextLodgingEUR(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-                placeholder="npr. 350"
+                onChange={(e) => setNextLodgingEUR(e.target.value)}
+                placeholder="unesi smeštaj u evrima"
                 className="border p-1 rounded w-32 text-right"
               />
             </td>
           </tr>
 
           <tr>
-            <td className="border p-2 font-medium">Niži kurs (specifikacija)</td>
+            <td className="border p-2">Niži kurs (specifikacija)</td>
             <td className="border p-2 text-right">
               <input
                 type="number"
                 value={lowerExchangeRate}
-                onChange={(e) =>
-                  setLowerExchangeRate(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
+                onChange={(e) => setLowerExchangeRate(e.target.value)}
                 placeholder="npr. 117.20"
                 className="border p-1 rounded w-32 text-right"
               />
@@ -407,16 +462,12 @@ export default function SpecificationViewPage() {
           </tr>
 
           <tr>
-            <td className="border p-2 font-medium">Srednji kurs (dug + smeštaj)</td>
+            <td className="border p-2">Srednji kurs (dug + smeštaj)</td>
             <td className="border p-2 text-right">
               <input
                 type="number"
                 value={middleExchangeRate}
-                onChange={(e) =>
-                  setMiddleExchangeRate(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
+                onChange={(e) => setMiddleExchangeRate(e.target.value)}
                 placeholder="npr. 117.75"
                 className="border p-1 rounded w-32 text-right"
               />
@@ -425,13 +476,13 @@ export default function SpecificationViewPage() {
         </tbody>
       </table>
 
-      {/* KONVERZIJA */}
+      {/* KONVERZIJA I UKUPNO */}
       <h3 className="text-lg font-semibold mb-2">Konverzija</h3>
 
-      <table className="w-full border-collapse border border-gray-400 mb-10">
+      <table className="w-full border-collapse border border-gray-400 mb-8">
         <tbody>
           <tr>
-            <td className="border p-2">Specifikacija (EUR)</td>
+            <td className="border p-2">Specifikacija (EUR, niži kurs)</td>
             <td className="border p-2 text-right">{specEUR.toFixed(2)}</td>
           </tr>
 
@@ -441,8 +492,10 @@ export default function SpecificationViewPage() {
           </tr>
 
           <tr>
-            <td className="border p-2">Smeštaj (EUR)</td>
-            <td className="border p-2 text-right">{lodgingEUR.toFixed(2)}</td>
+            <td className="border p-2">Smeštaj narednih 30 dana (EUR)</td>
+            <td className="border p-2 text-right">
+              {lodgingEUR.toFixed(2)}
+            </td>
           </tr>
 
           <tr className="font-bold bg-gray-50">
@@ -456,8 +509,16 @@ export default function SpecificationViewPage() {
           </tr>
         </tbody>
       </table>
-      <div className="flex justify-end mb-6">
-         <button
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={saveBilling}
+          className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
+        >
+          Sačuvaj obračun
+        </button>
+
+        <button
           onClick={generateWord}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
