@@ -23,9 +23,8 @@ export default function AddMedicine() {
 
   const [name, setName] = useState("");
   const [pricePerUnit, setPricePerUnit] = useState<number | "">("");
-  const [packages, setPackages] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
-  const [looseQuantity, setLooseQuantity] = useState<number | "">("");
+  const [totalQuantity, setTotalQuantity] = useState<number | "">("");
   const [fromFamily, setFromFamily] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -54,9 +53,8 @@ export default function AddMedicine() {
     setSelectedId("");
     setName("");
     setPricePerUnit("");
-    setPackages("");
     setUnitsPerPackage("");
-    setLooseQuantity("");
+    setTotalQuantity("");
     setFromFamily(false);
   };
 
@@ -66,19 +64,24 @@ export default function AddMedicine() {
     setMessage("");
 
     try {
+      // ------------------------
+      //  PRORAČUNI
+      // ------------------------
+      const u = Number(unitsPerPackage);
+      const q = Number(totalQuantity);
+
+      const packageCount = u > 0 ? Math.floor(q / u) : 0;
+      const loose = u > 0 ? q % u : q;
+
       if (selectedId) {
-        // ✅ dodaj količinu postojećem leku
+        // === UPDATE POSTOJEĆEG LEKA ===
         const payload: any = {
           fromFamily,
+          unitsPerPackage: u,
+          packages: packageCount,
+          addQuantity: loose,
         };
 
-        if (packages !== "") payload.packages = Number(packages);
-        if (unitsPerPackage !== "") {
-          payload.unitsPerPackage = Number(unitsPerPackage);
-        }
-        if (looseQuantity !== "") {
-          payload.addQuantity = Number(looseQuantity);
-        }
         if (pricePerUnit !== "") {
           payload.pricePerUnit = Number(pricePerUnit);
         }
@@ -94,24 +97,19 @@ export default function AddMedicine() {
           resetForm();
         }
       } else {
-        // ✅ kreiraj novi lek
+        // === NOVI LEK ===
         const payload: any = {
           name,
           pricePerUnit:
-          typeof pricePerUnit === "number"
-            ? parseFloat(pricePerUnit.toFixed(2))
-            : parseFloat(Number(pricePerUnit).toFixed(2)),
+            typeof pricePerUnit === "number"
+              ? parseFloat(pricePerUnit.toFixed(2))
+              : parseFloat(Number(pricePerUnit).toFixed(2)),
 
+          unitsPerPackage: u,
+          packages: packageCount,
+          quantity: loose,
           fromFamily,
         };
-
-        if (packages !== "") payload.packages = Number(packages);
-        if (unitsPerPackage !== "") {
-          payload.unitsPerPackage = Number(unitsPerPackage);
-        }
-        if (looseQuantity !== "") {
-          payload.quantity = Number(looseQuantity);
-        }
 
         const res = await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
@@ -139,29 +137,25 @@ export default function AddMedicine() {
 
   useEffect(() => {
     if (selectedMedicine) {
-      // kada izabereš lek iz liste, možemo popuniti unitsPerPackage
-      if (selectedMedicine.unitsPerPackage) {
-        setUnitsPerPackage(selectedMedicine.unitsPerPackage);
-      } else {
-        setUnitsPerPackage("");
-      }
+      setUnitsPerPackage(selectedMedicine.unitsPerPackage ?? "");
       setPricePerUnit(selectedMedicine.pricePerUnit);
     } else {
       setUnitsPerPackage("");
       setPricePerUnit("");
     }
-    setPackages("");
-    setLooseQuantity("");
+    setTotalQuantity("");
   }, [selectedMedicine]);
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
       <h2 className="text-xl font-bold mb-2">
-        {selectedId ? "Dodaj količinu postojećem leku" : "Dodaj novi lek"}
+        {selectedId
+          ? "Dodaj količinu postojećem leku"
+          : "Dodaj novi lek"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Izbor postojećeg leka ili novi lek */}
+        {/* Izbor leka */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
@@ -206,40 +200,28 @@ export default function AddMedicine() {
           </>
         )}
 
-        {/* Pakovanja */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            type="number"
-            placeholder="Broj pakovanja (npr. 2)"
-            value={packages}
-            onChange={(e) =>
-              setPackages(
-                e.target.value === "" ? "" : Number(e.target.value)
-              )
-            }
-          />
-          <Input
-            type="number"
-            placeholder="Tableta po pakovanju (npr. 12)"
-            value={unitsPerPackage}
-            onChange={(e) =>
-              setUnitsPerPackage(
-                e.target.value === "" ? "" : Number(e.target.value)
-              )
-            }
-          />
-        </div>
-
-        {/* Dodatne tablete (bez pakovanja) */}
         <Input
           type="number"
-          placeholder="Dodatne tablete (bez pakovanja)"
-          value={looseQuantity}
+          placeholder="broj tableta u pakovanju npr. 12"
+          value={unitsPerPackage}
           onChange={(e) =>
-            setLooseQuantity(
+            setUnitsPerPackage(
               e.target.value === "" ? "" : Number(e.target.value)
             )
           }
+          required
+        />
+
+        <Input
+          type="number"
+          placeholder="Ukupna količina (npr. 36)"
+          value={totalQuantity}
+          onChange={(e) =>
+            setTotalQuantity(
+              e.target.value === "" ? "" : Number(e.target.value)
+            )
+          }
+          required
         />
 
         <label className="flex items-center gap-2 text-sm">
