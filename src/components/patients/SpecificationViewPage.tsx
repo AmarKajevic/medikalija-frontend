@@ -31,31 +31,45 @@ export default function SpecificationViewPage() {
   // ------------------------------
   //  FRONTEND / BILLING – EUR
   // ------------------------------
-  const [previousDebtEUR, setPreviousDebtEUR] = useState<string>("");
-  const [nextLodgingEUR, setNextLodgingEUR] = useState<string>("");
+  const [previousDebtEUR, setPreviousDebtEUR] = useState<string>("");   // dug u EUR
+  const [nextLodgingEUR, setNextLodgingEUR] = useState<string>("");     // smeštaj u EUR
 
-  const [lowerExchangeRate, setLowerExchangeRate] = useState<string>("");  // niži kurs
+  const [lowerExchangeRate, setLowerExchangeRate] = useState<string>("");   // niži kurs
   const [middleExchangeRate, setMiddleExchangeRate] = useState<string>(""); // srednji kurs
+
   // ------------------------------
-//  POPUNI STATE IZ billing (ako postoji u bazi)
-// ------------------------------
-useEffect(() => {
-  if (!spec || !spec.billing) return;
+  //  POPUNI STATE IZ billing (ako postoji u bazi)
+  // ------------------------------
+  useEffect(() => {
+    if (!spec || !spec.billing) return;
 
-  if (spec.billing.previousDebtEUR != null) {
-    setPreviousDebtEUR(spec.billing.previousDebtEUR.toString());
-  }
-  if (spec.billing.nextLodgingEUR != null) {
-    setNextLodgingEUR(spec.billing.nextLodgingEUR.toString());
-  }
-  if (spec.billing.lowerExchangeRate != null) {
-    setLowerExchangeRate(spec.billing.lowerExchangeRate.toString());
-  }
-  if (spec.billing.middleExchangeRate != null) {
-    setMiddleExchangeRate(spec.billing.middleExchangeRate.toString());
-  }
-}, [spec]);
+    if (spec.billing.previousDebtEUR && spec.billing.previousDebtEUR > 0) {
+      setPreviousDebtEUR(spec.billing.previousDebtEUR.toString());
+    } else {
+      setPreviousDebtEUR("");
+    }
 
+    if (spec.billing.nextLodgingEUR && spec.billing.nextLodgingEUR > 0) {
+      setNextLodgingEUR(spec.billing.nextLodgingEUR.toString());
+    } else {
+      setNextLodgingEUR("");
+    }
+
+    if (spec.billing.lowerExchangeRate && spec.billing.lowerExchangeRate > 0) {
+      setLowerExchangeRate(spec.billing.lowerExchangeRate.toString());
+    } else {
+      setLowerExchangeRate("");
+    }
+
+    if (
+      spec.billing.middleExchangeRate &&
+      spec.billing.middleExchangeRate > 0
+    ) {
+      setMiddleExchangeRate(spec.billing.middleExchangeRate.toString());
+    } else {
+      setMiddleExchangeRate("");
+    }
+  }, [spec]);
 
   // ------------------------------
   //  STANJE UČITAVANJA
@@ -63,11 +77,10 @@ useEffect(() => {
   if (isLoading) return <p>Učitavanje...</p>;
   if (isError || !spec) return <p>Greška pri učitavanju specifikacije.</p>;
 
-  // spec je "any" iz hook-a, pa ga ovde samo koristimo
   const specTotalRSD: number = spec.totalPrice ?? 0;
 
   // ------------------------------
-  //  PERIOD NAREDNIH 30 DANA
+  //  PERIOD NAREDNIH 30 DANA (za smeštaj unapred)
   // ------------------------------
   const currentEndDate = new Date(spec.endDate);
   const nextStartDate = new Date(currentEndDate);
@@ -81,12 +94,7 @@ useEffect(() => {
     nextEndDate.toLocaleDateString("sr-RS");
 
   // ------------------------------
-  //  POPUNI STATE IZ billing (ako postoji u bazi)
-  // ------------------------------
-// kada se promeni specifikacija, osveži polja
-
-  // ------------------------------
-  //  KONVERZIJE (logika koju si definisao)
+  //  KONVERZIJE (tvoja logika)
   // ------------------------------
   const debtEUR = previousDebtEUR === "" ? 0 : Number(previousDebtEUR);
   const lodgingEUR = nextLodgingEUR === "" ? 0 : Number(nextLodgingEUR);
@@ -131,7 +139,7 @@ useEffect(() => {
   };
 
   // ------------------------------
-  //  BACKEND – ČUVANJE BILLINGA
+  //  BACKEND – ČUVANJE BILLINGA U BAZU
   // ------------------------------
   const saveBilling = async () => {
     try {
@@ -337,84 +345,7 @@ useEffect(() => {
         {new Date(spec.endDate).toLocaleDateString("sr-RS")}
       </p>
 
-      {/* GLAVNA TABELA SPECIFIKACIJE */}
-      <table className="w-full border-collapse border border-gray-300 mb-6">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2 text-left">Opis</th>
-            <th className="border p-2 text-right">Količina</th>
-            <th className="border p-2 text-right">Cena (RSD)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {spec.items.map((item: any) => (
-            <tr key={item._id}>
-              <td className="border p-2">
-                {item.formattedName ?? item.name ?? "Nepoznata stavka"}
-              </td>
-              <td className="border p-2 text-right">{item.amount ?? 1}</td>
-              <td className="border p-2 text-right">
-                {(item.price ?? 0).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-          <tr className="font-bold bg-gray-50">
-            <td></td>
-            <td className="border p-2 text-right">Ukupno:</td>
-            <td className="border p-2 text-right">
-              {specTotalRSD.toFixed(2)} RSD
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* DODAVANJE DODATNIH TROŠKOVA (BACKEND) */}
-      <h3 className="text-lg font-semibold mb-2">Dodaj troškove</h3>
-
-      <table className="w-full border-collapse border border-gray-300 mb-4">
-        <tbody>
-          <tr>
-            <td className="border p-2 font-medium">Dodatni trošak — opis</td>
-            <td className="border p-2">
-              <input
-                type="text"
-                value={extraCostLabel}
-                onChange={(e) => setExtraCostLabel(e.target.value)}
-                placeholder="npr. dodatna terapija"
-                className="border p-1 rounded w-full"
-              />
-            </td>
-          </tr>
-
-          <tr>
-            <td className="border p-2 font-medium">Dodatni trošak — iznos (RSD)</td>
-            <td className="border p-2 text-right">
-              <input
-                type="number"
-                value={extraCostAmount}
-                onChange={(e) =>
-                  setExtraCostAmount(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-                placeholder="npr. 1500"
-                className="border p-1 rounded w-32 text-right"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div className="flex justify-end gap-3 mb-8">
-        <button
-          onClick={addCosts}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Sačuvaj troškove
-        </button>
-      </div>
-
-      {/* OBRAČUN U EUR (UNOS) */}
+      {/* 1) PRVO: SMEŠTAJ + DUG + KURS (UNOS U EUR) */}
       <h3 className="text-lg font-semibold mt-4 mb-2">
         Obračun naplate (unos u EUR)
       </h3>
@@ -484,7 +415,7 @@ useEffect(() => {
       {/* KONVERZIJA I UKUPNO */}
       <h3 className="text-lg font-semibold mb-2">Konverzija</h3>
 
-      <table className="w-full border-collapse border border-gray-400 mb-8">
+      <table className="w-full border-collapse border border-gray-400 mb-6">
         <tbody>
           <tr>
             <td className="border p-2">Specifikacija (EUR, niži kurs)</td>
@@ -515,7 +446,7 @@ useEffect(() => {
         </tbody>
       </table>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 mb-10">
         <button
           onClick={saveBilling}
           className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
@@ -528,6 +459,89 @@ useEffect(() => {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Preuzmi Word
+        </button>
+      </div>
+
+      {/* 2) POSLE TOGA: SPECIFIKACIJA (ONO ŠTO JE POTROŠENO OVOG PERIODA) */}
+      <h3 className="text-lg font-semibold mb-2">
+        Specifikacija za ovaj period
+      </h3>
+
+      <table className="w-full border-collapse border border-gray-300 mb-6">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2 text-left">Opis</th>
+            <th className="border p-2 text-right">Količina</th>
+            <th className="border p-2 text-right">Cena (RSD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {spec.items.map((item: any) => (
+            <tr key={item._id}>
+              <td className="border p-2">
+                {item.formattedName ?? item.name ?? "Nepoznata stavka"}
+              </td>
+              <td className="border p-2 text-right">{item.amount ?? 1}</td>
+              <td className="border p-2 text-right">
+                {(item.price ?? 0).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+          <tr className="font-bold bg-gray-50">
+            <td></td>
+            <td className="border p-2 text-right">Ukupno:</td>
+            <td className="border p-2 text-right">
+              {specTotalRSD.toFixed(2)} RSD
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* 3) NA KRAJU: DODATNI TROŠKOVI (IDU U SPECIFIKACIJU) */}
+      <h3 className="text-lg font-semibold mb-2">Dodaj dodatne troškove</h3>
+
+      <table className="w-full border-collapse border border-gray-300 mb-4">
+        <tbody>
+          <tr>
+            <td className="border p-2 font-medium">Dodatni trošak — opis</td>
+            <td className="border p-2">
+              <input
+                type="text"
+                value={extraCostLabel}
+                onChange={(e) => setExtraCostLabel(e.target.value)}
+                placeholder="npr. dodatna terapija"
+                className="border p-1 rounded w-full"
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td className="border p-2 font-medium">
+              Dodatni trošak — iznos (RSD)
+            </td>
+            <td className="border p-2 text-right">
+              <input
+                type="number"
+                value={extraCostAmount}
+                onChange={(e) =>
+                  setExtraCostAmount(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                placeholder="npr. 1500"
+                className="border p-1 rounded w-32 text-right"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={addCosts}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Sačuvaj dodatne troškove
         </button>
       </div>
     </div>
