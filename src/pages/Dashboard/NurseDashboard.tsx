@@ -3,7 +3,7 @@ import { Link } from "react-router"
 
 export default function NurseDashboard() {
   const links= [
-    { to: "/articles", label: "artikli ", icon: <FaPrescriptionBottleAlt /> },
+    { to: "/family-articles", label: "artikli ", icon: <FaPrescriptionBottleAlt /> },
     { to: "/familyMedicine", label: "dodavanje lekova od porodice ", icon: <FaFileMedical /> },
     { to: "../patient-table", label: "Lista pacijenata", icon: <FaUsers /> },
   ]

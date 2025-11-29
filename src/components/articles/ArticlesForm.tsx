@@ -146,7 +146,7 @@ export default function ArticlesForm() {
         {/* TABLETA / PAKOVANJU */}
         <Input
           type="number"
-          placeholder="Komada po pakovanju"
+          placeholder="broj komada u pakovanju"
           value={unitsPerPackage}
           onChange={(e) =>
             setUnitsPerPackage(

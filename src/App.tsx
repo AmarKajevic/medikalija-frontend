@@ -11,6 +11,7 @@ import PrivateRoutes from "./utils.tsx/PrivateRoutes";
 import AppLayout from "./layout/AppLayout";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AddArticleFromFamily from "./components/articles/AddArticleFromFamily";
 
 
 // -------------------------------------------------------
@@ -144,6 +145,7 @@ export default function App() {
               <Route path="/nurseDashboard" element={<NurseDashboard />} />
               <Route path="/familyMedicine" element={<AddMedicineFromFamily />} />
               <Route path="/patient-table" element={<PatientTable />} />
+              <Route path="/family-articles" element={<AddArticleFromFamily />} />
             </Route>
 
             {/* ALL STAFF */}
