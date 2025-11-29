@@ -1,3 +1,4 @@
+// pages/Medicine/AddMedicineFromFamily.tsx
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
@@ -18,23 +19,21 @@ export default function AddMedicineFromFamily() {
   const [selectedId, setSelectedId] = useState("");
 
   const [name, setName] = useState("");
-  const [packages, setPackages] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
-  const [looseQuantity, setLooseQuantity] = useState<number | "">("");
+  const [totalQuantity, setTotalQuantity] = useState<number | "">("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // ============================
-  // LOAD EXISTING MEDICINES
-  // ============================
+  // ---------------------------------------------------
+  // LOAD MEDICINES
+  // ---------------------------------------------------
   const loadMedicines = async () => {
     try {
       const res = await axios.get(
         "https://medikalija-api.vercel.app/api/medicine",
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (res.data.success) {
         setMedicines(res.data.medicines);
       }
@@ -47,9 +46,9 @@ export default function AddMedicineFromFamily() {
     loadMedicines();
   }, [token]);
 
-  // ============================
-  // SELECTED MEDICINE MEMO
-  // ============================
+  // ---------------------------------------------------
+  // SELECTED MEDICINE
+  // ---------------------------------------------------
   const selectedMedicine = useMemo(
     () => medicines.find((m) => m._id === selectedId),
     [selectedId, medicines]
@@ -61,37 +60,48 @@ export default function AddMedicineFromFamily() {
     } else {
       setUnitsPerPackage("");
     }
-    setPackages("");
-    setLooseQuantity("");
+    setTotalQuantity("");
   }, [selectedMedicine]);
 
-  // ============================
+  // ---------------------------------------------------
   // RESET FORM
-  // ============================
+  // ---------------------------------------------------
   const resetForm = () => {
     setSelectedId("");
     setName("");
-    setPackages("");
     setUnitsPerPackage("");
-    setLooseQuantity("");
+    setTotalQuantity("");
   };
 
-  // ============================
-  // SUBMIT HANDLER
-  // ============================
+  // ---------------------------------------------------
+  // SUBMIT
+  // ---------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      if (selectedId) {
-        // UPDATE EXISTING MEDICINE
-        const payload: any = { fromFamily: true };
+      if (!unitsPerPackage || !totalQuantity) {
+        setMessage("Unesi ukupnu količinu i tablete po pakovanju.");
+        return;
+      }
 
-        if (packages) payload.packages = Number(packages);
-        if (unitsPerPackage) payload.unitsPerPackage = Number(unitsPerPackage);
-        if (looseQuantity) payload.addQuantity = Number(looseQuantity);
+      const total = Number(totalQuantity);
+      const upp = Number(unitsPerPackage);
+
+      // IZRAČUNAVANJE PAKOVANJA + OSTATAK
+      const packageCount = Math.floor(total / upp);
+      const loose = total % upp;
+
+      if (selectedId) {
+        // UPDATE EXISTING
+        const payload = {
+          fromFamily: true,
+          packages: packageCount,
+          unitsPerPackage: upp,
+          addQuantity: loose,
+        };
 
         const res = await axios.put(
           `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
@@ -106,11 +116,13 @@ export default function AddMedicineFromFamily() {
         }
       } else {
         // ADD NEW MEDICINE
-        const payload: any = { name, fromFamily: true };
-
-        if (packages) payload.packages = Number(packages);
-        if (unitsPerPackage) payload.unitsPerPackage = Number(unitsPerPackage);
-        if (looseQuantity) payload.quantity = Number(looseQuantity);
+        const payload = {
+          name,
+          fromFamily: true,
+          packages: packageCount,
+          unitsPerPackage: upp,
+          quantity: loose,
+        };
 
         const res = await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
@@ -132,9 +144,9 @@ export default function AddMedicineFromFamily() {
     }
   };
 
-  // ============================
+  // ---------------------------------------------------
   // RENDER
-  // ============================
+  // ---------------------------------------------------
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
       <h2 className="text-xl font-bold">
@@ -142,7 +154,6 @@ export default function AddMedicineFromFamily() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
         {/* SELECT */}
         <div>
           <label className="text-sm font-medium text-gray-700">
@@ -172,26 +183,22 @@ export default function AddMedicineFromFamily() {
           />
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            type="number"
-            placeholder="Pakovanja"
-            value={packages}
-            onChange={(e) => setPackages(e.target.value === "" ? "" : Number(e.target.value))}
-          />
-          <Input
-            type="number"
-            placeholder="Tableta po pakovanju"
-            value={unitsPerPackage}
-            onChange={(e) => setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))}
-          />
-        </div>
+        <Input
+          type="number"
+          placeholder="Tableta po pakovanju"
+          value={unitsPerPackage}
+          onChange={(e) =>
+            setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))
+          }
+        />
 
         <Input
           type="number"
-          placeholder="Dodatne tablete"
-          value={looseQuantity}
-          onChange={(e) => setLooseQuantity(e.target.value === "" ? "" : Number(e.target.value))}
+          placeholder="Ukupna količina"
+          value={totalQuantity}
+          onChange={(e) =>
+            setTotalQuantity(e.target.value === "" ? "" : Number(e.target.value))
+          }
         />
 
         <button
