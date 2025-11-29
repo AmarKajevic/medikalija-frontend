@@ -185,7 +185,7 @@ export default function AddMedicineFromFamily() {
 
         <Input
           type="number"
-          placeholder="Tableta po pakovanju"
+          placeholder="broj tableta u pakovanju"
           value={unitsPerPackage}
           onChange={(e) =>
             setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))

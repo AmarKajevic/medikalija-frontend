@@ -4,77 +4,85 @@ import Input from "../form/input/InputField";
 import useArticles from "../../hooks/Patient/useArticle";
 
 export default function ArticlesForm() {
-  const {
-    getArticles,
-    mutate: addArticle,
-    editArticle
-  } = useArticles();
+  const { getArticles, mutate: addArticle, editArticle } = useArticles();
 
   const [selectedId, setSelectedId] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState<number | "">("");
-  const [packages, setPackages] = useState<number | "">("");
+
+  // ❗️ NOVO — SAMO JEDAN INPUT "ukupna količina"
+  const [totalQuantity, setTotalQuantity] = useState<number | "">("");
+
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
-  const [looseQuantity, setLooseQuantity] = useState<number | "">("");
+
   const [fromFamily, setFromFamily] = useState(false);
   const [message, setMessage] = useState("");
 
   const articles = getArticles.data || [];
   const selectedArticle = articles.find((a) => a._id === selectedId);
 
+  // ============================================================
+  // Kada izabereš postojeći artikal → popuni polja
+  // ============================================================
   useEffect(() => {
     if (selectedArticle) {
-      if (selectedArticle.unitsPerPackage) {
-        setUnitsPerPackage(selectedArticle.unitsPerPackage);
-      } else {
-        setUnitsPerPackage("");
-      }
+      setUnitsPerPackage(selectedArticle.unitsPerPackage ?? "");
       setPrice(selectedArticle.price);
     } else {
       setUnitsPerPackage("");
       setPrice("");
     }
-    setPackages("");
-    setLooseQuantity("");
+
+    setTotalQuantity("");
   }, [selectedArticle]);
 
+  // ============================================================
+  // RESET FORME
+  // ============================================================
   const resetForm = () => {
     setSelectedId("");
     setName("");
     setPrice("");
-    setPackages("");
     setUnitsPerPackage("");
-    setLooseQuantity("");
+    setTotalQuantity("");
     setFromFamily(false);
   };
 
+  // ============================================================
+  // SUBMIT
+  // ============================================================
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
+    const qty = totalQuantity === "" ? 0 : Number(totalQuantity);
+    const units = unitsPerPackage === "" ? 0 : Number(unitsPerPackage);
+
+    if (qty <= 0) {
+      setMessage("Unesi ispravnu ukupnu količinu.");
+      return;
+    }
+
+
+
     const payload: any = {
       fromFamily,
+      unitsPerPackage: units > 0 ? units : undefined,
     };
 
-    if (packages !== "") payload.packages = Number(packages);
-    if (unitsPerPackage !== "") payload.unitsPerPackage = Number(unitsPerPackage);
-    if (looseQuantity !== "") {
-      if (selectedId) {
-        payload.addQuantity = Number(looseQuantity);
-      } else {
-        payload.quantity = Number(looseQuantity);
-      }
-    }
-    if (price !== "") payload.price = Number(price);
-
     if (selectedId) {
-      // ažuriraj postojeći
+      // Ažuriranje postojećeg artikla
       payload.articleId = selectedId;
+      payload.addQuantity = qty;
+
       editArticle.mutate(payload);
       setMessage("Količina uspešno dodata.");
     } else {
-      // novi artikal
+      // Novi artikal
       payload.name = name;
+      payload.price = Number(price);
+      payload.quantity = qty;
+
       addArticle(payload);
       setMessage("Artikal uspešno dodat.");
     }
@@ -82,6 +90,9 @@ export default function ArticlesForm() {
     resetForm();
   };
 
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
       <h2 className="text-xl font-bold mb-2">
@@ -89,7 +100,8 @@ export default function ArticlesForm() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Izbor postojećeg artikla ili novi */}
+
+        {/* SELECT */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći artikal ili unesi novi
@@ -131,32 +143,29 @@ export default function ArticlesForm() {
           </>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            type="number"
-            placeholder="Broj pakovanja"
-            value={packages}
-            onChange={(e) =>
-              setPackages(e.target.value === "" ? "" : Number(e.target.value))
-            }
-          />
-          <Input
-            type="number"
-            placeholder="Komada po pakovanju"
-            value={unitsPerPackage}
-            onChange={(e) =>
-              setUnitsPerPackage(e.target.value === "" ? "" : Number(e.target.value))
-            }
-          />
-        </div>
-
+        {/* TABLETA / PAKOVANJU */}
         <Input
           type="number"
-          placeholder="Dodatni komadi"
-          value={looseQuantity}
+          placeholder="Komada po pakovanju"
+          value={unitsPerPackage}
           onChange={(e) =>
-            setLooseQuantity(e.target.value === "" ? "" : Number(e.target.value))
+            setUnitsPerPackage(
+              e.target.value === "" ? "" : Number(e.target.value)
+            )
           }
+        />
+
+        {/* ❗️ JEDAN INPUT ZA UKUPNU KOLIČINU */}
+        <Input
+          type="number"
+          placeholder="Ukupna količina"
+          value={totalQuantity}
+          onChange={(e) =>
+            setTotalQuantity(
+              e.target.value === "" ? "" : Number(e.target.value)
+            )
+          }
+          required
         />
 
         <label className="flex items-center gap-2 text-sm">
