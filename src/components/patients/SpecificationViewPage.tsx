@@ -411,6 +411,87 @@ export default function SpecificationViewPage() {
           </tr>
         </tbody>
       </table>
+      {/* 2) POSLE TOGA: SPECIFIKACIJA (ONO ŠTO JE POTROŠENO OVOG PERIODA) */}
+      <h3 className="text-lg font-semibold mb-2">
+        Specifikacija za ovaj period
+      </h3>
+
+      <table className="w-full border-collapse border border-gray-300 mb-6">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2 text-left">Opis</th>
+            <th className="border p-2 text-right">Količina</th>
+            <th className="border p-2 text-right">Cena (RSD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {spec.items.map((item: any) => (
+            <tr key={item._id}>
+              <td className="border p-2">
+                {item.formattedName ?? item.name ?? "Nepoznata stavka"}
+              </td>
+              <td className="border p-2 text-right">{item.amount ?? 1}</td>
+              <td className="border p-2 text-right">
+                {(item.price ?? 0).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+          <tr className="font-bold bg-gray-50">
+            <td></td>
+            <td className="border p-2 text-right">Ukupno:</td>
+            <td className="border p-2 text-right">
+              {specTotalRSD.toFixed(2)} RSD
+            </td>
+          </tr>
+        </tbody>
+      </table>
+       {/* 3) NA KRAJU: DODATNI TROŠKOVI (IDU U SPECIFIKACIJU) */}
+      <h3 className="text-lg font-semibold mb-2">Dodaj dodatne troškove</h3>
+
+      <table className="w-full border-collapse border border-gray-300 mb-4">
+        <tbody>
+          <tr>
+            <td className="border p-2 font-medium">Dodatni trošak — opis</td>
+            <td className="border p-2">
+              <input
+                type="text"
+                value={extraCostLabel}
+                onChange={(e) => setExtraCostLabel(e.target.value)}
+                placeholder="npr. dodatna terapija"
+                className="border p-1 rounded w-full"
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td className="border p-2 font-medium">
+              Dodatni trošak — iznos (RSD)
+            </td>
+            <td className="border p-2 text-right">
+              <input
+                type="number"
+                value={extraCostAmount}
+                onChange={(e) =>
+                  setExtraCostAmount(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                placeholder="npr. 1500"
+                className="border p-1 rounded w-32 text-right"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={addCosts}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Sačuvaj dodatne troškove
+        </button>
+      </div>
 
       {/* KONVERZIJA I UKUPNO */}
       <h3 className="text-lg font-semibold mb-2">Konverzija</h3>
@@ -462,88 +543,9 @@ export default function SpecificationViewPage() {
         </button>
       </div>
 
-      {/* 2) POSLE TOGA: SPECIFIKACIJA (ONO ŠTO JE POTROŠENO OVOG PERIODA) */}
-      <h3 className="text-lg font-semibold mb-2">
-        Specifikacija za ovaj period
-      </h3>
+      
 
-      <table className="w-full border-collapse border border-gray-300 mb-6">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2 text-left">Opis</th>
-            <th className="border p-2 text-right">Količina</th>
-            <th className="border p-2 text-right">Cena (RSD)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {spec.items.map((item: any) => (
-            <tr key={item._id}>
-              <td className="border p-2">
-                {item.formattedName ?? item.name ?? "Nepoznata stavka"}
-              </td>
-              <td className="border p-2 text-right">{item.amount ?? 1}</td>
-              <td className="border p-2 text-right">
-                {(item.price ?? 0).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-          <tr className="font-bold bg-gray-50">
-            <td></td>
-            <td className="border p-2 text-right">Ukupno:</td>
-            <td className="border p-2 text-right">
-              {specTotalRSD.toFixed(2)} RSD
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* 3) NA KRAJU: DODATNI TROŠKOVI (IDU U SPECIFIKACIJU) */}
-      <h3 className="text-lg font-semibold mb-2">Dodaj dodatne troškove</h3>
-
-      <table className="w-full border-collapse border border-gray-300 mb-4">
-        <tbody>
-          <tr>
-            <td className="border p-2 font-medium">Dodatni trošak — opis</td>
-            <td className="border p-2">
-              <input
-                type="text"
-                value={extraCostLabel}
-                onChange={(e) => setExtraCostLabel(e.target.value)}
-                placeholder="npr. dodatna terapija"
-                className="border p-1 rounded w-full"
-              />
-            </td>
-          </tr>
-
-          <tr>
-            <td className="border p-2 font-medium">
-              Dodatni trošak — iznos (RSD)
-            </td>
-            <td className="border p-2 text-right">
-              <input
-                type="number"
-                value={extraCostAmount}
-                onChange={(e) =>
-                  setExtraCostAmount(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-                placeholder="npr. 1500"
-                className="border p-1 rounded w-32 text-right"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={addCosts}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Sačuvaj dodatne troškove
-        </button>
-      </div>
+     
     </div>
   );
 }
