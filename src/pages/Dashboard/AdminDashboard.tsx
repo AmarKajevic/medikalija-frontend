@@ -13,6 +13,7 @@ function AdminDashboard() {
     { to: "/combinationGroup", label: "kombinacije analiza ", icon: <FaYCombinator /> },
     { to: "/articles", label: "artikli ", icon: <FaDiaspora /> },
     { to: "/nurse-actions", label: "Kontrola sestara ", icon: <FaUserNurse/> },
+    { to: "/users-list", label: "Lista korisnika aplikacije ", icon: <FaUserPlus/> },
 
 
   ];
