@@ -1,4 +1,3 @@
-// pages/Medicine/MedicineList.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
@@ -24,7 +23,11 @@ interface Medicine {
   familyPackageCount?: number;
 }
 
-export default function MedicineList() {
+interface MedicineListProps {
+  search?: string;  // ⬅ search je prosleđen iz Headera
+}
+
+export default function MedicineList({ search }: MedicineListProps) {
   const { token } = useAuth();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,114 +53,96 @@ export default function MedicineList() {
   }, [token]);
 
   if (loading) return <p>Učitavanje lekova...</p>;
+  const safeSearch = search?.toLowerCase() ?? "";
 
-  const familyMedicines = medicines.filter(
+  const filteredMedicines = medicines.filter(m =>
+    m.name.toLowerCase().includes(safeSearch)
+  );
+
+  const familyMedicines = filteredMedicines.filter(
     (m) => m.familyQuantity > 0
   );
 
   return (
     <div className="space-y-10">
 
-      {/* 🔵 TABELA DOM LEKOVA */}
+      {/* DOM LEKOVI */}
       <ComponentCard title="LEKOVI — MEDIKALIJA (DOM)">
         <div className="max-w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Naziv</TableCell>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Pakovanja</TableCell>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Tableta / pak.</TableCell>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Komada ukupno</TableCell>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Cena po komadu</TableCell>
-
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Izmeni</TableCell>
-                <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Obriši</TableCell>
+                <TableCell isHeader>Naziv</TableCell>
+                <TableCell isHeader>Pakovanja</TableCell>
+                <TableCell isHeader>Tableta / pak.</TableCell>
+                <TableCell isHeader>Komada ukupno</TableCell>
+                <TableCell isHeader>Cena po komadu</TableCell>
+                <TableCell isHeader>Izmeni</TableCell>
+                <TableCell isHeader>Obriši</TableCell>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {medicines.map((m) => {
-
-                return (
-                  <TableRow key={m._id}>
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.name}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.packageCount ?? 0}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.unitsPerPackage ?? "-"}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.quantity.toFixed(2)}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                      {m.pricePerUnit ? `${m.pricePerUnit} RSD` : "-"}
-                    </TableCell>
-
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                      <EditMedicine
-                        medicineId={m._id}
-                        onUpdated={fetchMedicines}
-                      />
-                    </TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                      <DeleteMedicine
-                        medicineId={m._id}
-                        onDeleted={fetchMedicines}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {filteredMedicines.map((m) => (
+                <TableRow key={m._id}>
+                  <TableCell>{m.name}</TableCell>
+                  <TableCell>{m.packageCount ?? 0}</TableCell>
+                  <TableCell>{m.unitsPerPackage ?? "-"}</TableCell>
+                  <TableCell>{m.quantity.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {m.pricePerUnit ? `${m.pricePerUnit} RSD` : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <EditMedicine medicineId={m._id} onUpdated={fetchMedicines} />
+                  </TableCell>
+                  <TableCell>
+                    <DeleteMedicine medicineId={m._id} onDeleted={fetchMedicines} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
+
           </Table>
         </div>
       </ComponentCard>
 
-      {/* 🟡 TABELA LEKOVA OD PORODICE */}
+      {/* FAMILY LEKOVI */}
       {familyMedicines.length > 0 && (
         <ComponentCard title="LEKOVI OD PORODICE">
           <div className="max-w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Naziv</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Pakovanja</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Tableta / pak.</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Ukupno komada</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Dodaj</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-large text-gray-500 text-start text-theme-xs dark:text-gray-400">Obriši</TableCell>
+                  <TableCell isHeader>Naziv</TableCell>
+                  <TableCell isHeader>Pakovanja</TableCell>
+                  <TableCell isHeader>Tableta / pak.</TableCell>
+                  <TableCell isHeader>Ukupno komada</TableCell>
+                  <TableCell isHeader>Dodaj</TableCell>
+                  <TableCell isHeader>Obriši</TableCell>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {familyMedicines.map((m) => (
                   <TableRow key={m._id}>
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.name}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.familyPackageCount ?? 0}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.unitsPerPackage ?? "-"}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">{m.familyQuantity}</TableCell>
-
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
+                    <TableCell>{m.name}</TableCell>
+                    <TableCell>{m.familyPackageCount ?? 0}</TableCell>
+                    <TableCell>{m.unitsPerPackage ?? "-"}</TableCell>
+                    <TableCell>{m.familyQuantity}</TableCell>
+                    <TableCell>
                       <EditMedicine
                         medicineId={m._id}
                         mode="family"
                         onUpdated={fetchMedicines}
                       />
                     </TableCell>
-
                     <TableCell>
-                      <DeleteMedicine
-                        medicineId={m._id}
-                        onDeleted={fetchMedicines}
-                      />
+                      <DeleteMedicine medicineId={m._id} onDeleted={fetchMedicines} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
+
             </Table>
           </div>
         </ComponentCard>
