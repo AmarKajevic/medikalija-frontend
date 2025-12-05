@@ -64,11 +64,22 @@ export default function SignInForm() {
         login(user, accessToken);
 
         // navigacija po ulozi
-        if (user.role === "admin" || user.role === "main-nurse") {
-          navigate("/");
-        } else {
-          navigate("/nurseDashboard");
-        }
+        // Admin i glavna sestra → glavni dashboard
+      if (user.role === "admin" || user.role === "main-nurse") {
+        navigate("/");
+        return;
+      }
+
+      // Doktor i sestra idu na isti dashboard
+      if (user.role === "doctor" || user.role === "nurse") {
+        navigate("/nurseDashboard");
+        return;
+      }
+
+      // Ostale uloge ne bi trebalo ni da mogu da se uloguju,
+      // ali ako backend nekad promeni policy, ovde ih štitimo:
+      navigate("/unauthorized");
+
       }
     } catch (error: any) {
       console.log(error);
