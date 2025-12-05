@@ -11,7 +11,7 @@ interface AddArticleProps {
 export default function AddArticleToPatient({ patientId }: AddArticleProps) {
   const { getArticles, addArticleToPatient } = useArticles();
   const [selectedArticleId, setSelectedArticleId] = useState<string>("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState<string>("");
 
   if (getArticles.isLoading) return <p>Učitavanje artikala...</p>;
   if (getArticles.isError) return <p>Greška pri učitavanju artikala</p>;
@@ -20,18 +20,24 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
   const selectedArticle = articles.find((a) => a._id === selectedArticleId);
 
   const handleAdd = () => {
+    const numericAmount = parseFloat(amount);
+
     if (!selectedArticleId) return alert("Izaberite Artikal");
-    if (amount <= 0) return alert("Količina mora biti veća od nule");
-    if (selectedArticle && amount > selectedArticle.quantity)
-      return alert(`Nema dovoljno artikala na stanju (preostalo: ${selectedArticle.quantity})`);
+    if (numericAmount <= 0 || isNaN(numericAmount))
+      return alert("Količina mora biti veća od nule");
+
+    if (selectedArticle && numericAmount > selectedArticle.quantity)
+      return alert(
+        `Nema dovoljno artikala na stanju (preostalo: ${selectedArticle.quantity})`
+      );
 
     addArticleToPatient.mutate(
-      { patientId, articleId: selectedArticleId, amount },
+      { patientId, articleId: selectedArticleId, amount: numericAmount },
       {
         onSuccess: () => {
           alert("Artikal uspešno dodat pacijentu!");
           setSelectedArticleId("");
-          setAmount(0);
+          setAmount("");
         },
       }
     );
@@ -41,7 +47,6 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
     <ComponentCard title="DODAJ ARTIKAL">
       <div className="flex flex-col space-y-2">
 
-        {/* ✅ KORISTIMO SELECT KOMPONENTU */}
         <Select
           options={articles.map((a) => ({
             value: a._id,
@@ -56,9 +61,10 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
           type="number"
           min={0.01}
           step={0.01}
-          className="border p-2 rounded"
+          placeholder="Unesi količinu"
           value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value))}
+          onChange={(e) => setAmount(e.target.value)}
+          className="border p-2 rounded"
         />
 
         <button
@@ -69,7 +75,6 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
           {addArticleToPatient.isPending ? "Dodavanje..." : "Dodaj pacijentu"}
         </button>
       </div>
-
     </ComponentCard>
   );
 }

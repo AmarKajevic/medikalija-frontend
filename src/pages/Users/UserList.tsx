@@ -3,11 +3,26 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { TrashBinIcon } from "../../icons";
 
-
 export default function UserList() {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ✔ Mapa prevoda rola na srpski
+  const ROLE_LABELS: Record<string, string> = {
+    admin: "Administrator",
+    "main-nurse": "Glavna sestra",
+    nurse: "Medicinska sestra",
+    doctor: "Doktor",
+    Caregiver: "Negovatelj",
+    Physiotherapist: "Fizioterapeut",
+    Cleaner: "Čistačica",
+    Kitchen: "Kuhinja",
+    "Social Worker": "Socijalni radnik",
+    Janitor: "Domar",
+    "Occupational Therapist": "Radni terapeut",
+    Administration: "Administracija",
+  };
 
   const loadUsers = async () => {
     try {
@@ -61,9 +76,7 @@ export default function UserList() {
 
   return (
     <div className="px-4 py-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
-        Lista korisnika
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Lista korisnika</h1>
 
       {/* TABLE WRAPPER */}
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
@@ -98,11 +111,13 @@ export default function UserList() {
                   </td>
 
                   <td className="p-4">
-                    <span className="
+                    <span
+                      className="
                       px-3 py-1 text-xs font-semibold rounded-full
                       bg-blue-100 text-blue-700
-                    ">
-                      {u.role}
+                    "
+                    >
+                      {ROLE_LABELS[u.role] || u.role}
                     </span>
                   </td>
 
@@ -130,7 +145,7 @@ export default function UserList() {
 
       {/* RESPONSIVE FOOTNOTE FOR MOBILE */}
       <p className="text-xs text-gray-500 mt-3 md:hidden">
-        * Za više informacija (email) pogledajte u landscape modu ili na desktopu
+        * Za više informacija (email), pogledajte u landscape modu ili na desktopu.
       </p>
     </div>
   );

@@ -6,7 +6,6 @@ import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import ComponentCard from "../../components/common/ComponentCard";
 
-
 interface Medicine {
   _id: string;
   name: string;
@@ -25,10 +24,13 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState("");
+
+  // PREPRAVLJENO → string umesto number da placeholder radi
+  const [amount, setAmount] = useState<string>("");
+  const [days, setDays] = useState<string>(""); 
+  const [portion, setPortion] = useState<string>("");
+
   const [message, setMessage] = useState("");
-  const [amount, setAmount] = useState(1);
-  const [days, setDays] = useState(1);
-  const [portion, setPortion] = useState(1);
 
   const portions = [
     { label: "Cela tableta", value: 1 },
@@ -62,15 +64,15 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     },
     onSuccess: (data) => {
       setMessage("Uspešno dodat lek ✔️");
-      queryClient.invalidateQueries({
-        queryKey: ["medicines", patientId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["medicines", patientId] });
 
       onMedicineUsed(data.usedMedicine);
+
+      // Reset polja
       setSelected("");
-      setAmount(1);
-      setDays(1);
-      setPortion(1);
+      setAmount("");
+      setDays("");
+      setPortion("");
     },
     onError: (error: any) => {
       setMessage(error.response?.data?.message || "Greška pri dodavanju leka ❌");
@@ -78,14 +80,25 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   });
 
   const selectedMedicine = medicines.find((m) => m._id === selected);
-  const totalAmount = parseFloat((amount * days * portion).toFixed(2));
+
+  const numericAmount = parseFloat(amount || "0");
+  const numericDays = parseFloat(days || "0");
+  const numericPortion = parseFloat(portion || "0");
+
+  const totalAmount = parseFloat((numericAmount * numericDays * numericPortion).toFixed(2));
+
   const totalPrice = selectedMedicine
     ? parseFloat((totalAmount * selectedMedicine.pricePerUnit).toFixed(2))
     : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected) return;
+
+    if (!selected) return setMessage("Izaberite lek.");
+    if (!numericAmount) return setMessage("Unesite količinu.");
+    if (!numericDays) return setMessage("Unesite broj dana.");
+    if (!numericPortion) return setMessage("Odaberite dozu/tabletu.");
+
     addMedicine.mutate({ medicineId: selected, amount: totalAmount });
   };
 
@@ -93,49 +106,58 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
 
   return (
     <ComponentCard title="IZABERI LEK">
-
       <form onSubmit={handleSubmit} className="space-y-3">
-        {/* ✅ Select for Medicines */}
+        
+        {/* SELECT LEKA */}
         <Select
           options={medicines.map((m) => ({
             value: m._id,
-            label: `${m.name} (dostupno od doma: ${m.quantity.toFixed(2)}, od porodice: ${m.familyQuantity.toFixed(2)})`,
+            label: `${m.name} (stanje: ${m.quantity}, od porodice: ${m.familyQuantity})`,
           }))}
           placeholder="-- Izaberi lek --"
           onChange={setSelected}
           defaultValue={selected}
         />
 
-      <Input
-          type="number"
-          step={0.01}             // ➜ Omogućava decimale
-          min={0}                 // ➜ Može i 0 ako treba
-          value={amount === 0 ? "" : amount}  // ➜ placeholder radi
-          onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full border p-2 rounded"
-          placeholder="Količina po danu"      // ➜ Prikazuje placeholder
-        />
+        {/* PREPRAVLJEN PRVI INPUT */}
         <Input
           type="number"
-          min={1}
-          value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
+          step={0.01}
+          min={0}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
           className="w-full border p-2 rounded"
-          placeholder="Broj dana"
+          placeholder="broj dana ili ukupna kolicina"
         />
 
-        {/* ✅ Select for Portions */}
+        {/* PREPRAVLJEN DRUGI INPUT */}
+        <Input
+          type="number"
+          min={0}
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+          className="w-full border p-2 rounded"
+          placeholder="koliko puta po danu"
+        />
+
+        {/* SELECT PORTION */}
         <Select
           options={portions.map((p) => ({
             value: String(p.value),
             label: p.label,
           }))}
-          onChange={(v) => setPortion(Number(v))}
-          defaultValue={String(portion)}
+          placeholder="-- Izaberi količinu tablete --"
+          onChange={setPortion}
+          defaultValue={portion}
         />
 
-        <p className="text-gray-600 text-sm">Ukupno za upotrebu: {totalAmount} tableta</p>
-        <p className="text-gray-600 text-sm">Ukupna cena: {totalPrice} RSD</p>
+        <p className="text-gray-600 text-sm">
+          Ukupno za upotrebu: {isNaN(totalAmount) ? 0 : totalAmount} tableta
+        </p>
+
+        <p className="text-gray-600 text-sm">
+          Ukupna cena: {totalPrice} RSD
+        </p>
 
         <button
           type="submit"
@@ -154,7 +176,6 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
           {message}
         </p>
       )}
-   
     </ComponentCard>
   );
 }
