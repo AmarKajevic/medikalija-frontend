@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {Link } from "react-router";
+import { Link } from "react-router";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Label from "../form/Label";
@@ -11,22 +11,38 @@ export default function SignUpForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("nurse");
+  const [role, setRole] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const { user } = useAuth();
 
+  const ROLES = [
+    { value: "nurse", label: "Sestra" },
+    { value: "main-nurse", label: "Glavna sestra" },
+    { value: "doctor", label: "Doktor" },
+
+    // pasivne uloge
+    { value: "Caregiver", label: "Negovatelj" },
+    { value: "Physiotherapist", label: "Fizioterapeut" },
+    { value: "Cleaner", label: "Čistačica" },
+    { value: "Kitchen", label: "Kuhinja" },
+    { value: "Social Worker", label: "Socijalni radnik" },
+    { value: "Janitor", label: "Domar" },
+    { value: "Occupational Therapist", label: "Radni terapeut" },
+    { value: "Administration", label: "Administracija" },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token"); // uzmi admin token
+      const token = localStorage.getItem("token");
 
       const response = await axios.post(
         "https://medikalija-api.vercel.app/api/auth/register",
-        { name,lastName, email, password, role },
+        { name, lastName, email, password, role },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -38,14 +54,12 @@ export default function SignUpForm() {
         setSuccess("Korisnik uspešno registrovan!");
         setError(null);
 
-        // Očisti formu
+        // Reset forme
         setName("");
+        setLastName("");
         setEmail("");
         setPassword("");
-        setRole("nurse");
-
-        // Ako želiš odmah redirekciju:
-        // navigate("/users");
+        setRole("");
       }
     } catch (err: any) {
       if (err.response) {
@@ -57,7 +71,7 @@ export default function SignUpForm() {
     }
   };
 
-  // Ako user nije admin, ne može da vidi formu
+  // Ako user nije admin → nema pristup formi
   if (!user || user.role !== "admin") {
     return (
       <div className="text-center text-red-500 font-medium">
@@ -71,7 +85,7 @@ export default function SignUpForm() {
       <div className="w-full max-w-md pt-10 mx-auto">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           ⬅ Back to dashboard
         </Link>
@@ -80,18 +94,16 @@ export default function SignUpForm() {
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="mb-5 sm:mb-8">
           <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-            Register User
+            Registracija korisnika
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Admin može dodati nove sestre i glavne sestre.
+            Admin može dodati sve type osoblja: medicinsko, administrativno i pomoćno.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label>
-              Ime <span className="text-error-500">*</span>
-            </Label>
+            <Label>Ime *</Label>
             <Input
               type="text"
               placeholder="Unesite ime"
@@ -100,13 +112,12 @@ export default function SignUpForm() {
               required
             />
           </div>
+
           <div>
-            <Label>
-              Ime <span className="text-error-500">*</span>
-            </Label>
+            <Label>Prezime *</Label>
             <Input
               type="text"
-              placeholder="Unesite Prezime"
+              placeholder="Unesite prezime"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               required
@@ -114,9 +125,7 @@ export default function SignUpForm() {
           </div>
 
           <div>
-            <Label>
-              Email <span className="text-error-500">*</span>
-            </Label>
+            <Label>Email *</Label>
             <Input
               type="email"
               placeholder="info@gmail.com"
@@ -127,9 +136,7 @@ export default function SignUpForm() {
           </div>
 
           <div>
-            <Label>
-              Lozinka <span className="text-error-500">*</span>
-            </Label>
+            <Label>Lozinka *</Label>
             <Input
               type="password"
               placeholder="Unesite lozinku"
@@ -140,27 +147,29 @@ export default function SignUpForm() {
           </div>
 
           <div>
-            <Label>
-              Uloga <span className="text-error-500">*</span>
-            </Label>
+            <Label>Uloga *</Label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              required
               className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
             >
-              <option value="nurse">Sestra</option>
-              <option value="main-nurse">Glavna sestra</option>
+              <option value="" disabled>Izaberite ulogu...</option>
+
+              {ROLES.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
             </select>
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
           {success && <p className="text-green-500 text-sm">{success}</p>}
 
-          <div>
-            <Button className="w-full" size="sm" >
-              Register
-            </Button>
-          </div>
+          <Button className="w-full" size="sm">
+            Register
+          </Button>
         </form>
       </div>
     </div>
