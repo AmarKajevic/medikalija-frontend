@@ -11,11 +11,8 @@ const AppHeader: React.FC = () => {
   const { toggleSidebar, toggleMobileSidebar } = useSidebar();
 
   const handleToggleSidebar = () => {
-    if (window.innerWidth >= 1024) {
-      toggleSidebar();
-    } else {
-      toggleMobileSidebar();
-    }
+    if (window.innerWidth >= 1024) toggleSidebar();
+    else toggleMobileSidebar();
   };
 
   // === SEARCH STATE ===
@@ -25,27 +22,27 @@ const AppHeader: React.FC = () => {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const typingTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // CMD+K focus shortcut
+  // === CMD + K FOCUS ===
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
+    const handleShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
         inputRef.current?.focus();
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleShortcut);
+    return () => document.removeEventListener("keydown", handleShortcut);
   }, []);
 
-  // Klik izvan dropdowna → zatvori
+  // === CLICK OUTSIDE DROPDOWN ===
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(e.target as Node)
       ) {
         setShowDropdown(false);
       }
@@ -55,7 +52,7 @@ const AppHeader: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // === API search poziv ===
+  // === API SEARCH ===
   const performSearch = async (value: string) => {
     if (!value.trim()) {
       setResults([]);
@@ -64,24 +61,24 @@ const AppHeader: React.FC = () => {
     }
 
     try {
-      const res = await axios.get(
+      const { data } = await axios.get(
         `https://medikalija-api.vercel.app/api/search?q=${value}`
       );
 
-      setResults(res.data.results || []);
+      setResults(data.results || []);
       setShowDropdown(true);
-    } catch (err) {
-      console.log("Search error:", err);
+    } catch (error) {
+      console.error("Search error:", error);
     }
   };
 
-  // === Debounced search input handler ===
+  // === HANDLE INPUT WITH DEBOUNCE ===
   const handleSearchInput = (value: string) => {
     setQuery(value);
 
-    if (typingTimer.current) clearTimeout(typingTimer.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    typingTimer.current = setTimeout(() => {
+    debounceRef.current = setTimeout(() => {
       performSearch(value);
     }, 300);
   };
@@ -93,7 +90,7 @@ const AppHeader: React.FC = () => {
         {/* LEFT SIDE */}
         <div className="flex items-center justify-between w-full px-3 py-3 lg:px-0 lg:py-4">
 
-          {/* Sidebar toggle */}
+          {/* SIDEBAR TOGGLE */}
           <button
             onClick={handleToggleSidebar}
             className="w-10 h-10 lg:w-11 lg:h-11 text-gray-500 dark:text-gray-400 flex items-center justify-center rounded-lg"
@@ -101,19 +98,21 @@ const AppHeader: React.FC = () => {
             ☰
           </button>
 
-          {/* Logo - mobile */}
+          {/* LOGO (mobile) */}
           <Link to="/" className="lg:hidden">
             <img src="./images/logo/logo.svg" className="dark:hidden" />
             <img src="./images/logo/logo-dark.svg" className="hidden dark:block" />
           </Link>
 
           {/* SEARCH BAR */}
-          <div className="hidden lg:block relative w-full max-w-lg" ref={dropdownRef}>
+          <div className="hidden lg:block relative w-full max-w-lg mx-auto" ref={dropdownRef}>
             <div className="relative">
+              {/* Icon */}
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                 🔍
               </span>
 
+              {/* Input */}
               <input
                 ref={inputRef}
                 type="text"
@@ -122,11 +121,11 @@ const AppHeader: React.FC = () => {
                 onChange={(e) => handleSearchInput(e.target.value)}
                 className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14
                 text-sm text-gray-800 placeholder:text-gray-400 shadow-sm
-                focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 
+                focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10
                 dark:bg-dark-900 dark:text-white/90 dark:border-gray-800 dark:placeholder:text-white/30"
               />
 
-              {/* CMD + K indicator */}
+              {/* CMD + K hint */}
               <button className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 
               dark:text-gray-400 border border-gray-300 dark:border-gray-700 px-2 py-1 rounded">
                 ⌘K
@@ -145,13 +144,24 @@ const AppHeader: React.FC = () => {
                   >
                     <div className="font-medium">{item.name}</div>
 
-                    <div className="text-xs text-gray-500">
-                      {item.type === "medicine" && "🟦 Lek"}
-                      {item.type === "article" && "🟩 Artikal"}
-                      {item.type === "patient" && "🟧 Pacijent"}
-                    </div>
+                    {/* TYPE BADGE + QUANTITIES */}
+                    {item.type === "medicine" && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        🏥 Dom: <span className="font-semibold">{item.quantity ?? 0}</span> kom ·{" "}
+                        👪 Porodica: <span className="font-semibold">{item.familyQuantity ?? 0}</span> kom
+                      </div>
+                    )}
+
+                    {item.type === "article" && (
+                      <div className="text-xs text-gray-500 mt-1">📦 Artikal</div>
+                    )}
+
+                    {item.type === "patient" && (
+                      <div className="text-xs text-gray-500 mt-1">👤 Pacijent</div>
+                    )}
                   </div>
                 ))}
+
               </div>
             )}
           </div>
@@ -163,6 +173,7 @@ const AppHeader: React.FC = () => {
           <NotificationDropdown />
           <UserDropdown />
         </div>
+
       </div>
     </header>
   );
