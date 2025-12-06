@@ -153,7 +153,10 @@ const AppHeader: React.FC = () => {
                     )}
 
                     {item.type === "article" && (
-                      <div className="text-xs text-gray-500 mt-1">📦 Artikal</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        🏥 Dom: <span className="font-semibold">{item.quantity ?? 0}</span> kom ·{" "}
+                        👪 Porodica: <span className="font-semibold">{item.familyQuantity ?? 0}</span> kom
+                      </div>
                     )}
 
                     {item.type === "patient" && (
