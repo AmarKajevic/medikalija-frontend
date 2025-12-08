@@ -13,7 +13,8 @@ import AppLayout from "./layout/AppLayout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AddArticleFromFamily from "./components/articles/AddArticleFromFamily";
 import UserList from "./pages/Users/UserList";
-import MedicineWithReserve from "./pages/Medicine/MedicineWithReserve";
+import MedicineReserveManager from "./pages/Medicine/MedicineReserveManager";
+import MedicineReserveList from "./pages/Medicine/MedicineReserveList";
 
 
 // -------------------------------------------------------
@@ -117,7 +118,8 @@ export default function App() {
 
               <Route path="/combinationGroup" element={<CombinationGroupManager />} />
               <Route path="/users-list" element={<UserList />} />
-              <Route path="/reserve-list" element={<MedicineWithReserve />} />
+              <Route path="/adding-to-reserve-list" element={<MedicineReserveManager />} />
+              <Route path="/reserve-list" element={<MedicineReserveList />} />
 
               {/* UI PAGES */}
               <Route path="/profile" element={<UserProfiles />} />
