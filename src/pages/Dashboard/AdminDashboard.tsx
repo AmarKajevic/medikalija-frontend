@@ -14,7 +14,7 @@ function AdminDashboard() {
     { to: "/articles", label: "artikli ", icon: <FaDiaspora /> },
     { to: "/nurse-actions", label: "Kontrola sestara ", icon: <FaUserNurse/> },
     { to: "/users-list", label: "Lista korisnika aplikacije ", icon: <FaUserPlus/> },
-    { to: "/adding-to-reserve-list", label: "Lista rezervnih lekova", icon: <FaMedkit/> },
+    { to: "/adding-to-reserve-list", label: "dodavanje rezervnih lekova", icon: <FaMedkit/> },
     { to: "/reserve-list", label: "Lista rezervnih lekova", icon: <FaBookMedical/> },
 
 
