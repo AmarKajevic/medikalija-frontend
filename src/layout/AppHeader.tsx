@@ -169,12 +169,12 @@ const AppHeader: React.FC = () => {
             {showDropdown && results.length > 0 && (
               <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border max-h-80 overflow-y-auto z-50">
                 {results.map((item) => (
-                  <div key={item._id} className="p-3 border-b text-sm space-y-2">
+                  <div key={item._id} className="p-3 border-b text-xl space-y-2">
                     <div className="font-semibold">{item.name}</div>
 
                     {item.type === "medicine" && (
                       <>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xl text-gray-500">
                           🏥 {item.quantity} · 👪 {item.familyQuantity}
                         </div>
 
@@ -194,13 +194,13 @@ const AppHeader: React.FC = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={() => moveToReserve(item._id, "home")}
-                            className="bg-blue-600 text-white text-xs py-1 rounded"
+                            className="bg-blue-600 text-white text-xl py-1 rounded"
                           >
                             Rezerva dom
                           </button>
                           <button
                             onClick={() => moveToReserve(item._id, "family")}
-                            className="bg-green-600 text-white text-xs py-1 rounded"
+                            className="bg-green-600 text-white text-xl py-1 rounded"
                           >
                             Rezerva porodica
                           </button>
