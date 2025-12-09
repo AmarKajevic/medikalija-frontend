@@ -133,7 +133,15 @@ const AppHeader: React.FC = () => {
           </Link>
 
           {/* SEARCH (MOBILE + DESKTOP) */}
-          <div className="relative w-full max-w-5xl ml-auto" ref={dropdownRef}>
+          <div ref={dropdownRef} className=" relative 
+              w-full 
+              max-w-full 
+              sm:max-w-xl 
+              md:max-w-3xl 
+              lg:max-w-5xl 
+              xl:max-w-5xl 
+              2xl:max-w-6xl 
+              mx-auto" >
             <input
               ref={inputRef}
               type="text"
