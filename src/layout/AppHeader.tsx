@@ -63,11 +63,7 @@ const AppHeader: React.FC = () => {
 
     try {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/search?q=${value} `, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        `https://medikalija-api.vercel.app/api/search?q=${value} `
       );
       setResults(data.results || []);
       setShowDropdown(true);
@@ -89,10 +85,14 @@ const AppHeader: React.FC = () => {
 
     try {
       await axios.post(
-        "https://medikalija-api.vercel.app/api/medicine-reserve/move",
-        { medicineId, amount, source },
-        { withCredentials: true }
-      );
+  "https://medikalija-api.vercel.app/api/medicine-reserve/move",
+      { medicineId, amount, source },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
       setAmounts((prev) => ({ ...prev, [medicineId]: 0 }));
       alert("Prebačeno u rezervu ✅");
@@ -133,7 +133,7 @@ const AppHeader: React.FC = () => {
           </Link>
 
           {/* SEARCH (MOBILE + DESKTOP) */}
-          <div className="relative w-full max-w-lg ml-auto" ref={dropdownRef}>
+          <div className="relative w-full max-w-5xl ml-auto" ref={dropdownRef}>
             <input
               ref={inputRef}
               type="text"
