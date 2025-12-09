@@ -118,7 +118,7 @@ const AppHeader: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 py-3 lg:px-6">
 
         {/* LEFT */}
-        <div className="flex items-center gap-3 w-full lg:w-auto">
+        <div className="flex items-center gap-3 w-full lg:flex-1">
 
           <button
             onClick={handleToggleSidebar}
@@ -133,7 +133,7 @@ const AppHeader: React.FC = () => {
           </Link>
 
           {/* SEARCH (MOBILE + DESKTOP) */}
-          <div ref={dropdownRef} className=" relative 
+          <div ref={dropdownRef}className=" relative 
               w-full 
               max-w-full 
               sm:max-w-xl 
@@ -146,10 +146,24 @@ const AppHeader: React.FC = () => {
               ref={inputRef}
               type="text"
               value={query}
-              placeholder="Pretraga..."
+              placeholder="Pretraga lekova, pacijenata i rezervi..."
               onChange={(e) => handleSearchInput(e.target.value)}
-              className="h-10 w-full rounded-lg border px-3 text-sm dark:bg-gray-800 dark:text-white"
+              className="
+                h-12
+                w-full 
+                rounded-2xl
+                border 
+                px-5
+                text-base
+                shadow-sm
+                focus:ring-2 
+                focus:ring-blue-500 
+                focus:border-blue-500
+                dark:bg-gray-800 
+                dark:text-white
+              "
             />
+
 
             {/* DROPDOWN */}
             {showDropdown && results.length > 0 && (
