@@ -5,6 +5,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+import { useAuth } from "../context/AuthContext";
 
 const AppHeader: React.FC = () => {
   const { toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -19,6 +20,7 @@ const AppHeader: React.FC = () => {
   const [results, setResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [amounts, setAmounts] = useState<Record<string, number>>({});
+  const { token } = useAuth();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,7 +63,11 @@ const AppHeader: React.FC = () => {
 
     try {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/search?q=${value}`
+        `https://medikalija-api.vercel.app/api/search?q=${value} `, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
       setResults(data.results || []);
       setShowDropdown(true);
