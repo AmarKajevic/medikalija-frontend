@@ -48,7 +48,7 @@ export type Patient = {
   lastName: string;
   dateOfBirth: string | Date;
   admissionDate: string | Date;
-
+  contactPerson: string;
   address: string;
   createdBy: User
 };

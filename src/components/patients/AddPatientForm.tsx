@@ -8,6 +8,7 @@ export default function AddPatientForm() {
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [admissionDate, setAdmissionDate] = useState<Date | null>(null);
   const [address, setAddress] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
   const addPatient = useAddPatient();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,6 +27,7 @@ export default function AddPatientForm() {
           dateOfBirth,        // ← šaljemo PRAVI DATE objekat
           admissionDate,      // ← šaljemo PRAVI DATE objekat
           address,
+          contactPerson,
         },
         {
           onSuccess: () => {
@@ -36,6 +38,7 @@ export default function AddPatientForm() {
             setDateOfBirth(null);
             setAdmissionDate(null);
             setAddress("");
+            setContactPerson("");
           },
           onError: (error: any) => {
             console.error("Greška pri dodavanju pacijenta:", error.response?.data || error);
@@ -87,6 +90,13 @@ export default function AddPatientForm() {
         placeholder="Adresa"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
+        className="border p-2 w-full"
+      />
+      <input
+        type="text"
+        placeholder="Kontakt osoba (ime, telefon…)"
+        value={contactPerson}
+        onChange={(e) => setContactPerson(e.target.value)}
         className="border p-2 w-full"
       />
 
