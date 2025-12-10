@@ -10,18 +10,18 @@ export default function UserList() {
 
   // ✔ Mapa prevoda rola na srpski
   const ROLE_LABELS: Record<string, string> = {
-    admin: "Administrator",
+    admin: "Direktor",
     "main-nurse": "Glavna sestra",
     nurse: "Medicinska sestra",
     doctor: "Doktor",
     Caregiver: "Negovatelj",
     Physiotherapist: "Fizioterapeut",
-    Cleaner: "Čistačica",
+    Cleaner: "spremač",
     Kitchen: "Kuhinja",
     "Social Worker": "Socijalni radnik",
     Janitor: "Domar",
     "Occupational Therapist": "Radni terapeut",
-    Administration: "Administracija",
+    Administration: "Uprava",
   };
 
   const loadUsers = async () => {
