@@ -18,6 +18,7 @@ interface Patient {
   dateOfBirth: string;
   address: string;
   admissionDate: string;
+  contactPerson: string;
   dischargeDate?: string | null;
 }
 
@@ -114,6 +115,7 @@ function PatientList() {
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Datum prijema</TableCell>
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Datum otpusta</TableCell>
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Akcija</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Kontakt osoba</TableCell>
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Profil</TableCell>
             </TableRow>
           </TableHeader>
@@ -154,6 +156,7 @@ function PatientList() {
                     <span className="text-gray-400 italic">Čeka datum</span>
                   )}
                 </TableCell>
+                <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.contactPerson}</TableCell>
 
                 {/* ➤ Profil */}
                 <TableCell className="px-5 py-4 sm:px-6 text-start">

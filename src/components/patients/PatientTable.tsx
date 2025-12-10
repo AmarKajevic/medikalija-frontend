@@ -17,6 +17,7 @@ export default function PatientTable() {
             <th className="p-2 border">Datum rođenja</th>
             <th className="p-2 border">Datum prijema</th>
             <th className="p-2 border">Adresa</th>
+            <th className="p-2 border">Kontakt osoba</th>
             <th className="p-2 border">Profil</th>
           </tr>
         </thead>
@@ -36,6 +37,7 @@ export default function PatientTable() {
                   : "-"}
               </td>
               <td className="p-2 border">{p.address}</td>
+              <td className="p-2 border">{p.contactPerson}</td>
               <td className="p-2 border text-center">
                 <Link
                   to={`/patient-profile-nurse/${p._id}`}
