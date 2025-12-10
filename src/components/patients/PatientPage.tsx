@@ -11,7 +11,10 @@ export default function PatientsPage() {
       <AddPatientForm />
       
     </div>
-    <PatientList/>
+    <div>
+      <PatientList/>
+    </div>
+    
     </div>
     
     
