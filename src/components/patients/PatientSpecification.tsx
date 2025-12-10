@@ -1,40 +1,32 @@
 import { Link } from "react-router";
-import { useState } from "react";
 import axios from "axios";
 import { usePatientSpecification } from "../../hooks/Patient/usePatientSpecification";
 import { useAuth } from "../../context/AuthContext";
 
 export default function PatientSpecification({ patientId }: { patientId: string }) {
-  const { data, isLoading, isError, refetch } = usePatientSpecification(patientId);
   const { token } = useAuth();
-
-  // ⭐ lokalni state za nova polja
-  const [lodgingPrice, setLodgingPrice] = useState<number>(0);
-  const [extraCostAmount, setExtraCostAmount] = useState<number>(0);
-  const [extraCostLabel, setExtraCostLabel] = useState<string>("");
+  const { data, isLoading, isError, refetch } = usePatientSpecification(patientId);
 
   if (isLoading) return <p>Učitavanje...</p>;
   if (isError) return <p>Greška pri učitavanju specifikacije.</p>;
   if (!data) return <p>Nema aktivne specifikacije.</p>;
 
-  // ⭐ FUNKCIJA ZA SLANJE TROŠKOVA
-  const addCosts = async () => {
+  // ✅ BRISANJE STAVKE
+  const handleDeleteItem = async (itemId: string) => {
+    if (!confirm("Da li ste sigurni da želite da obrišete ovu stavku?")) return;
+
     try {
-      await axios.post(
-        `https://medikalija-api.vercel.app/api/specification/${data._id}/add-costs`, // ✅ ispravljeno
-        { lodgingPrice, extraCostAmount, extraCostLabel },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await axios.delete(
+        `https://medikalija-api.vercel.app/api/specification/${data._id}/item/${itemId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      await refetch(); // ✅ osveži podatke nakon unosa
-
-      // reset input polja
-      setLodgingPrice(0);
-      setExtraCostAmount(0);
-      setExtraCostLabel("");
-
+      refetch(); // ✅ REFRESH TABELE
     } catch (err) {
-      console.error("Greška pri dodavanju troškova:", err);
+      console.error("Greška pri brisanju:", err);
+      alert("Greška pri brisanju stavke");
     }
   };
 
@@ -52,13 +44,14 @@ export default function PatientSpecification({ patientId }: { patientId: string 
         </Link>
       </div>
 
-      {/* ==== GLAVNA POSTOJEĆA TABELA ==== */}
+      {/* ==== TABELA ==== */}
       <table className="w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2 text-left">Opis</th>
             <th className="border p-2 text-right">Količina</th>
             <th className="border p-2 text-right">Cena (RSD)</th>
+            <th className="border p-2 text-center">Akcija</th>
           </tr>
         </thead>
 
@@ -72,6 +65,14 @@ export default function PatientSpecification({ patientId }: { patientId: string 
               <td className="border p-2 text-right">
                 {item.price.toFixed(2)}
               </td>
+              <td className="border p-2 text-center">
+                <button
+                  onClick={() => handleDeleteItem(item._id)}
+                  className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded"
+                >
+                  ❌ Obriši
+                </button>
+              </td>
             </tr>
           ))}
 
@@ -81,65 +82,10 @@ export default function PatientSpecification({ patientId }: { patientId: string 
             <td className="border p-2 text-right">
               {data.totalPrice?.toFixed(2)} RSD
             </td>
+            <td></td>
           </tr>
         </tbody>
       </table>
-
-      {/* ✅ DRUGA TABELA — DODATNI TROŠKOVI */}
-      <h3 className="text-lg font-semibold mt-6 mb-2">Dodaj troškove</h3>
-
-      <table className="w-full border-collapse border border-gray-300 mb-4">
-        <tbody>
-
-          <tr>
-            <td className="border p-2 font-medium">Cena smeštaja</td>
-            <td className="border p-2 text-right">
-              <input
-                type="number"
-                value={lodgingPrice}
-                onChange={(e) => setLodgingPrice(Number(e.target.value))}
-                className="border rounded p-1 w-32 text-right"
-              />
-            </td>
-          </tr>
-
-          <tr>
-            <td className="border p-2 font-medium">Dodatni trošak — opis</td>
-            <td className="border p-2 text-right">
-              <input
-                type="text"
-                value={extraCostLabel}
-                onChange={(e) => setExtraCostLabel(e.target.value)}
-                className="border rounded p-1 w-48"
-                placeholder="npr. Pranje veša"
-              />
-            </td>
-          </tr>
-
-          <tr>
-            <td className="border p-2 font-medium">Dodatni trošak — iznos</td>
-            <td className="border p-2 text-right">
-              <input
-                type="number"
-                value={extraCostAmount}
-                onChange={(e) => setExtraCostAmount(Number(e.target.value))}
-                className="border rounded p-1 w-32 text-right"
-              />
-            </td>
-          </tr>
-
-        </tbody>
-      </table>
-          <div className="flex justify-end">
-          <button 
-            onClick={addCosts}
-            className="f bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Dodaj troškove
-          </button>
-          </div>
-      
-
     </div>
   );
 }
