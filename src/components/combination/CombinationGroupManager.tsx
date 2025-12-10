@@ -80,7 +80,7 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     if (!confirm("Obrisati kombinaciju?")) return;
 
     await axios.delete(
-      `https://medikalija-api.vercel.app/api/combinations/${comboId}`,
+      `https://medikalija-api.vercel.app/api/analysis/combination/combinations/${comboId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -91,7 +91,7 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     if (!confirm("OBRISATI CELOU GRUPU?")) return;
 
     await axios.delete(
-      `https://medikalija-api.vercel.app/api/combination-groups/${groupId}`,
+      `https://medikalija-api.vercel.app/api/combinationGroup/combination-groups/${groupId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
