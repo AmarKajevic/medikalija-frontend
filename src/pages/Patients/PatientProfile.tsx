@@ -11,6 +11,7 @@ import AddArticleToPatient from "../../components/articles/AddArticleToPatient";
 import useArticles from "../../hooks/Patient/useArticle";
 import { useCombinations } from "../../hooks/Patient/useCombination";
 import PatientComb from "../../components/patients/PatientComb";
+import PatientSpecification from "../../components/patients/PatientSpecification";
 
 
 export default function PatientProfile() {
@@ -43,12 +44,7 @@ export default function PatientProfile() {
 
         {patient && patient._id && (
           <div className="flex flex-col sm:flex-row gap-2">
-            <a
-              href={`/patient/${patient._id}/specification`}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              Pogledaj specifikaciju
-            </a>
+          
 
             <a
               href={`/patient/${patientId}/specification-history`}
@@ -83,6 +79,9 @@ export default function PatientProfile() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UseMedicine patientId={patient._id} onMedicineUsed={handleMedicineUsed} />
         <PatientComb patientId={patient._id} />
+      </div>
+      <div className="flex">
+        <PatientSpecification patientId={patient._id} />
       </div>
 
       {/* TABLE */}
