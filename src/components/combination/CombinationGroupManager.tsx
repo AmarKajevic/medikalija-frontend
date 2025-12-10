@@ -27,7 +27,6 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
 
   const groups = getGroupsWithCombinations.data || [];
 
-  // ✅ UKUPNA CENA
   const totalPrice = useMemo(
     () =>
       analyses
@@ -36,7 +35,6 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     [analyses, selectedAnalysisIds]
   );
 
-  // ✅ DODAVANJE KOMBINACIJE
   const handleAddCombination = async () => {
     if (!comboName.trim()) return alert("Unesite ime kombinacije");
     if (!selectedGroupId && !newGroupName.trim())
@@ -67,7 +65,6 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     setNewGroupName("");
   };
 
-  // ✅ BRISANJE ANALIZE
   const deleteAnalysis = async (analysisId: string) => {
     if (!confirm("Obrisati analizu?")) return;
 
@@ -79,7 +76,6 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     getGroupsWithCombinations.refetch();
   };
 
-  // ✅ BRISANJE KOMBINACIJE
   const deleteCombination = async (comboId: string) => {
     if (!confirm("Obrisati kombinaciju?")) return;
 
@@ -91,7 +87,6 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     getGroupsWithCombinations.refetch();
   };
 
-  // ✅ BRISANJE CELE GRUPE
   const deleteGroup = async (groupId: string) => {
     if (!confirm("OBRISATI CELOU GRUPU?")) return;
 
@@ -103,39 +98,45 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     getGroupsWithCombinations.refetch();
   };
 
-  if (isAnalysesLoading) return <p>Loading analyses...</p>;
+  if (isAnalysesLoading) return <p className="text-gray-500">Učitavanje analiza...</p>;
 
   return (
-    <div className="p-4 bg-white rounded shadow space-y-6">
+    <div className="space-y-10 p-6 bg-gray-50 rounded-xl">
 
-      {/* ✅ LISTA ANALIZA */}
-      <div>
-        <h2 className="font-bold text-lg mb-3">Lista analiza</h2>
-        <ul className="space-y-2">
+      {/* ================= ANALIZE ================= */}
+      <div className="bg-white rounded-xl shadow p-5">
+        <h2 className="text-lg font-semibold border-b pb-3 mb-4">
+          📊 Lista analiza
+        </h2>
+
+        <ul className="grid md:grid-cols-2 gap-3">
           {analyses.map((a) => (
-            <li key={a._id} className="flex justify-between items-center border p-2 rounded">
-              <div>
+            <li
+              key={a._id}
+              className="flex justify-between items-center border rounded-lg p-3 hover:bg-gray-50 transition"
+            >
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  value={a._id}
                   checked={selectedAnalysisIds.includes(a._id)}
-                  onChange={(e) => {
-                    const id = e.target.value;
+                  onChange={() =>
                     setSelectedAnalysisIds((prev) =>
-                      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-                    );
-                  }}
-                  className="mr-2"
+                      prev.includes(a._id)
+                        ? prev.filter((x) => x !== a._id)
+                        : [...prev, a._id]
+                    )
+                  }
+                  className="w-4 h-4 accent-blue-600"
                 />
-                {a.name} – {a.price} RSD
-              </div>
+                <span className="font-medium">{a.name}</span>
+                <span className="text-sm text-gray-500">{a.price} RSD</span>
+              </label>
 
               <div className="flex gap-2">
                 <EditAnalysis analysisId={a._id} currentPrice={a.price} onUpdated={() => {}} />
-
                 <button
                   onClick={() => deleteAnalysis(a._id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded text-sm"
+                  className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
                 >
                   Obriši
                 </button>
@@ -145,59 +146,66 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
         </ul>
       </div>
 
-      {/* ✅ DODAVANJE KOMBINACIJE */}
-      <div className="flex flex-wrap gap-2">
-        <input
-          value={comboName}
-          onChange={(e) => setComboName(e.target.value)}
-          placeholder="Ime kombinacije"
-          className="border p-2 rounded"
-        />
+      {/* ================= DODAVANJE KOMBINACIJE ================= */}
+      <div className="bg-white rounded-xl shadow p-5">
+        <h2 className="text-lg font-semibold border-b pb-3 mb-4">
+          ➕ Nova kombinacija
+        </h2>
 
-        <select
-          value={selectedGroupId}
-          onChange={(e) => setSelectedGroupId(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="">-- Izaberi grupu --</option>
-          {groups.map((g) => (
-            <option key={g._id} value={g._id}>
-              {g.name}
-            </option>
-          ))}
-          <option value="__new">+ Nova grupa</option>
-        </select>
-
-        {selectedGroupId === "__new" && (
+        <div className="grid md:grid-cols-5 gap-3 items-center">
           <input
-            value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
-            placeholder="Nova grupa"
-            className="border p-2 rounded"
+            value={comboName}
+            onChange={(e) => setComboName(e.target.value)}
+            placeholder="Ime kombinacije"
+            className="border rounded-lg p-2"
           />
-        )}
 
-        <span className="font-semibold">UKUPNO: {totalPrice} RSD</span>
+          <select
+            value={selectedGroupId}
+            onChange={(e) => setSelectedGroupId(e.target.value)}
+            className="border rounded-lg p-2"
+          >
+            <option value="">Izaberi grupu</option>
+            {groups.map((g) => (
+              <option key={g._id} value={g._id}>
+                {g.name}
+              </option>
+            ))}
+            <option value="__new">+ Nova grupa</option>
+          </select>
 
-        <button
-          onClick={handleAddCombination}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Dodaj kombinaciju
-        </button>
+          {selectedGroupId === "__new" && (
+            <input
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Nova grupa"
+              className="border rounded-lg p-2"
+            />
+          )}
+
+          <div className="font-bold text-blue-700 text-center">
+            Ukupno: {totalPrice} RSD
+          </div>
+
+          <button
+            onClick={handleAddCombination}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+          >
+            Sačuvaj
+          </button>
+        </div>
       </div>
 
-      {/* ✅ GRUPE + KOMBINACIJE */}
-      <div className="space-y-6">
+      {/* ================= GRUPE & KOMBINACIJE ================= */}
+      <div className="space-y-8">
         {groups.map((group) => (
-          <div key={group._id} className="border rounded p-4 shadow">
-
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-lg">{group.name}</h3>
+          <div key={group._id} className="bg-white rounded-xl shadow p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">📁 {group.name}</h3>
 
               <button
                 onClick={() => deleteGroup(group._id)}
-                className="bg-red-700 text-white px-3 py-1 rounded text-sm"
+                className="text-red-600 border border-red-600 hover:bg-red-600 hover:text-white px-3 py-1 rounded text-sm"
               >
                 Obriši grupu
               </button>
@@ -205,30 +213,33 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
 
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-100">
                   <TableCell isHeader>Naziv</TableCell>
                   <TableCell isHeader>Analize</TableCell>
                   <TableCell isHeader>Cena</TableCell>
-                  <TableCell isHeader>Akcije</TableCell>
+                  <TableCell isHeader>Akcija</TableCell>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {group.combinations.map((combo: any) => {
                   const total =
-                    combo.analyses?.reduce((sum: number, a: any) => sum + (a.price || 0), 0) || 0;
+                    combo.analyses?.reduce(
+                      (sum: number, a: any) => sum + (a.price || 0),
+                      0
+                    ) || 0;
 
                   return (
-                    <TableRow key={combo._id}>
-                      <TableCell>{combo.name}</TableCell>
-                      <TableCell>
+                    <TableRow key={combo._id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">{combo.name}</TableCell>
+                      <TableCell className="text-gray-600">
                         {combo.analyses?.map((a: any) => a.name).join(" + ")}
                       </TableCell>
-                      <TableCell>{total} RSD</TableCell>
+                      <TableCell className="font-semibold">{total} RSD</TableCell>
                       <TableCell>
                         <button
                           onClick={() => deleteCombination(combo._id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded text-sm"
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
                         >
                           Obriši
                         </button>
