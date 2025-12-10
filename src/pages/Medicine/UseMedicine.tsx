@@ -29,6 +29,10 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const [amount, setAmount] = useState<string>("");
   const [days, setDays] = useState<string>(""); 
   const [portion, setPortion] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Medicine[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
 
   const [message, setMessage] = useState("");
 
@@ -78,6 +82,31 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
       setMessage(error.response?.data?.message || "Greška pri dodavanju leka ❌");
     },
   });
+    const searchMedicines = async (value: string) => {
+    setSearch(value);
+
+    if (!value.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    try {
+      const { data } = await axios.get(
+        `https://medikalija-api.vercel.app/api/search?q=${value}`
+      );
+
+      const onlyMedicines = (data.results || []).filter(
+        (r: any) => r.type === "medicine"
+      );
+
+      setSearchResults(onlyMedicines);
+      setShowDropdown(true);
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  };
+
 
   const selectedMedicine = medicines.find((m) => m._id === selected);
 
@@ -108,16 +137,37 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     <ComponentCard title="IZABERI LEK">
       <form onSubmit={handleSubmit} className="space-y-3">
         
-        {/* SELECT LEKA */}
-        <Select
-          options={medicines.map((m) => ({
-            value: m._id,
-            label: `${m.name} (stanje: ${m.quantity}, od porodice: ${m.familyQuantity})`,
-          }))}
-          placeholder="-- Izaberi lek --"
-          onChange={setSelected}
-          defaultValue={selected}
-        />
+       <div className="relative">
+  <Input
+    type="text"
+    value={search}
+    onChange={(e) => searchMedicines(e.target.value)}
+    placeholder="Pretraži lek (npr. Brufen)"
+    className="w-full border p-2 rounded"
+  />
+
+      {showDropdown && searchResults.length > 0 && (
+        <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
+          {searchResults.map((m) => (
+            <div
+              key={m._id}
+              onClick={() => {
+                setSelected(m._id);
+                setSearch(m.name);
+                setShowDropdown(false);
+              }}
+              className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b"
+            >
+              <div className="font-medium">{m.name}</div>
+              <div className="text-xs text-gray-500">
+                🏥 Dom: {m.quantity} | 👪 Porodica: {m.familyQuantity}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
 
         {/* PREPRAVLJEN PRVI INPUT */}
         <Input
