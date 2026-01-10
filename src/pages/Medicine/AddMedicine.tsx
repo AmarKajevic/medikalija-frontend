@@ -175,7 +175,7 @@ export default function AddMedicine() {
       <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* CUSTOM DROPDOWN (1:1 SELECT) */}
-        <div className="space-y-1" ref={dropdownRef}>
+        <div className="space-y-1 relative" ref={dropdownRef}>
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
           </label>
