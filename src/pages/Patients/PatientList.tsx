@@ -27,6 +27,9 @@ function PatientList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // ✅ NOVO: lokalni search (identično kao lekovi / artikli)
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     fetchPatients();
   }, []);
@@ -35,9 +38,12 @@ function PatientList() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("https://medikalija-api.vercel.app/api/patient", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "https://medikalija-api.vercel.app/api/patient",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (response.data.success) {
         setPatients(
@@ -60,7 +66,6 @@ function PatientList() {
   const updateDischargeDate = async (patientId: string, date: string) => {
     try {
       const token = localStorage.getItem("token");
-
       const isoDate = new Date(date).toISOString();
 
       await axios.patch(
@@ -69,7 +74,6 @@ function PatientList() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // ⭐ Instant update UI bez refresh-a
       setPatients((prev) =>
         prev.map((p) =>
           p._id === patientId ? { ...p, dischargeDate: isoDate } : p
@@ -81,7 +85,7 @@ function PatientList() {
     }
   };
 
-  // ⭐ Inicijalizacija DatePickera – svaki puta kad se lista promeni
+  // DatePicker init
   useEffect(() => {
     patients.forEach((p) => {
       if (p.dischargeDate) return;
@@ -101,27 +105,47 @@ function PatientList() {
   if (error) return <p className="text-red-500 text-center py-4">{error}</p>;
   if (!patients.length) return <p className="text-center py-4">Nema pacijenata</p>;
 
+  // ✅ filtriranje – NE menja dizajn
+  const safeSearch = search.toLowerCase();
+  const filteredPatients = patients.filter(
+    (p) =>
+      p.name.toLowerCase().includes(safeSearch) ||
+      p.lastName.toLowerCase().includes(safeSearch)
+  );
+
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+      {/* ✅ SEARCH BAR – ISTI KAO OSTALI */}
+      <div className="p-4">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pretraži pacijente..."
+          className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
+        />
+      </div>
+
       <div className="max-w-full overflow-x-auto">
         <Table>
 
           <TableHeader className="border-b">
             <TableRow>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Ime</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Prezime</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Datum rođenja</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Adresa</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Datum prijema</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Datum otpusta</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Akcija</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Kontakt osoba</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Profil</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Ime</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Prezime</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum rođenja</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Adresa</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum prijema</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum otpusta</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Akcija</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Kontakt osoba</TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Profil</TableCell>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {patients.map((patient) => (
+            {filteredPatients.map((patient) => (
               <TableRow key={patient._id} className="hover:bg-gray-50">
                 <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.name}</TableCell>
                 <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.lastName}</TableCell>
@@ -133,7 +157,6 @@ function PatientList() {
                   {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
                 </TableCell>
 
-                {/* ➤ Datum otpusta */}
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                   {patient.dischargeDate ? (
                     <span className="font-medium text-gray-700">
@@ -148,7 +171,6 @@ function PatientList() {
                   )}
                 </TableCell>
 
-                {/* ➤ Akcija */}
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                   {patient.dischargeDate ? (
                     <span className="text-gray-400 italic">Otpušten</span>
@@ -156,9 +178,11 @@ function PatientList() {
                     <span className="text-gray-400 italic">Čeka datum</span>
                   )}
                 </TableCell>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.contactPerson}</TableCell>
 
-                {/* ➤ Profil */}
+                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                  {patient.contactPerson}
+                </TableCell>
+
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                   <Link
                     to={`/patient/${patient._id}`}

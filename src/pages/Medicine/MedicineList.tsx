@@ -83,7 +83,7 @@ export default function MedicineList({ search }: MedicineListProps) {
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           placeholder="Pretraži lek..."
-          className="w-full max-w-md border rounded px-3 py-2"
+          className="w-full max-w-md border-2 rounded px-3 py-2 bg-white "
         />
       </div>
 

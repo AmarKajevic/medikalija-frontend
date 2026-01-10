@@ -47,7 +47,7 @@ export default function ArticlesList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Pretraži artikle..."
-          className="w-full max-w-md border rounded px-3 py-2"
+          className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
         />
       </div>
 
