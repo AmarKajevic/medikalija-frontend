@@ -27,6 +27,9 @@ export default function AddMedicine() {
   const [totalQuantity, setTotalQuantity] = useState<number | "">("");
   const [fromFamily, setFromFamily] = useState(false);
 
+  // ✅ NOVO — search za dropdown (ISTI kao svuda)
+  const [search, setSearch] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -56,6 +59,7 @@ export default function AddMedicine() {
     setUnitsPerPackage("");
     setTotalQuantity("");
     setFromFamily(false);
+    setSearch("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,9 +68,6 @@ export default function AddMedicine() {
     setMessage("");
 
     try {
-      // ------------------------
-      //  PRORAČUNI
-      // ------------------------
       const u = Number(unitsPerPackage);
       const q = Number(totalQuantity);
 
@@ -74,7 +75,7 @@ export default function AddMedicine() {
       const loose = u > 0 ? q % u : q;
 
       if (selectedId) {
-        // === UPDATE POSTOJEĆEG LEKA ===
+        // UPDATE POSTOJEĆEG LEKA
         const payload: any = {
           fromFamily,
           unitsPerPackage: u,
@@ -97,14 +98,13 @@ export default function AddMedicine() {
           resetForm();
         }
       } else {
-        // === NOVI LEK ===
+        // NOVI LEK
         const payload: any = {
           name,
           pricePerUnit:
             typeof pricePerUnit === "number"
               ? parseFloat(pricePerUnit.toFixed(2))
               : parseFloat(Number(pricePerUnit).toFixed(2)),
-
           unitsPerPackage: u,
           packages: packageCount,
           quantity: loose,
@@ -146,6 +146,12 @@ export default function AddMedicine() {
     setTotalQuantity("");
   }, [selectedMedicine]);
 
+  // ✅ filtrirane opcije za dropdown
+  const safeSearch = search.toLowerCase();
+  const filteredMedicines = medicines.filter((m) =>
+    m.name.toLowerCase().includes(safeSearch)
+  );
+
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
       <h2 className="text-xl font-bold mb-2">
@@ -155,18 +161,29 @@ export default function AddMedicine() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
         {/* Izbor leka */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
           </label>
+
+          {/* ✅ SEARCH BAR — DODAT, DIZAJN NE DIRAN */}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Pretraži lek..."
+            className="w-full border px-3 py-2 rounded-lg text-sm mb-2"
+          />
+
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
             className="w-full border px-3 py-2 rounded-lg text-sm"
           >
             <option value="">— Novi lek —</option>
-            {medicines.map((m) => (
+            {filteredMedicines.map((m) => (
               <option key={m._id} value={m._id}>
                 {m.name} (Dom: {m.quantity.toFixed(2)} | Porodica:{" "}
                 {m.familyQuantity?.toFixed(2) ?? 0})
