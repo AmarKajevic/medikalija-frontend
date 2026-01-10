@@ -17,6 +17,9 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [newGroupName, setNewGroupName] = useState("");
 
+  // ✅ NOVO: search za analize (isti kao svuda)
+  const [search, setSearch] = useState("");
+
   const {
     analyses,
     isAnalysesLoading,
@@ -26,6 +29,12 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
   } = useCombinations(patientId!);
 
   const groups = getGroupsWithCombinations.data || [];
+
+  // ✅ filtrirane analize – bez promene dizajna
+  const safeSearch = search.toLowerCase();
+  const filteredAnalyses = analyses.filter((a) =>
+    a.name.toLowerCase().includes(safeSearch)
+  );
 
   const totalPrice = useMemo(
     () =>
@@ -98,7 +107,8 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
     getGroupsWithCombinations.refetch();
   };
 
-  if (isAnalysesLoading) return <p className="text-gray-500">Učitavanje analiza...</p>;
+  if (isAnalysesLoading)
+    return <p className="text-gray-500">Učitavanje analiza...</p>;
 
   return (
     <div className="space-y-10 p-6 bg-gray-50 rounded-xl">
@@ -109,8 +119,19 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
           📊 Lista analiza
         </h2>
 
+        {/* ✅ SEARCH BAR – ISTI KAO SVUDA */}
+        <div className="mb-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Pretraži analize..."
+            className="w-full max-w-md border rounded px-3 py-2"
+          />
+        </div>
+
         <ul className="grid md:grid-cols-2 gap-3">
-          {analyses.map((a) => (
+          {filteredAnalyses.map((a) => (
             <li
               key={a._id}
               className="flex justify-between items-center border rounded-lg p-3 hover:bg-gray-50 transition"
@@ -133,7 +154,11 @@ export default function AddCombinationRQ({ patientId }: AddCombinationRQProps) {
               </label>
 
               <div className="flex gap-2">
-                <EditAnalysis analysisId={a._id} currentPrice={a.price} onUpdated={() => {}} />
+                <EditAnalysis
+                  analysisId={a._id}
+                  currentPrice={a.price}
+                  onUpdated={() => {}}
+                />
                 <button
                   onClick={() => deleteAnalysis(a._id)}
                   className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
