@@ -1,3 +1,4 @@
+import { useState } from "react";
 import useArticles from "../../hooks/Patient/useArticle";
 import ArticlesForm from "./ArticlesForm";
 import DeleteArticle from "./DeleteArticle";
@@ -17,14 +18,38 @@ export default function ArticlesList() {
 
   const refetchArticles = getArticles.refetch;
 
-  const homeArticles = articles.filter((a) => (a.quantity ?? 0) > 0);
-  const familyArticles = articles.filter((a) => (a.familyQuantity ?? 0) > 0);
+  // ✅ NOVO: lokalni search (isto kao kod lekova)
+  const [search, setSearch] = useState("");
+
+  const safeSearch = search.toLowerCase();
+
+  const filteredArticles = articles.filter((a) =>
+    a.name.toLowerCase().includes(safeSearch)
+  );
+
+  const homeArticles = filteredArticles.filter(
+    (a) => (a.quantity ?? 0) > 0
+  );
+  const familyArticles = filteredArticles.filter(
+    (a) => (a.familyQuantity ?? 0) > 0
+  );
 
   if (isLoading) return <p>Učitavanje artikala...</p>;
 
   return (
     <div className="space-y-10">
       <ArticlesForm />
+
+      {/* ✅ SEARCH BAR – ISTI KAO KOD LEKOVA */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pretraži artikle..."
+          className="w-full max-w-md border rounded px-3 py-2"
+        />
+      </div>
 
       {/* 🟦 DOM ARTIKLI */}
       <ComponentCard title="ARTIKLI — DOM">
