@@ -6,40 +6,34 @@ interface MedicineProps {
   medicineId: string
   pricePerUnit?: number
   quantity?: number
-  mode?: "home" | "family"
+  mode?: "home" | "family"  // doma ili porodica
   onUpdated: () => void
 }
 
 export default function EditMedicine({
   medicineId,
-  pricePerUnit,
+  pricePerUnit = 0,
+  quantity = 0,
   mode = "home",
   onUpdated,
 }: MedicineProps) {
   const { token } = useAuth()
-
-  // ⬇️ number | "" da bi placeholder radio
-  const [price, setPrice] = useState<number | "">(
-    pricePerUnit ?? ""
-  )
-  const [quantityValue, setQuantityValue] = useState<number | "">("")
-  const [addQuantity, setAddQuantity] = useState<number | "">("")
+  const [price, setPrice] = useState<number>(pricePerUnit)
+  const [quantityValue, setQuantityValue] = useState<number>(quantity)
+  const [addQuantity, setAddQuantity] = useState<number>(0)
   const [message, setMessage] = useState("")
 
-  // Update cene
+  // Funkcija za update cene
   const handlePriceUpdate = async () => {
-    if (price === "") return
-
     try {
+      const data = { pricePerUnit: price }
       const response = await axios.put(
         `https://medikalija-api.vercel.app/api/medicine/${medicineId}`,
-        { pricePerUnit: Number(price) },
+        data,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-
       if (response.data.success) {
         setMessage("Cena uspešno promenjena")
-        setPrice("")
         onUpdated()
       }
     } catch (error) {
@@ -48,22 +42,14 @@ export default function EditMedicine({
     }
   }
 
-  // Update količine
+  // Funkcija za update količine
   const handleQuantityUpdate = async (isAdd: boolean) => {
-    const value = isAdd ? addQuantity : quantityValue
-    if (value === "") return
-
     try {
       let data: any = {}
-
       if (mode === "family") {
-        data = isAdd
-          ? { addQuantity: Number(addQuantity), fromFamily: true }
-          : { quantity: Number(quantityValue), fromFamily: true }
+        data = isAdd ? { addQuantity, fromFamily: true } : { quantity: quantityValue, fromFamily: true }
       } else {
-        data = isAdd
-          ? { addQuantity: Number(addQuantity) }
-          : { quantity: Number(quantityValue) }
+        data = isAdd ? { addQuantity } : { quantity: quantityValue }
       }
 
       const response = await axios.put(
@@ -74,8 +60,8 @@ export default function EditMedicine({
 
       if (response.data.success) {
         setMessage("Količina uspešno promenjena")
-        setQuantityValue("")
-        setAddQuantity("")
+        setQuantityValue(0)
+        setAddQuantity(0)
         onUpdated()
       }
     } catch (error) {
@@ -85,17 +71,14 @@ export default function EditMedicine({
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-
+    <div className="flex items-center gap-2">
       {/* Cena */}
       {mode === "home" && (
         <>
           <input
             type="number"
-            value={price}
-            onChange={(e) =>
-              setPrice(e.target.value === "" ? "" : Number(e.target.value))
-            }
+            value={price === 0 ? "" : price}
+            onChange={(e) => setPrice(e.target.value === "" ? 0 : Number(e.target.value))}
             className="border p-1 rounded w-20"
             placeholder="Cena"
           />
@@ -108,18 +91,17 @@ export default function EditMedicine({
         </>
       )}
 
-      {/* Nova količina */}
-      <input
-        type="number"
-        value={quantityValue}
-        onChange={(e) =>
-          setQuantityValue(
-            e.target.value === "" ? "" : Number(e.target.value)
-          )
-        }
-        className="border p-1 rounded w-20"
-        placeholder="Nova količina"
-      />
+      {/* Količina */}
+          <input
+            type="number"
+            value={quantityValue === 0 ? "" : quantityValue}
+            onChange={(e) =>
+              setQuantityValue(e.target.value === "" ? 0 : Number(e.target.value))
+            }
+            className="border p-1 rounded w-20"
+            placeholder="Nova količina"
+          />
+
       <button
         onClick={() => handleQuantityUpdate(false)}
         className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
@@ -127,18 +109,16 @@ export default function EditMedicine({
         Nova količina
       </button>
 
-      {/* Dodaj količinu */}
-      <input
-        type="number"
-        value={addQuantity}
-        onChange={(e) =>
-          setAddQuantity(
-            e.target.value === "" ? "" : Number(e.target.value)
-          )
-        }
-        className="border p-1 rounded w-20"
-        placeholder="Dodaj količinu"
-      />
+        <input
+          type="number"
+          value={addQuantity === 0 ? "" : addQuantity}
+          onChange={(e) =>
+            setAddQuantity(e.target.value === "" ? 0 : Number(e.target.value))
+          }
+          className="border p-1 rounded w-20"
+          placeholder="Dodaj količinu"
+        />
+
       <button
         onClick={() => handleQuantityUpdate(true)}
         className="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600"
@@ -147,9 +127,7 @@ export default function EditMedicine({
       </button>
 
       {/* Poruka */}
-      {message && (
-        <p className="text-green-600 text-sm ml-2">{message}</p>
-      )}
+      {message && <p className="text-green-600 text-sm ml-2">{message}</p>}
     </div>
   )
 }

@@ -106,11 +106,11 @@ export default function MedicineList({ search }: MedicineListProps) {
             <TableBody>
               {filteredMedicines.map((m) => (
                 <TableRow key={m._id}>
-                  <TableCell>{m.name}</TableCell>
-                  <TableCell>{m.packageCount ?? 0}</TableCell>
-                  <TableCell>{m.unitsPerPackage ?? "-"}</TableCell>
-                  <TableCell>{m.quantity.toFixed(2)}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">{m.name}</TableCell>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">{m.packageCount ?? 0}</TableCell>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">{m.unitsPerPackage ?? "-"}</TableCell>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">{m.quantity.toFixed(2)}</TableCell>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">
                     {m.pricePerUnit ? `${m.pricePerUnit} RSD` : "-"}
                   </TableCell>
                   <TableCell>
