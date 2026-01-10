@@ -1,5 +1,5 @@
 // pages/Medicine/AddMedicine.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import Input from "../../components/form/input/InputField";
@@ -27,8 +27,10 @@ export default function AddMedicine() {
   const [totalQuantity, setTotalQuantity] = useState<number | "">("");
   const [fromFamily, setFromFamily] = useState(false);
 
-  // ✅ NOVO — search za dropdown (ISTI kao svuda)
+  // 🔽 DROPDOWN STATE
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -38,9 +40,7 @@ export default function AddMedicine() {
       try {
         const res = await axios.get(
           "https://medikalija-api.vercel.app/api/medicine",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.success) {
           setMedicines(res.data.medicines);
@@ -52,6 +52,21 @@ export default function AddMedicine() {
     fetchMedicines();
   }, [token]);
 
+  // klik van dropdowna → zatvori
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const resetForm = () => {
     setSelectedId("");
     setName("");
@@ -60,6 +75,7 @@ export default function AddMedicine() {
     setTotalQuantity("");
     setFromFamily(false);
     setSearch("");
+    setDropdownOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,7 +91,6 @@ export default function AddMedicine() {
       const loose = u > 0 ? q % u : q;
 
       if (selectedId) {
-        // UPDATE POSTOJEĆEG LEKA
         const payload: any = {
           fromFamily,
           unitsPerPackage: u,
@@ -98,7 +113,6 @@ export default function AddMedicine() {
           resetForm();
         }
       } else {
-        // NOVI LEK
         const payload: any = {
           name,
           pricePerUnit:
@@ -146,10 +160,8 @@ export default function AddMedicine() {
     setTotalQuantity("");
   }, [selectedMedicine]);
 
-  // ✅ filtrirane opcije za dropdown
-  const safeSearch = search.toLowerCase();
   const filteredMedicines = medicines.filter((m) =>
-    m.name.toLowerCase().includes(safeSearch)
+    m.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -162,34 +174,74 @@ export default function AddMedicine() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Izbor leka */}
-        <div className="space-y-1">
+        {/* CUSTOM DROPDOWN (1:1 SELECT) */}
+        <div className="space-y-1" ref={dropdownRef}>
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
           </label>
 
-          {/* ✅ SEARCH BAR — DODAT, DIZAJN NE DIRAN */}
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Pretraži lek..."
-            className="w-full border px-3 py-2 rounded-lg text-sm mb-2"
-          />
-
-          <select
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full border px-3 py-2 rounded-lg text-sm"
+          <button
+            type="button"
+            onClick={() => setDropdownOpen((o) => !o)}
+            className="w-full border px-3 py-2 rounded-lg text-sm text-left bg-white"
           >
-            <option value="">— Novi lek —</option>
-            {filteredMedicines.map((m) => (
-              <option key={m._id} value={m._id}>
-                {m.name} (Dom: {m.quantity.toFixed(2)} | Porodica:{" "}
-                {m.familyQuantity?.toFixed(2) ?? 0})
-              </option>
-            ))}
-          </select>
+            {selectedMedicine
+              ? `${selectedMedicine.name} (Dom: ${selectedMedicine.quantity.toFixed(
+                  2
+                )} | Porodica: ${
+                  selectedMedicine.familyQuantity?.toFixed(2) ?? 0
+                })`
+              : "— Novi lek —"}
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-64 overflow-auto">
+              <div className="p-2 border-b">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Pretraži lek..."
+                  className="w-full border px-2 py-1 rounded text-sm"
+                  autoFocus
+                />
+              </div>
+
+              <ul>
+                <li
+                  onClick={() => {
+                    setSelectedId("");
+                    setDropdownOpen(false);
+                    setSearch("");
+                  }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                >
+                  — Novi lek —
+                </li>
+
+                {filteredMedicines.map((m) => (
+                  <li
+                    key={m._id}
+                    onClick={() => {
+                      setSelectedId(m._id);
+                      setDropdownOpen(false);
+                      setSearch("");
+                    }}
+                    className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                  >
+                    {m.name} (Dom: {m.quantity.toFixed(2)} | Porodica:{" "}
+                    {m.familyQuantity?.toFixed(2) ?? 0})
+                  </li>
+                ))}
+
+                {filteredMedicines.length === 0 && (
+                  <li className="px-3 py-2 text-sm text-gray-500">
+                    Nema rezultata
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         {!selectedId && (
