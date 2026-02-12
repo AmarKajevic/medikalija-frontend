@@ -11,23 +11,27 @@ interface Medicine {
   quantity: number;
   familyQuantity?: number;
   unitsPerPackage?: number;
-  packageCount?: number;
-  familyPackageCount?: number;
 }
 
-export default function AddMedicine() {
-  const { token } = useAuth();
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
+interface MedicineFormProps {
+  title: string;
+  fromFamily: boolean;
+  medicines: Medicine[];
+  token: string | null;
+}
 
+function MedicineForm({
+  title,
+  fromFamily,
+  medicines,
+  token,
+}: MedicineFormProps) {
   const [selectedId, setSelectedId] = useState<string>("");
-
   const [name, setName] = useState("");
   const [pricePerUnit, setPricePerUnit] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
   const [totalQuantity, setTotalQuantity] = useState<number | "">("");
-  const [fromFamily, setFromFamily] = useState(false);
 
-  // 🔽 DROPDOWN STATE
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,24 +39,6 @@ export default function AddMedicine() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const fetchMedicines = async () => {
-      try {
-        const res = await axios.get(
-          "https://medikalija-api.vercel.app/api/medicine",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data.success) {
-          setMedicines(res.data.medicines);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchMedicines();
-  }, [token]);
-
-  // klik van dropdowna → zatvori
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -67,13 +53,16 @@ export default function AddMedicine() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const filteredMedicines = medicines.filter((m) =>
+    m.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   const resetForm = () => {
     setSelectedId("");
     setName("");
     setPricePerUnit("");
     setUnitsPerPackage("");
     setTotalQuantity("");
-    setFromFamily(false);
     setSearch("");
     setDropdownOpen(false);
   };
@@ -91,53 +80,37 @@ export default function AddMedicine() {
       const loose = u > 0 ? q % u : q;
 
       if (selectedId) {
-        const payload: any = {
-          fromFamily,
-          unitsPerPackage: u,
-          packages: packageCount,
-          addQuantity: loose,
-        };
-
-        if (pricePerUnit !== "") {
-          payload.pricePerUnit = Number(pricePerUnit);
-        }
-
-        const res = await axios.put(
+        await axios.put(
           `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
-          payload,
+          {
+            fromFamily,
+            unitsPerPackage: u,
+            packages: packageCount,
+            addQuantity: loose,
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        if (res.data.success) {
-          setMessage("Količina uspešno dodata.");
-          resetForm();
-        }
+        setMessage("Količina uspešno dodata.");
       } else {
-        const payload: any = {
-          name,
-          pricePerUnit:
-            typeof pricePerUnit === "number"
-              ? parseFloat(pricePerUnit.toFixed(2))
-              : parseFloat(Number(pricePerUnit).toFixed(2)),
-          unitsPerPackage: u,
-          packages: packageCount,
-          quantity: loose,
-          fromFamily,
-        };
-
-        const res = await axios.post(
+        await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
-          payload,
+          {
+            name,
+            pricePerUnit: Number(pricePerUnit),
+            unitsPerPackage: u,
+            packages: packageCount,
+            quantity: loose,
+            fromFamily,
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        if (res.data.success) {
-          setMessage("Lek uspešno dodat.");
-          resetForm();
-        }
+        setMessage("Lek uspešno dodat.");
       }
+
+      resetForm();
     } catch (error: any) {
-      console.error(error);
       setMessage(
         error.response?.data?.message ||
           "Greška prilikom dodavanja leka."
@@ -160,21 +133,11 @@ export default function AddMedicine() {
     setTotalQuantity("");
   }, [selectedMedicine]);
 
-  const filteredMedicines = medicines.filter((m) =>
-    m.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
-      <h2 className="text-xl font-bold mb-2">
-        {selectedId
-          ? "Dodaj količinu postojećem leku"
-          : "Dodaj novi lek"}
-      </h2>
+    <div className="p-6 bg-white shadow-lg rounded-xl space-y-4">
+      <h2 className="text-xl font-bold">{title}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
-        {/* CUSTOM DROPDOWN (1:1 SELECT) */}
         <div className="space-y-1 relative" ref={dropdownRef}>
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
@@ -212,7 +175,6 @@ export default function AddMedicine() {
                   onClick={() => {
                     setSelectedId("");
                     setDropdownOpen(false);
-                    setSearch("");
                   }}
                   className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
                 >
@@ -225,7 +187,6 @@ export default function AddMedicine() {
                     onClick={() => {
                       setSelectedId(m._id);
                       setDropdownOpen(false);
-                      setSearch("");
                     }}
                     className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
                   >
@@ -233,12 +194,6 @@ export default function AddMedicine() {
                     {m.familyQuantity?.toFixed(2) ?? 0})
                   </li>
                 ))}
-
-                {filteredMedicines.length === 0 && (
-                  <li className="px-3 py-2 text-sm text-gray-500">
-                    Nema rezultata
-                  </li>
-                )}
               </ul>
             </div>
           )}
@@ -271,7 +226,7 @@ export default function AddMedicine() {
 
         <Input
           type="number"
-          placeholder="broj tableta u pakovanju npr. 12"
+          placeholder="Broj tableta u pakovanju"
           value={unitsPerPackage}
           onChange={(e) =>
             setUnitsPerPackage(
@@ -283,7 +238,7 @@ export default function AddMedicine() {
 
         <Input
           type="number"
-          placeholder="Ukupna količina (npr. 36)"
+          placeholder="Ukupna količina"
           value={totalQuantity}
           onChange={(e) =>
             setTotalQuantity(
@@ -292,15 +247,6 @@ export default function AddMedicine() {
           }
           required
         />
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={fromFamily}
-            onChange={() => setFromFamily((prev) => !prev)}
-          />
-          <span>Porodica donela lek</span>
-        </label>
 
         <button
           type="submit"
@@ -316,6 +262,48 @@ export default function AddMedicine() {
           {message}
         </p>
       )}
+    </div>
+  );
+}
+
+export default function AddMedicine() {
+  const { token } = useAuth();
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        const res = await axios.get(
+          "https://medikalija-api.vercel.app/api/medicine",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.success) {
+          setMedicines(res.data.medicines);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchMedicines();
+  }, [token]);
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <MedicineForm
+          title="Dodavanje leka (Dom)"
+          fromFamily={false}
+          medicines={medicines}
+          token={token}
+        />
+
+        <MedicineForm
+          title="Dodavanje leka (Porodica)"
+          fromFamily={true}
+          medicines={medicines}
+          token={token}
+        />
+      </div>
     </div>
   );
 }
