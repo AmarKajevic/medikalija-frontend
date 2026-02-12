@@ -25,7 +25,7 @@ interface Medicine {
 
 interface Patient {
   _id: string;
-  firstName: string;
+  name: string;
   lastName: string;
 }
 
@@ -44,14 +44,17 @@ export default function MedicineList({ search }: MedicineListProps) {
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const API = "https://medikalija-api.vercel.app/api";
 
   /* ================= FETCH DOM MEDICINES ================= */
   const fetchMedicines = async () => {
     try {
-      const response = await axios.get(
-        "https://medikalija-api.vercel.app/api/medicine",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`${API}/medicine`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (response.data.success) {
         setMedicines(response.data.medicines);
       }
@@ -63,10 +66,10 @@ export default function MedicineList({ search }: MedicineListProps) {
   /* ================= FETCH PATIENTS ================= */
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(
-        "https://medikalija-api.vercel.app/api/patient",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`${API}/patient`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (response.data.success) {
         setPatients(response.data.patients);
       }
@@ -78,15 +81,23 @@ export default function MedicineList({ search }: MedicineListProps) {
   /* ================= FETCH PATIENT MEDICINES ================= */
   const fetchPatientMedicines = async (patientId: string) => {
     try {
+      // 🔴 AKO OVO NIJE TACNA RUTA -> PROMENI SAMO OVDE
       const response = await axios.get(
-        `https://medikalija-api.vercel.app/api/patient/${patientId}/medicines`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/patient/${patientId}/medicines`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
+
       if (response.data.success) {
         setPatientMedicines(response.data.medicines);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setPatientMedicines([]); // da ne puca UI
+      } else {
+        console.log(error);
+      }
     }
   };
 
@@ -97,6 +108,7 @@ export default function MedicineList({ search }: MedicineListProps) {
       await fetchPatients();
       setLoading(false);
     };
+
     loadData();
   }, [token]);
 
@@ -114,33 +126,33 @@ export default function MedicineList({ search }: MedicineListProps) {
   );
 
   const filteredPatients = patients.filter((p) =>
-    `${p.firstName} ${p.lastName}`
+    `${p.name} ${p.lastName}`
       .toLowerCase()
       .includes(safePatientSearch)
   );
 
   return (
     <div className="space-y-10">
-      {/* ================= DOM LEKOVI ================= */}
-      <div className="mb-4">
-        <input
-          type="text"
-          value={localSearch}
-          onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="Pretraži lek..."
-          className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
-        />
-      </div>
 
+      {/* ================= DOM LEKOVI ================= */}
       <ComponentCard title="LEKOVI — MEDIKALIJA (DOM)">
+        <div className="mb-4">
+          <input
+            type="text"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder="Pretraži lek..."
+            className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
+          />
+        </div>
+
         <div className="max-w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableCell isHeader>Naziv</TableCell>
                 <TableCell isHeader>Pakovanja</TableCell>
-                <TableCell isHeader>Tableta / pak.</TableCell>
-                <TableCell isHeader>Komada ukupno</TableCell>
+                <TableCell isHeader>Komada</TableCell>
                 <TableCell isHeader>Cena</TableCell>
                 <TableCell isHeader>Izmeni</TableCell>
                 <TableCell isHeader>Obriši</TableCell>
@@ -152,7 +164,6 @@ export default function MedicineList({ search }: MedicineListProps) {
                 <TableRow key={m._id}>
                   <TableCell>{m.name}</TableCell>
                   <TableCell>{m.packageCount ?? 0}</TableCell>
-                  <TableCell>{m.unitsPerPackage ?? "-"}</TableCell>
                   <TableCell>{m.quantity}</TableCell>
                   <TableCell>
                     {m.pricePerUnit ? `${m.pricePerUnit} RSD` : "-"}
@@ -176,38 +187,52 @@ export default function MedicineList({ search }: MedicineListProps) {
         </div>
       </ComponentCard>
 
-      {/* ================= PACIJENTI ================= */}
+      {/* ================= PACIJENT SEARCH ================= */}
       <ComponentCard title="PACIJENTI — LEKOVI OD PORODICE">
-        <div className="mb-4">
+        <div className="relative max-w-md">
           <input
             type="text"
             value={patientSearch}
-            onChange={(e) => setPatientSearch(e.target.value)}
+            onFocus={() => setShowDropdown(true)}
+            onChange={(e) => {
+              setPatientSearch(e.target.value);
+              setShowDropdown(true);
+            }}
             placeholder="Pretraži pacijenta..."
-            className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
+            className="w-full border-2 rounded px-3 py-2 bg-white"
           />
-        </div>
 
-        <div className="space-y-2">
-          {filteredPatients.map((p) => (
-            <div
-              key={p._id}
-              onClick={() => {
-                setSelectedPatient(p);
-                fetchPatientMedicines(p._id);
-              }}
-              className="cursor-pointer p-3 border rounded hover:bg-gray-100"
-            >
-              {p.firstName} {p.lastName}
+          {showDropdown && safePatientSearch && (
+            <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto shadow">
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((p) => (
+                  <div
+                    key={p._id}
+                    onClick={() => {
+                      setSelectedPatient(p);
+                      setPatientSearch(`${p.name} ${p.lastName}`);
+                      setShowDropdown(false);
+                      fetchPatientMedicines(p._id);
+                    }}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {p.name} {p.lastName}
+                  </div>
+                ))
+              ) : (
+                <div className="p-2 text-gray-500">
+                  Nema rezultata
+                </div>
+              )}
             </div>
-          ))}
+          )}
         </div>
       </ComponentCard>
 
-      {/* ================= TABELA LEKOVA PACIJENTA ================= */}
+      {/* ================= LEKOVI PACIJENTA ================= */}
       {selectedPatient && (
         <ComponentCard
-          title={`Lekovi pacijenta: ${selectedPatient.firstName} ${selectedPatient.lastName}`}
+          title={`Lekovi pacijenta: ${selectedPatient.name} ${selectedPatient.lastName}`}
         >
           <div className="max-w-full overflow-x-auto">
             <Table>
@@ -215,8 +240,7 @@ export default function MedicineList({ search }: MedicineListProps) {
                 <TableRow>
                   <TableCell isHeader>Naziv</TableCell>
                   <TableCell isHeader>Pakovanja</TableCell>
-                  <TableCell isHeader>Tableta / pak.</TableCell>
-                  <TableCell isHeader>Ukupno komada</TableCell>
+                  <TableCell isHeader>Komada</TableCell>
                   <TableCell isHeader>Izmeni</TableCell>
                   <TableCell isHeader>Obriši</TableCell>
                 </TableRow>
@@ -227,7 +251,6 @@ export default function MedicineList({ search }: MedicineListProps) {
                   <TableRow key={m._id}>
                     <TableCell>{m.name}</TableCell>
                     <TableCell>{m.familyPackageCount ?? 0}</TableCell>
-                    <TableCell>{m.unitsPerPackage ?? "-"}</TableCell>
                     <TableCell>{m.familyQuantity}</TableCell>
                     <TableCell>
                       <EditMedicine
