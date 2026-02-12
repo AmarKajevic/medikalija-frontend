@@ -15,7 +15,7 @@ interface Medicine {
 
 interface Patient {
   _id: string;
-  firstName: string;
+  name: string;
   lastName: string;
 }
 
@@ -81,7 +81,7 @@ function MedicineForm({
   );
 
   const filteredPatients = patients.filter((p) =>
-    `${p.firstName} ${p.lastName}`
+    `${p.name} ${p.lastName}`
       .toLowerCase()
       .includes(patientSearch.toLowerCase())
   );
@@ -243,7 +243,7 @@ function MedicineForm({
               className="w-full border px-3 py-2 rounded-lg text-sm text-left bg-white"
             >
               {selectedPatientObj
-                ? `${selectedPatientObj.firstName} ${selectedPatientObj.lastName}`
+                ? `${selectedPatientObj.name} ${selectedPatientObj.lastName}`
                 : "— Izaberi pacijenta —"}
             </button>
 
@@ -271,7 +271,7 @@ function MedicineForm({
                       }}
                       className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
                     >
-                      {p.firstName} {p.lastName}
+                      {p.name} {p.lastName}
                     </li>
                   ))}
 
