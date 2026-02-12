@@ -59,9 +59,8 @@ const handleQuantityUpdate = async (isAdd: boolean) => {
 
     const endpoint =
       mode === "family"
-        ? `https://medikalija-api.vercel.app/api/patient-stock/${medicineId}`
+        ? `https://medikalija-api.vercel.app/api/medicine/patient-stock/${medicineId}`
         : `https://medikalija-api.vercel.app/api/medicine/${medicineId}`
-
     const response = await axios.put(endpoint, data, {
       headers: { Authorization: `Bearer ${token}` },
     })
