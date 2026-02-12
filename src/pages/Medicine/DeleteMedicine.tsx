@@ -3,27 +3,33 @@ import axios from "axios";
 
 interface DeleteMedicineProps {
   medicineId: string;
-  onDeleted: () => void; // callback za parent
+  mode?: "home" | "family";
+  onDeleted: () => void;
 }
 
-export default function DeleteMedicine({ medicineId, onDeleted }: DeleteMedicineProps) {
+export default function DeleteMedicine({
+  medicineId,
+  mode = "home",
+  onDeleted,
+}: DeleteMedicineProps) {
   const { token } = useAuth();
 
   const handleDelete = async () => {
     try {
-      const response = await axios.delete(
-        `https://medikalija-api.vercel.app/api/medicine/${medicineId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const endpoint =
+        mode === "family"
+          ? `https://medikalija-api.vercel.app/api/medicine/patient-stock/${medicineId}`
+          : `https://medikalija-api.vercel.app/api/medicine/${medicineId}`;
+
+      const response = await axios.delete(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (response.data.success) {
-        onDeleted(); // 👈 obavesti parent da osveži listu
+        onDeleted();
       }
     } catch (error) {
-      console.error(error);
+      console.error("Delete error:", error);
     }
   };
 

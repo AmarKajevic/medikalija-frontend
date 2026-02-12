@@ -279,10 +279,10 @@ const fetchPatientMedicines = async (patientId: string) => {
                   <TableCell>
                     <DeleteMedicine
                       medicineId={m._id}
-                      onDeleted={() =>
-                        fetchPatientMedicines(selectedPatient._id)
-                      }
+                      mode="family"
+                      onDeleted={() => fetchPatientMedicines(selectedPatient._id)}
                     />
+
                   </TableCell>
                 </TableRow>
               ))}
