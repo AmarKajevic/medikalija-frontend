@@ -1,4 +1,5 @@
 // pages/Medicine/AddMedicine.tsx
+
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
@@ -108,6 +109,12 @@ function MedicineForm({
       const u = Number(unitsPerPackage);
       const q = Number(totalQuantity);
 
+      if (!q || q <= 0) {
+        setMessage("Morate uneti količinu.");
+        setLoading(false);
+        return;
+      }
+
       const packageCount = u > 0 ? Math.floor(q / u) : 0;
       const loose = u > 0 ? q % u : q;
 
@@ -124,8 +131,12 @@ function MedicineForm({
         quantity: loose,
       };
 
+      // Ako je postojeći lek
       if (selectedId) {
-        payload.addQuantity = loose;
+        const selectedMedicine = medicines.find(
+          (m) => m._id === selectedId
+        );
+        payload.name = selectedMedicine?.name;
       } else {
         payload.name = name;
         if (!fromFamily) {
@@ -137,23 +148,37 @@ function MedicineForm({
         payload.patientId = selectedPatient;
       }
 
-      if (selectedId) {
-        await axios.put(
-          `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
+      console.log("PAYLOAD:", payload);
+
+      // 🔥 BITNA LOGIKA
+      if (fromFamily) {
+        // UVEK POST za porodični lek
         await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+      } else {
+        // DOM
+        if (selectedId) {
+          await axios.put(
+            `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } else {
+          await axios.post(
+            "https://medikalija-api.vercel.app/api/medicine/add",
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
       }
 
       setMessage("Uspešno sačuvano.");
       resetForm();
     } catch (error: any) {
+      console.error(error);
       setMessage(
         error.response?.data?.message || "Greška prilikom dodavanja."
       );
@@ -174,7 +199,7 @@ function MedicineForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* MEDICINE DROPDOWN */}
         <div className="space-y-1 relative" ref={dropdownRef}>
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium">
             Odaberi postojeći lek ili unesi novi
           </label>
 
@@ -228,10 +253,10 @@ function MedicineForm({
           )}
         </div>
 
-        {/* PATIENT SEARCHABLE DROPDOWN */}
+        {/* PATIENT DROPDOWN */}
         {fromFamily && (
           <div className="space-y-1 relative" ref={patientDropdownRef}>
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium">
               Odaberi pacijenta
             </label>
 
