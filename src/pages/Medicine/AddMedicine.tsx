@@ -13,10 +13,17 @@ interface Medicine {
   unitsPerPackage?: number;
 }
 
+interface Patient {
+  _id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface MedicineFormProps {
   title: string;
   fromFamily: boolean;
   medicines: Medicine[];
+  patients?: Patient[];
   token: string | null;
 }
 
@@ -24,9 +31,11 @@ function MedicineForm({
   title,
   fromFamily,
   medicines,
+  patients = [],
   token,
 }: MedicineFormProps) {
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState("");
   const [name, setName] = useState("");
   const [pricePerUnit, setPricePerUnit] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
@@ -59,6 +68,7 @@ function MedicineForm({
 
   const resetForm = () => {
     setSelectedId("");
+    setSelectedPatient("");
     setName("");
     setPricePerUnit("");
     setUnitsPerPackage("");
@@ -79,41 +89,51 @@ function MedicineForm({
       const packageCount = u > 0 ? Math.floor(q / u) : 0;
       const loose = u > 0 ? q % u : q;
 
+      if (fromFamily && !selectedPatient) {
+        setMessage("Morate odabrati pacijenta.");
+        setLoading(false);
+        return;
+      }
+
+      const payload: any = {
+        fromFamily,
+        unitsPerPackage: u,
+        packages: packageCount,
+        quantity: loose,
+      };
+
+      if (selectedId) {
+        payload.addQuantity = loose;
+      } else {
+        payload.name = name;
+        if (!fromFamily) {
+          payload.pricePerUnit = Number(pricePerUnit);
+        }
+      }
+
+      if (fromFamily) {
+        payload.patientId = selectedPatient;
+      }
+
       if (selectedId) {
         await axios.put(
           `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
-          {
-            fromFamily,
-            unitsPerPackage: u,
-            packages: packageCount,
-            addQuantity: loose,
-          },
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        setMessage("Količina uspešno dodata.");
       } else {
         await axios.post(
           "https://medikalija-api.vercel.app/api/medicine/add",
-          {
-            name,
-            pricePerUnit: Number(pricePerUnit),
-            unitsPerPackage: u,
-            packages: packageCount,
-            quantity: loose,
-            fromFamily,
-          },
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        setMessage("Lek uspešno dodat.");
       }
 
+      setMessage("Uspešno sačuvano.");
       resetForm();
     } catch (error: any) {
       setMessage(
-        error.response?.data?.message ||
-          "Greška prilikom dodavanja leka."
+        error.response?.data?.message || "Greška prilikom dodavanja."
       );
     } finally {
       setLoading(false);
@@ -125,10 +145,12 @@ function MedicineForm({
   useEffect(() => {
     if (selectedMedicine) {
       setUnitsPerPackage(selectedMedicine.unitsPerPackage ?? "");
-      setPricePerUnit(selectedMedicine.pricePerUnit);
+      if (!fromFamily) {
+        setPricePerUnit(selectedMedicine.pricePerUnit);
+      }
     } else {
       setUnitsPerPackage("");
-      setPricePerUnit("");
+      if (!fromFamily) setPricePerUnit("");
     }
     setTotalQuantity("");
   }, [selectedMedicine]);
@@ -138,6 +160,7 @@ function MedicineForm({
       <h2 className="text-xl font-bold">{title}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* MEDICINE DROPDOWN */}
         <div className="space-y-1 relative" ref={dropdownRef}>
           <label className="text-sm font-medium text-gray-700">
             Odaberi postojeći lek ili unesi novi
@@ -148,13 +171,7 @@ function MedicineForm({
             onClick={() => setDropdownOpen((o) => !o)}
             className="w-full border px-3 py-2 rounded-lg text-sm text-left bg-white"
           >
-            {selectedMedicine
-              ? `${selectedMedicine.name} (Dom: ${selectedMedicine.quantity.toFixed(
-                  2
-                )} | Porodica: ${
-                  selectedMedicine.familyQuantity?.toFixed(2) ?? 0
-                })`
-              : "— Novi lek —"}
+            {selectedMedicine ? selectedMedicine.name : "— Novi lek —"}
           </button>
 
           {dropdownOpen && (
@@ -166,7 +183,6 @@ function MedicineForm({
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Pretraži lek..."
                   className="w-full border px-2 py-1 rounded text-sm"
-                  autoFocus
                 />
               </div>
 
@@ -190,14 +206,36 @@ function MedicineForm({
                     }}
                     className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
                   >
-                    {m.name} (Dom: {m.quantity.toFixed(2)} | Porodica:{" "}
-                    {m.familyQuantity?.toFixed(2) ?? 0})
+                    {m.name}
                   </li>
                 ))}
               </ul>
             </div>
           )}
         </div>
+
+        {/* PATIENT DROPDOWN (ONLY FAMILY) */}
+        {fromFamily && (
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700">
+              Odaberi pacijenta
+            </label>
+
+            <select
+              value={selectedPatient}
+              onChange={(e) => setSelectedPatient(e.target.value)}
+              className="w-full border px-3 py-2 rounded-lg text-sm bg-white"
+              required
+            >
+              <option value="">-- Izaberi pacijenta --</option>
+              {patients.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.firstName} {p.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {!selectedId && (
           <>
@@ -209,18 +247,20 @@ function MedicineForm({
               required
             />
 
-            <Input
-              type="number"
-              step={0.01}
-              placeholder="Cena po komadu (RSD)"
-              value={pricePerUnit}
-              onChange={(e) =>
-                setPricePerUnit(
-                  e.target.value === "" ? "" : Number(e.target.value)
-                )
-              }
-              required
-            />
+            {!fromFamily && (
+              <Input
+                type="number"
+                step={0.01}
+                placeholder="Cena po komadu (RSD)"
+                value={pricePerUnit}
+                onChange={(e) =>
+                  setPricePerUnit(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                required
+              />
+            )}
           </>
         )}
 
@@ -269,22 +309,34 @@ function MedicineForm({
 export default function AddMedicine() {
   const { token } = useAuth();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
 
   useEffect(() => {
-    const fetchMedicines = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(
+        const medRes = await axios.get(
           "https://medikalija-api.vercel.app/api/medicine",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (res.data.success) {
-          setMedicines(res.data.medicines);
+
+        const patientRes = await axios.get(
+          "https://medikalija-api.vercel.app/api/patient",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (medRes.data.success) {
+          setMedicines(medRes.data.medicines);
+        }
+
+        if (patientRes.data.success) {
+          setPatients(patientRes.data.patients);
         }
       } catch (err) {
         console.error(err);
       }
     };
-    fetchMedicines();
+
+    fetchData();
   }, [token]);
 
   return (
@@ -301,6 +353,7 @@ export default function AddMedicine() {
           title="Dodavanje leka (Porodica)"
           fromFamily={true}
           medicines={medicines}
+          patients={patients}
           token={token}
         />
       </div>
