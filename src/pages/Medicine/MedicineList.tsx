@@ -22,6 +22,16 @@ interface Medicine {
   packageCount?: number;
   familyPackageCount?: number;
 }
+interface PatientMedicine {
+  _id: string;
+  quantity: number;
+  medicine: {
+    _id: string;
+    name: string;
+  };
+}
+
+
 
 interface Patient {
   _id: string;
@@ -39,7 +49,8 @@ export default function MedicineList({ search }: MedicineListProps) {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [patientMedicines, setPatientMedicines] = useState<Medicine[]>([]);
+  const [patientMedicines, setPatientMedicines] = useState<PatientMedicine[]>([]);
+
 
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
@@ -249,31 +260,34 @@ const fetchPatientMedicines = async (patientId: string) => {
               </TableHeader>
 
               <TableBody>
-                {patientMedicines.map((m) => (
-                  <TableRow key={m._id}>
-                    <TableCell>{m.name}</TableCell>
-                    <TableCell>{m.familyPackageCount ?? 0}</TableCell>
-                    <TableCell>{m.familyQuantity}</TableCell>
-                    <TableCell>
-                      <EditMedicine
-                        medicineId={m._id}
-                        mode="family"
-                        onUpdated={() =>
-                          fetchPatientMedicines(selectedPatient._id)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <DeleteMedicine
-                        medicineId={m._id}
-                        onDeleted={() =>
-                          fetchPatientMedicines(selectedPatient._id)
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+              {patientMedicines.map((m) => (
+                <TableRow key={m._id}>
+                  <TableCell>{m.medicine?.name}</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>{m.quantity}</TableCell>
+
+                  <TableCell>
+                    <EditMedicine
+                      medicineId={m._id}
+                      mode="family"
+                      onUpdated={() =>
+                        fetchPatientMedicines(selectedPatient._id)
+                      }
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <DeleteMedicine
+                      medicineId={m._id}
+                      onDeleted={() =>
+                        fetchPatientMedicines(selectedPatient._id)
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+
             </Table>
           </div>
         </ComponentCard>
