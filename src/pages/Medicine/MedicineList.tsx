@@ -91,9 +91,7 @@ const fetchPatientMedicines = async (patientId: string) => {
     console.log("PATIENT MED RESPONSE:", response.data);
 
     if (response.data.success) {
-      setPatientMedicines(response.data.medicines || []);
-    } else if (Array.isArray(response.data)) {
-      setPatientMedicines(response.data);
+      setPatientMedicines(response.data.patientStock || []);
     } else {
       setPatientMedicines([]);
     }
@@ -102,6 +100,7 @@ const fetchPatientMedicines = async (patientId: string) => {
     setPatientMedicines([]);
   }
 };
+
 
 
   useEffect(() => {
