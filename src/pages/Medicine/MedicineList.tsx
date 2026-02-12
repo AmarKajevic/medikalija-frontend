@@ -82,7 +82,7 @@ export default function MedicineList({ search }: MedicineListProps) {
 const fetchPatientMedicines = async (patientId: string) => {
   try {
     const response = await axios.get(
-      `${API}/medicine/patient/${patientId}/medicines`,
+      `${API}/medicine/patient/${patientId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
