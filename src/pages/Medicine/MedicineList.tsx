@@ -79,11 +79,10 @@ export default function MedicineList({ search }: MedicineListProps) {
   };
 
   /* ================= FETCH PATIENT MEDICINES ================= */
-  const fetchPatientMedicines = async (patientId: string) => {
+const fetchPatientMedicines = async (patientId: string) => {
     try {
-      // 🔴 AKO OVO NIJE TACNA RUTA -> PROMENI SAMO OVDE
       const response = await axios.get(
-        `${API}/patient/${patientId}/medicines`,
+        `${API}/medicine/patient/${patientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -92,14 +91,11 @@ export default function MedicineList({ search }: MedicineListProps) {
       if (response.data.success) {
         setPatientMedicines(response.data.medicines);
       }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        setPatientMedicines([]); // da ne puca UI
-      } else {
-        console.log(error);
-      }
+    } catch (error) {
+      console.log(error);
     }
   };
+
 
   useEffect(() => {
     const loadData = async () => {
