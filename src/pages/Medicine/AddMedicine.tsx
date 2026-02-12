@@ -36,6 +36,7 @@ function MedicineForm({
 }: MedicineFormProps) {
   const [selectedId, setSelectedId] = useState("");
   const [selectedPatient, setSelectedPatient] = useState("");
+
   const [name, setName] = useState("");
   const [pricePerUnit, setPricePerUnit] = useState<number | "">("");
   const [unitsPerPackage, setUnitsPerPackage] = useState<number | "">("");
@@ -43,11 +44,17 @@ function MedicineForm({
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState("");
+
+  const [patientDropdownOpen, setPatientDropdownOpen] = useState(false);
+  const [patientSearch, setPatientSearch] = useState("");
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const patientDropdownRef = useRef<HTMLDivElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  /* CLICK OUTSIDE */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -56,7 +63,14 @@ function MedicineForm({
       ) {
         setDropdownOpen(false);
       }
+      if (
+        patientDropdownRef.current &&
+        !patientDropdownRef.current.contains(e.target as Node)
+      ) {
+        setPatientDropdownOpen(false);
+      }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
@@ -64,6 +78,12 @@ function MedicineForm({
 
   const filteredMedicines = medicines.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredPatients = patients.filter((p) =>
+    `${p.firstName} ${p.lastName}`
+      .toLowerCase()
+      .includes(patientSearch.toLowerCase())
   );
 
   const resetForm = () => {
@@ -74,7 +94,9 @@ function MedicineForm({
     setUnitsPerPackage("");
     setTotalQuantity("");
     setSearch("");
+    setPatientSearch("");
     setDropdownOpen(false);
+    setPatientDropdownOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,19 +163,9 @@ function MedicineForm({
   };
 
   const selectedMedicine = medicines.find((m) => m._id === selectedId);
-
-  useEffect(() => {
-    if (selectedMedicine) {
-      setUnitsPerPackage(selectedMedicine.unitsPerPackage ?? "");
-      if (!fromFamily) {
-        setPricePerUnit(selectedMedicine.pricePerUnit);
-      }
-    } else {
-      setUnitsPerPackage("");
-      if (!fromFamily) setPricePerUnit("");
-    }
-    setTotalQuantity("");
-  }, [selectedMedicine]);
+  const selectedPatientObj = patients.find(
+    (p) => p._id === selectedPatient
+  );
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl space-y-4">
@@ -171,7 +183,9 @@ function MedicineForm({
             onClick={() => setDropdownOpen((o) => !o)}
             className="w-full border px-3 py-2 rounded-lg text-sm text-left bg-white"
           >
-            {selectedMedicine ? selectedMedicine.name : "— Novi lek —"}
+            {selectedMedicine
+              ? selectedMedicine.name
+              : "— Novi lek —"}
           </button>
 
           {dropdownOpen && (
@@ -214,26 +228,61 @@ function MedicineForm({
           )}
         </div>
 
-        {/* PATIENT DROPDOWN (ONLY FAMILY) */}
+        {/* PATIENT SEARCHABLE DROPDOWN */}
         {fromFamily && (
-          <div className="space-y-1">
+          <div className="space-y-1 relative" ref={patientDropdownRef}>
             <label className="text-sm font-medium text-gray-700">
               Odaberi pacijenta
             </label>
 
-            <select
-              value={selectedPatient}
-              onChange={(e) => setSelectedPatient(e.target.value)}
-              className="w-full border px-3 py-2 rounded-lg text-sm bg-white"
-              required
+            <button
+              type="button"
+              onClick={() =>
+                setPatientDropdownOpen((o) => !o)
+              }
+              className="w-full border px-3 py-2 rounded-lg text-sm text-left bg-white"
             >
-              <option value="">-- Izaberi pacijenta --</option>
-              {patients.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.firstName} {p.lastName}
-                </option>
-              ))}
-            </select>
+              {selectedPatientObj
+                ? `${selectedPatientObj.firstName} ${selectedPatientObj.lastName}`
+                : "— Izaberi pacijenta —"}
+            </button>
+
+            {patientDropdownOpen && (
+              <div className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-64 overflow-auto">
+                <div className="p-2 border-b">
+                  <input
+                    type="text"
+                    value={patientSearch}
+                    onChange={(e) =>
+                      setPatientSearch(e.target.value)
+                    }
+                    placeholder="Pretraži pacijenta..."
+                    className="w-full border px-2 py-1 rounded text-sm"
+                  />
+                </div>
+
+                <ul>
+                  {filteredPatients.map((p) => (
+                    <li
+                      key={p._id}
+                      onClick={() => {
+                        setSelectedPatient(p._id);
+                        setPatientDropdownOpen(false);
+                      }}
+                      className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                    >
+                      {p.firstName} {p.lastName}
+                    </li>
+                  ))}
+
+                  {filteredPatients.length === 0 && (
+                    <li className="px-3 py-2 text-sm text-gray-500">
+                      Nema rezultata
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
