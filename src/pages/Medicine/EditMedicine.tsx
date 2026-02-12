@@ -43,32 +43,41 @@ export default function EditMedicine({
   }
 
   // Funkcija za update količine
-  const handleQuantityUpdate = async (isAdd: boolean) => {
-    try {
-      let data: any = {}
-      if (mode === "family") {
-        data = isAdd ? { addQuantity, fromFamily: true } : { quantity: quantityValue, fromFamily: true }
-      } else {
-        data = isAdd ? { addQuantity } : { quantity: quantityValue }
-      }
+const handleQuantityUpdate = async (isAdd: boolean) => {
+  try {
+    let data: any = {}
 
-      const response = await axios.put(
-        `https://medikalija-api.vercel.app/api/medicine/${medicineId}`,
-        data,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-
-      if (response.data.success) {
-        setMessage("Količina uspešno promenjena")
-        setQuantityValue(0)
-        setAddQuantity(0)
-        onUpdated()
-      }
-    } catch (error) {
-      console.error(error)
-      setMessage("Greška pri ažuriranju količine")
+    if (mode === "family") {
+      data = isAdd
+        ? { addQuantity }
+        : { quantity: quantityValue }
+    } else {
+      data = isAdd
+        ? { addQuantity }
+        : { quantity: quantityValue }
     }
+
+    const endpoint =
+      mode === "family"
+        ? `https://medikalija-api.vercel.app/api/patient-stock/${medicineId}`
+        : `https://medikalija-api.vercel.app/api/medicine/${medicineId}`
+
+    const response = await axios.put(endpoint, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (response.data.success) {
+      setMessage("Količina uspešno promenjena")
+      setQuantityValue(0)
+      setAddQuantity(0)
+      onUpdated()
+    }
+  } catch (error) {
+    console.error(error)
+    setMessage("Greška pri ažuriranju količine")
   }
+}
+
 
   return (
     <div className="flex items-center gap-2">
