@@ -80,21 +80,28 @@ export default function MedicineList({ search }: MedicineListProps) {
 
   /* ================= FETCH PATIENT MEDICINES ================= */
 const fetchPatientMedicines = async (patientId: string) => {
-    try {
-      const response = await axios.get(
-        `${API}/medicine/patient/${patientId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.success) {
-        setPatientMedicines(response.data.medicines);
+  try {
+    const response = await axios.get(
+      `${API}/medicine/patient/${patientId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
-    } catch (error) {
-      console.log(error);
+    );
+
+    console.log("PATIENT MED RESPONSE:", response.data);
+
+    if (response.data.success) {
+      setPatientMedicines(response.data.medicines || []);
+    } else if (Array.isArray(response.data)) {
+      setPatientMedicines(response.data);
+    } else {
+      setPatientMedicines([]);
     }
-  };
+  } catch (error) {
+    console.log(error);
+    setPatientMedicines([]);
+  }
+};
 
 
   useEffect(() => {
