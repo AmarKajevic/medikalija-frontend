@@ -37,7 +37,7 @@ export const useMedicine = (patientId: string) => {
     queryKey: ["usedMedicine", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}`,
+        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/medicines`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // backend vraća data.usedMedicine, default na prazan niz

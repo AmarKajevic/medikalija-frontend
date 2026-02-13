@@ -64,7 +64,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     queryKey: ["patientStock", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/medicines`,
+        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/stock`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return data.medicines;
