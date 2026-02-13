@@ -68,9 +68,13 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return data.medicines;
+      
     },
+    
     enabled: !!patientId,
   });
+  console.log("STOCK:", patientStock);
+
 
   const addMedicine = useMutation({
     mutationFn: async (payload: { medicineId: string; amount: number }) => {
@@ -144,7 +148,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
             <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
               {filteredMedicines.map((m) => {
                 const family = patientStock.find(
-                  (p) => p.medicineId === m._id
+                  (p: any) => p.medicine?._id === m._id
                 );
 
                 return (
