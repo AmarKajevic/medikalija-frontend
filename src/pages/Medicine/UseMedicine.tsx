@@ -16,7 +16,7 @@ interface Medicine {
 interface PatientStock {
   _id: string;
   medicineId: string;
-  quantity: number; // PORODICA ZA TOG PACIJENTA
+  familyQuantity: number; // PORODICA ZA TOG PACIJENTA
 }
 
 interface MedicineProps {
@@ -148,8 +148,9 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
             <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
               {filteredMedicines.map((m) => {
                 const family = patientStock.find(
-                  (p: any) => p.medicine?._id === m._id
+                  (p: any) => p._id === m._id
                 );
+
 
                 return (
                   <div
@@ -163,7 +164,8 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
                   >
                     <div className="font-medium">{m.name}</div>
                     <div className="text-xs text-gray-500">
-                      🏥 Dom: {m.quantity} | 👪 Porodica: {family?.quantity || 0}
+                      🏥 Dom: {m.quantity} | 👪 Porodica: {family?.familyQuantity || 0}
+
                     </div>
                   </div>
                 );
