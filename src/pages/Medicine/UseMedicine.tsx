@@ -7,11 +7,16 @@ import Select from "../../components/form/Select";
 import ComponentCard from "../../components/common/ComponentCard";
 
 interface Medicine {
-  _id: string;          // PatientMedicine _id
-  medicineId: string;   // Medicine _id
+  _id: string;
   name: string;
-  quantity: number;
-  unitsPerPackage: number;
+  quantity: number; // DOM
+  pricePerUnit: number;
+}
+
+interface PatientStock {
+  _id: string;
+  medicineId: string;
+  quantity: number; // PORODICA ZA TOG PACIJENTA
 }
 
 interface MedicineProps {
@@ -42,9 +47,21 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     { label: "Dva cela", value: 2 },
   ];
 
-  // 🔥 UZIMA PACIJENTOV STOCK (ispravan endpoint)
-  const { data: medicines = [], isLoading } = useQuery<Medicine[]>({
-    queryKey: ["medicines", patientId],
+  // 🏥 SVI LEKOVI DOMA
+  const { data: medicines = [] } = useQuery<Medicine[]>({
+    queryKey: ["allMedicines"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        "https://medikalija-api.vercel.app/api/medicine",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return data.medicines;
+    },
+  });
+
+  // 👪 LEKOVI KOJE JE PORODICA DONELA TOM PACIJENTU
+  const { data: patientStock = [] } = useQuery<PatientStock[]>({
+    queryKey: ["patientStock", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
         `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/stock`,
@@ -66,7 +83,9 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     },
     onSuccess: (data) => {
       setMessage("Uspešno dodat lek ✔️");
-      queryClient.invalidateQueries({ queryKey: ["medicines", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["allMedicines"] });
+      queryClient.invalidateQueries({ queryKey: ["patientStock", patientId] });
+
       onMedicineUsed(data.usedMedicine);
 
       setSelected("");
@@ -76,14 +95,13 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
       setSearch("");
     },
     onError: (error: any) => {
-      setMessage(error.response?.data?.message || "Greška pri dodavanju leka ❌");
+      setMessage(error.response?.data?.message || "Greška ❌");
     },
   });
 
   const filteredMedicines = medicines.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
   );
-
 
   const numericAmount = parseFloat(amount || "0");
   const numericDays = parseFloat(days || "0");
@@ -99,7 +117,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     if (!selected) return setMessage("Izaberite lek.");
     if (!numericAmount) return setMessage("Unesite količinu.");
     if (!numericDays) return setMessage("Unesite broj dana.");
-    if (!numericPortion) return setMessage("Odaberite dozu/tabletu.");
+    if (!numericPortion) return setMessage("Odaberite dozu.");
 
     addMedicine.mutate({
       medicineId: selected,
@@ -107,12 +125,10 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     });
   };
 
-  if (isLoading) return <p>Učitavanje lekova...</p>;
-
   return (
     <ComponentCard title="IZABERI LEK">
       <form onSubmit={handleSubmit} className="space-y-3">
-        
+
         <div className="relative">
           <Input
             type="text"
@@ -122,27 +138,32 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
               setShowDropdown(true);
             }}
             placeholder="Pretraži lek"
-            className="w-full border p-2 rounded"
           />
 
           {showDropdown && filteredMedicines.length > 0 && (
             <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
-              {filteredMedicines.map((m) => (
-                <div
-                  key={m._id}
-                  onClick={() => {
-                    setSelected(m.medicineId);
-                    setSearch(m.name);
-                    setShowDropdown(false);
-                  }}
-                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b"
-                >
-                  <div className="font-medium">{m.name}</div>
-                  <div className="text-xs text-gray-500">
-                    Ukupno dostupno: {m.quantity}
+              {filteredMedicines.map((m) => {
+                const family = patientStock.find(
+                  (p) => p.medicineId === m._id
+                );
+
+                return (
+                  <div
+                    key={m._id}
+                    onClick={() => {
+                      setSelected(m._id);
+                      setSearch(m.name);
+                      setShowDropdown(false);
+                    }}
+                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b"
+                  >
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs text-gray-500">
+                      🏥 Dom: {m.quantity} | 👪 Porodica: {family?.quantity || 0}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -153,7 +174,6 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
           min={0}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full border p-2 rounded"
           placeholder="koliko dana"
         />
 
@@ -162,7 +182,6 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
           min={0}
           value={days}
           onChange={(e) => setDays(e.target.value)}
-          className="w-full border p-2 rounded"
           placeholder="koliko puta dnevno"
         />
 
@@ -177,23 +196,19 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
         />
 
         <p className="text-gray-600 text-sm">
-          Ukupno za upotrebu: {isNaN(totalAmount) ? 0 : totalAmount} tableta
+          Ukupno za upotrebu: {isNaN(totalAmount) ? 0 : totalAmount}
         </p>
 
         <button
           type="submit"
-          className="bg-blue-500 w-fit self-end text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Dodaj potrošnju
         </button>
       </form>
 
       {message && (
-        <p
-          className={`mt-3 text-center ${
-            message.includes("Greška") ? "text-red-600" : "text-green-600"
-          }`}
-        >
+        <p className="mt-3 text-center text-sm text-red-600">
           {message}
         </p>
       )}
