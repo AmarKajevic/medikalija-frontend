@@ -98,7 +98,7 @@ export default function PatientMedicineFromFamily() {
 
   try {
     await axios.post(
-      "https://medikalija-api.vercel.app/api/medicine-reserve",
+      "https://medikalija-api.vercel.app/api/medicine-reserve/move",
       {
         patientMedicineId,
         amount,
