@@ -37,6 +37,8 @@ export default function PatientMedicineFromFamily() {
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(
     null
   );
+  const [transferAmounts, setTransferAmounts] = useState<Record<string, number>>({});
+
 
   const [patientSearch, setPatientSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -87,6 +89,35 @@ export default function PatientMedicineFromFamily() {
       }));
     }
   };
+  const transferToReserve = async (patientMedicineId: string, patientId: string) => {
+  const amount = transferAmounts[patientMedicineId];
+
+  if (!amount || amount <= 0) {
+    return alert("Unesi količinu za prebacivanje!");
+  }
+
+  try {
+    await axios.post(
+      "https://medikalija-api.vercel.app/api/medicine-reserve",
+      {
+        patientMedicineId,
+        amount,
+        source: "family",
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    setTransferAmounts((prev) => ({ ...prev, [patientMedicineId]: 0 }));
+
+    // refresh lekova pacijenta
+    await fetchPatientMedicines(patientId);
+  } catch (err) {
+    console.error("Greška pri prebacivanju u rezervu:", err);
+  }
+};
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -164,6 +195,8 @@ export default function PatientMedicineFromFamily() {
                       <TableCell isHeader>Količina</TableCell>
                       <TableCell isHeader>Izmeni</TableCell>
                       <TableCell isHeader>Obriši</TableCell>
+                      <TableCell isHeader>Rezerva</TableCell>
+
                     </TableRow>
                   </TableHeader>
 
@@ -196,6 +229,30 @@ export default function PatientMedicineFromFamily() {
                               }
                             />
                           </TableCell>
+                        <TableCell className="w-40">
+                        <input
+                            type="number"
+                            placeholder="Količina"
+                            value={transferAmounts[m._id] || ""}
+                            onChange={(e) =>
+                            setTransferAmounts({
+                                ...transferAmounts,
+                                [m._id]: Number(e.target.value),
+                            })
+                            }
+                            className="w-full border rounded px-2 py-1 text-sm"
+                        />
+
+                        <button
+                            onClick={() =>
+                            transferToReserve(m._id, patient._id)
+                            }
+                            className="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-1 rounded text-xs"
+                        >
+                            Prebaci u rezervu
+                        </button>
+                        </TableCell>
+
                         </TableRow>
                       ))
                     ) : (

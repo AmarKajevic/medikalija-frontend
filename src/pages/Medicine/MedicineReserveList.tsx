@@ -17,6 +17,7 @@ export default function MedicineReserveList() {
   const [returnAmounts, setReturnAmounts] = useState<Record<string, number>>(
     {}
   );
+  
   const [loading, setLoading] = useState(false);
 
   // ✅ UČITAVANJE REZERVE
