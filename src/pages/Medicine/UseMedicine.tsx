@@ -73,7 +73,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     
     enabled: !!patientId,
   });
-  console.log("STOCK:", patientStock);
+  
 
 
   const addMedicine = useMutation({

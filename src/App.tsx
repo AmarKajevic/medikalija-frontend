@@ -15,6 +15,7 @@ import AddArticleFromFamily from "./components/articles/AddArticleFromFamily";
 import UserList from "./pages/Users/UserList";
 import MedicineReserveManager from "./pages/Medicine/MedicineReserveManager";
 import MedicineReserveList from "./pages/Medicine/MedicineReserveList";
+import PatientMedicineFromFamily from "./pages/Medicine/PatientMedicineFromFamily";
 
 
 // -------------------------------------------------------
@@ -152,6 +153,7 @@ export default function App() {
               <Route path="/familyMedicine" element={<AddMedicineFromFamily />} />
               <Route path="/patient-table" element={<PatientTable />} />
               <Route path="/family-articles" element={<AddArticleFromFamily />} />
+              <Route path="/patient-medicines" element={<PatientMedicineFromFamily />} />
             </Route>
 
             {/* ALL STAFF */}
