@@ -89,34 +89,48 @@ export default function PatientMedicineFromFamily() {
       }));
     }
   };
-  const transferToReserve = async (patientMedicineId: string, patientId: string) => {
+const transferToReserve = async (
+  patientMedicineId: string,
+  patientId: string,
+  maxQuantity: number
+) => {
   const amount = transferAmounts[patientMedicineId];
 
   if (!amount || amount <= 0) {
     return alert("Unesi količinu za prebacivanje!");
   }
 
+  if (amount > maxQuantity) {
+    return alert("Nema dovoljno leka kod pacijenta!");
+  }
+
   try {
     await axios.post(
-      "https://medikalija-api.vercel.app/api/medicine-reserve/move",
+      `${API}/medicine-reserve/move`,
       {
-        patientMedicineId,
+        medicineId: patientMedicineId, // 🔥 mora da se zove medicineId
         amount,
         source: "family",
+        patientId, // 🔥 OBAVEZNO
       },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
 
-    setTransferAmounts((prev) => ({ ...prev, [patientMedicineId]: 0 }));
+    setTransferAmounts((prev) => ({
+      ...prev,
+      [patientMedicineId]: 0,
+    }));
 
-    // refresh lekova pacijenta
     await fetchPatientMedicines(patientId);
-  } catch (err) {
-    console.error("Greška pri prebacivanju u rezervu:", err);
+
+  } catch (err: any) {
+    console.error("Greška:", err.response?.data);
+    alert(err.response?.data?.message || "Greška pri prebacivanju");
   }
 };
+
 
 
   useEffect(() => {
@@ -245,7 +259,7 @@ export default function PatientMedicineFromFamily() {
 
                         <button
                             onClick={() =>
-                            transferToReserve(m._id, patient._id)
+                            transferToReserve(m._id, patient._id,m.quantity)
                             }
                             className="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-1 rounded text-xs"
                         >
