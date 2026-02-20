@@ -35,6 +35,8 @@ export default function MedicineReserveManager() {
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
   const [returnAmounts, setReturnAmounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
+  const [returnDestination, setReturnDestination] = useState<Record<string, "family" | "home">>({});
+
 
 
   const API = "https://medikalija-api.vercel.app/api";
@@ -75,17 +77,20 @@ export default function MedicineReserveManager() {
   /* ================= RETURN ================= */
   const returnFromReserve = async (reserveId: string, patientId: string) => {
     const amount = returnAmounts[reserveId];
+    const destination = returnDestination[reserveId] || "family";
+
     if (!amount || amount <= 0) return alert("Unesi količinu!");
 
     await axios.post(
       `${API}/medicine-reserve/return`,
-      { reserveId, amount },
+      { reserveId, amount, destination },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
     setReturnAmounts((prev) => ({ ...prev, [reserveId]: 0 }));
     fetchReserve(patientId);
   };
+
 
   useEffect(() => {
     fetchPatients();
@@ -171,7 +176,7 @@ export default function MedicineReserveManager() {
                             {new Date(r.createdAt).toLocaleDateString()}
                           </TableCell>
 
-                          <TableCell className="w-32">
+                          <TableCell className="w-40">
                             <Input
                               type="number"
                               placeholder="Količina"
@@ -183,15 +188,29 @@ export default function MedicineReserveManager() {
                                 })
                               }
                             />
-                            <button
-                              onClick={() =>
-                                returnFromReserve(r._id, patient._id)
+
+                            <select
+                              value={returnDestination[r._id] || "family"}
+                              onChange={(e) =>
+                                setReturnDestination({
+                                  ...returnDestination,
+                                  [r._id]: e.target.value as "family" | "home",
+                                })
                               }
+                              className="mt-1 w-full border rounded px-2 py-1 text-xs"
+                            >
+                              <option value="family">Vrati pacijentu</option>
+                              <option value="home">Vrati u dom</option>
+                            </select>
+
+                            <button
+                              onClick={() => returnFromReserve(r._id, patient._id)}
                               className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-1 rounded text-xs"
                             >
                               Vrati
                             </button>
                           </TableCell>
+
 
                           <TableCell>
                             <button
