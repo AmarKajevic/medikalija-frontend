@@ -1,4 +1,4 @@
-import { FaFileMedical, FaPrescriptionBottleAlt, FaUsers } from "react-icons/fa"
+import { FaFileMedical, FaPills, FaPrescriptionBottleAlt, FaUsers } from "react-icons/fa"
 import { Link } from "react-router"
 
 export default function NurseDashboard() {
@@ -6,6 +6,7 @@ export default function NurseDashboard() {
     { to: "/family-articles", label: "artikli ", icon: <FaPrescriptionBottleAlt /> },
     { to: "/familyMedicine", label: "dodavanje lekova od porodice ", icon: <FaFileMedical /> },
     { to: "../patient-table", label: "Lista pacijenata", icon: <FaUsers /> },
+    { to: "/patient-medicines", label: "Lekovi pacijenata", icon: <FaPills/> },
   ]
   return (
      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">

@@ -2,103 +2,217 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import ComponentCard from "../../components/common/ComponentCard";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import Input from "../../components/form/input/InputField";
 
-interface Medicine {
+interface Patient {
   _id: string;
   name: string;
-  quantity: number;
-  familyQuantity: number;
-  pricePerUnit: number;
+  lastName: string;
+}
+
+interface ReserveItem {
+  _id: string;
+  name: string;
+  amount: number;
+  source: "home" | "family";
+  pricePerUnit?: number;
+  createdAt: string;
+  patient?: string;
 }
 
 export default function MedicineReserveManager() {
   const { token } = useAuth();
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [amounts, setAmounts] = useState<Record<string, number>>({});
 
-  const fetchMedicines = async () => {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [reserve, setReserve] = useState<Record<string, ReserveItem[]>>({});
+  const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
+  const [returnAmounts, setReturnAmounts] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+
+
+  const API = "https://medikalija-api.vercel.app/api";
+
+  /* ================= FETCH PACIJENATA ================= */
+  const fetchPatients = async () => {
+    const res = await axios.get(`${API}/patient`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setPatients(res.data.patients || []);
+  };
+
+  /* ================= FETCH REZERVE PO PACIJENTU ================= */
+  const fetchReserve = async (patientId: string) => {
     const res = await axios.get(
-      "https://medikalija-api.vercel.app/api/medicine",
+      `${API}/medicine-reserve?patientId=${patientId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    setMedicines(res.data.medicines || []);
+    setReserve((prev) => ({
+      ...prev,
+      [patientId]: res.data.reserve || [],
+    }));
   };
 
-  const moveToReserve = async (medicineId: string, source: "home" | "family") => {
-    const amount = amounts[medicineId];
+  /* ================= DELETE ================= */
+  const deleteReserve = async (id: string, patientId: string) => {
+    if (!confirm("Obrisati lek iz rezerve?")) return;
+
+    await axios.delete(`${API}/medicine-reserve/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    fetchReserve(patientId);
+  };
+
+  /* ================= RETURN ================= */
+  const returnFromReserve = async (reserveId: string, patientId: string) => {
+    const amount = returnAmounts[reserveId];
     if (!amount || amount <= 0) return alert("Unesi količinu!");
 
     await axios.post(
-      "https://medikalija-api.vercel.app/api/medicine-reserve/move",
-      { medicineId, amount, source },
+      `${API}/medicine-reserve/return`,
+      { reserveId, amount },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    setAmounts((prev) => ({ ...prev, [medicineId]: 0 }));
-    fetchMedicines();
+    setReturnAmounts((prev) => ({ ...prev, [reserveId]: 0 }));
+    fetchReserve(patientId);
   };
 
   useEffect(() => {
-    fetchMedicines();
+    fetchPatients();
   }, []);
 
+  const filteredPatients = patients.filter((p) =>
+    `${p.name} ${p.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const togglePatient = async (patientId: string) => {
+    if (expandedPatient === patientId) {
+      setExpandedPatient(null);
+      return;
+    }
+
+    setExpandedPatient(patientId);
+
+    if (!reserve[patientId]) {
+      await fetchReserve(patientId);
+    }
+  };
+
   return (
-    <div className="space-y-10">
-      <ComponentCard title="PRENOS LEKOVA U REZERVU">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell isHeader>Naziv</TableCell>
-                <TableCell isHeader>Dom</TableCell>
-                <TableCell isHeader>Porodica</TableCell>
-                <TableCell isHeader>Količina</TableCell>
-                <TableCell isHeader>Akcija</TableCell>
-              </TableRow>
-            </TableHeader>
+    <ComponentCard title="REZERVA LEKOVA — PORODICA">
+      {/* SEARCH */}
+      <div className="mb-6 max-w-md">
+        <Input
+          type="text"
+          placeholder="Pretraži pacijenta..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-            <TableBody>
-              {medicines.map((m) => (
-                <TableRow key={m._id}>
-                  <TableCell>{m.name}</TableCell>
-                  <TableCell>{m.quantity}</TableCell>
-                  <TableCell>{m.familyQuantity}</TableCell>
+      <div className="space-y-4">
+        {filteredPatients.map((patient) => (
+          <div key={patient._id} className="border rounded-lg overflow-hidden">
+            
+            {/* HEADER */}
+            <div
+              onClick={() => togglePatient(patient._id)}
+              className="p-4 bg-gray-100 cursor-pointer hover:bg-gray-200 font-semibold flex justify-between"
+            >
+              <span>
+                {patient.name} {patient.lastName}
+              </span>
+              <span>
+                {expandedPatient === patient._id ? "▲" : "▼"}
+              </span>
+            </div>
 
-                  <TableCell>
-                    <Input
-                      type="number"
-                      placeholder="Količina"
-                      value={amounts[m._id] || ""}
-                      onChange={(e) =>
-                        setAmounts({ ...amounts, [m._id]: Number(e.target.value) })
-                      }
-                    />
-                  </TableCell>
+            {/* REZERVA */}
+            {expandedPatient === patient._id && (
+              <div className="p-4 bg-white">
+                {(reserve[patient._id] || []).length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Nema lekova u rezervi.
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableCell isHeader>Lek</TableCell>
+                        <TableCell isHeader>Količina</TableCell>
+                        <TableCell isHeader>Cena</TableCell>
+                        <TableCell isHeader>Datum</TableCell>
+                        <TableCell isHeader>Vrati</TableCell>
+                        <TableCell isHeader>Obriši</TableCell>
+                      </TableRow>
+                    </TableHeader>
 
-                  <TableCell className="flex gap-2">
-                    <button
-                      onClick={() => moveToReserve(m._id, "home")}
-                      className="bg-blue-600 text-white px-3 py-1 rounded"
-                    >
-                      Dom → Rezerva
-                    </button>
+                    <TableBody>
+                      {reserve[patient._id].map((r) => (
+                        <TableRow key={r._id}>
+                          <TableCell>{r.name}</TableCell>
+                          <TableCell>{r.amount}</TableCell>
+                          <TableCell>
+                            {r.pricePerUnit
+                              ? `${r.pricePerUnit} RSD`
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(r.createdAt).toLocaleDateString()}
+                          </TableCell>
 
-                    <button
-                      onClick={() => moveToReserve(m._id, "family")}
-                      className="bg-green-600 text-white px-3 py-1 rounded"
-                    >
-                      Porodica → Rezerva
-                    </button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </ComponentCard>
-    </div>
+                          <TableCell className="w-32">
+                            <Input
+                              type="number"
+                              placeholder="Količina"
+                              value={returnAmounts[r._id] || ""}
+                              onChange={(e) =>
+                                setReturnAmounts({
+                                  ...returnAmounts,
+                                  [r._id]: Number(e.target.value),
+                                })
+                              }
+                            />
+                            <button
+                              onClick={() =>
+                                returnFromReserve(r._id, patient._id)
+                              }
+                              className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-1 rounded text-xs"
+                            >
+                              Vrati
+                            </button>
+                          </TableCell>
+
+                          <TableCell>
+                            <button
+                              onClick={() =>
+                                deleteReserve(r._id, patient._id)
+                              }
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                            >
+                              Obriši
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </ComponentCard>
   );
 }
