@@ -83,6 +83,8 @@ export default function FutureSpecificationsPage() {
             children: [
               new TableCell({
                 children: [new Paragraph(String(index + 1))],
+
+                
               }),
               new TableCell({
                 children: [
