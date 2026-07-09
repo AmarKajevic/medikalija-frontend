@@ -52,7 +52,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     queryKey: ["allMedicines"],
     queryFn: async () => {
       const { data } = await axios.get(
-        "http://localhost:5000/api/medicine",
+        "https://medikalija-frontend.vercel.app/api/medicine",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return data.medicines;
@@ -64,7 +64,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
     queryKey: ["patientStock", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `http://localhost:5000/api/medicine/patient/${patientId}/stock`,
+        `https://medikalija-frontend.vercel.app/api/medicine/patient/${patientId}/stock`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return data.medicines;
@@ -79,7 +79,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const addMedicine = useMutation({
     mutationFn: async (payload: { medicineId: string; amount: number }) => {
       const { data } = await axios.post(
-        "http://localhost:5000/api/medicine/use",
+        "https://medikalija-frontend.vercel.app/api/medicine/use",
         { patientId, ...payload },
         { headers: { Authorization: `Bearer ${token}` } }
       );

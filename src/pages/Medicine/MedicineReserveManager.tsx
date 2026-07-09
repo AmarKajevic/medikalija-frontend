@@ -39,7 +39,7 @@ export default function MedicineReserveManager() {
 
 
 
-  const API = "http://localhost:5000/api";
+  const API = "https://medikalija-frontend.vercel.app/api";
 
   /* ================= FETCH PACIJENATA ================= */
   const fetchPatients = async () => {

@@ -6,7 +6,7 @@ type UpdateDischargeDate = {
 }
 
 export const updateDischargeDate = async ({patientId, date} : UpdateDischargeDate) => {
-    const res = await api.patch(`/patient/${patientId}/discharge`, {
+    const res = await api.patch(`/api/patient/${patientId}/discharge`, {
     dischargeDate: date,
   });
 

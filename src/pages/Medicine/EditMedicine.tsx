@@ -28,7 +28,7 @@ export default function EditMedicine({
     try {
       const data = { pricePerUnit: price }
       const response = await axios.put(
-        `http://localhost:5000/api/medicine/${medicineId}`,
+        `https://medikalija-frontend.vercel.app/api/medicine/${medicineId}`,
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -59,8 +59,8 @@ const handleQuantityUpdate = async (isAdd: boolean) => {
 
     const endpoint =
       mode === "family"
-        ? `http://localhost:5000/api/medicine/patient-stock/${medicineId}`
-        : `http://localhost:5000/api/medicine/${medicineId}`
+        ? `https://medikalija-frontend.vercel.app/api/medicine/patient-stock/${medicineId}`
+        : `https://medikalija-frontend.vercel.app/api/medicine/${medicineId}`
     const response = await axios.put(endpoint, data, {
       headers: { Authorization: `Bearer ${token}` },
     })

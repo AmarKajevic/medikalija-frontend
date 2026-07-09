@@ -13,6 +13,6 @@ export const updateMedicine = async ({
     packages: number;
   }>;
 }) => {
-  const res = await api.put(`/medicine/${medicineId}`, data);
+  const res = await api.put(`/api/medicine/${medicineId}`, data);
   return res.data;
 };

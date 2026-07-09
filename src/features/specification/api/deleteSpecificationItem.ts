@@ -7,6 +7,6 @@ export const deleteSpecificationItem = async ({
   specId: string;
   itemId: string;
 }) => {
-    const res = await api.delete( `/specification/${specId}/item/${itemId}`)
+    const res = await api.delete( `/api/specification/${specId}/item/${itemId}`)
     return res.data
 }

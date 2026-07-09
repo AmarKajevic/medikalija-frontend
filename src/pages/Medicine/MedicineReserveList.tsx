@@ -26,7 +26,7 @@ export default function MedicineReserveList() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5000/api/medicine-reserve",
+        "https://medikalija-frontend.vercel.app/api/medicine-reserve",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -47,7 +47,7 @@ export default function MedicineReserveList() {
     if (!confirm("Obrisati lek iz rezerve?")) return;
 
     await axios.delete(
-      `http://localhost:5000/api/medicine-reserve/${id}`,
+      `https://medikalija-frontend.vercel.app/api/medicine-reserve/${id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -61,7 +61,7 @@ export default function MedicineReserveList() {
       return alert("Unesi količinu za vraćanje!");
 
     await axios.post(
-      "http://localhost:5000/api/medicine-reserve/return",
+      "https://medikalija-frontend.vercel.app/api/medicine-reserve/return",
       { reserveId, amount },
       { headers: { Authorization: `Bearer ${token}` } }
     );

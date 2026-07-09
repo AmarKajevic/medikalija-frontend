@@ -5,7 +5,7 @@ export const addCombinationToPatient = async (payload: {
   combinationId: string;
 }) => {
   const res = await api.post(
-    `/analysis/combination/addToPatient/${payload.patientId}`,
+    `/api/analysis/combination/addToPatient/${payload.patientId}`,
     { combinationId: payload.combinationId }
   );
 

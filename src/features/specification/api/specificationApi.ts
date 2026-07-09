@@ -22,7 +22,7 @@ export const saveBilling = async (specId: string, payload: {
   nextLodgingEUR: number;
 
 }) => {
-  const { data } = await api.post(`/specification/${specId}/billing`, payload);
+  const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
   return data.specification;
 };
 
@@ -33,10 +33,10 @@ export const previewBilling = async (specId: string, payload: {
   lowerExchangeRate: number;
   middleExchangeRate: number;
 }) => {
-  const { data } = await api.post(`/specification/${specId}/preview`, payload);
+  const { data } = await api.post(`/api/specification/${specId}/preview`, payload);
   return data; 
 };
 export const fetchSpecificationHistory = async (patientId: string) => {
-  const { data } = await api.get(`/specification/history/${patientId}`);
+  const { data } = await api.get(`/api/specification/history/${patientId}`);
   return data; 
 };
