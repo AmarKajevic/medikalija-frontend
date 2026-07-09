@@ -43,7 +43,7 @@ export default function PatientMedicineFromFamily() {
   const [patientSearch, setPatientSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const API = "https://medikalija-api.vercel.app/api";
+  const API = "http://localhost:5000/api";
 
   /* ================= FETCH PATIENTS ================= */
   const fetchPatients = async () => {

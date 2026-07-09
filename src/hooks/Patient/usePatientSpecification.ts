@@ -66,7 +66,7 @@ export const usePatientSpecification = (patientId: string) => {
     queryFn: async () => {
       try {
         const { data } = await axios.get(
-          `https://medikalija-api.vercel.app/api/specification/${patientId}`,
+          `http://localhost:5000/api/specification/${patientId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -96,7 +96,7 @@ export const useSpecificationHistory = (patientId: string) => {
     queryKey: ["specification-history", patientId],
     queryFn: async () => {
       const response = await axios.get(
-        `https://medikalija-api.vercel.app/api/specification/history/${patientId}`,
+        `http://localhost:5000/api/specification/history/${patientId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data;
@@ -114,7 +114,7 @@ export const useSingleSpecification = (specificationId: string) => {
     queryKey: ["single-specification", specificationId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/specification/view/${specificationId}`,
+        `http://localhost:5000/api/specification/view/${specificationId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -148,7 +148,7 @@ export function useFutureSpecPeriods(patientId: string) {
     queryKey: ["futureSpecPeriods", patientId],
     queryFn: async () => {
       const res = await axios.get(
-        `https://medikalija-api.vercel.app/api/specification/${patientId}/future-spec-periods`
+        `http://localhost:5000/api/specification/${patientId}/future-spec-periods`
       );
       return res.data;
     },

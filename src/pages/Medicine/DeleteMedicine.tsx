@@ -18,8 +18,8 @@ export default function DeleteMedicine({
     try {
       const endpoint =
         mode === "family"
-          ? `https://medikalija-api.vercel.app/api/medicine/patient-stock/${medicineId}`
-          : `https://medikalija-api.vercel.app/api/medicine/${medicineId}`;
+          ? `http://localhost:5000/api/medicine/patient-stock/${medicineId}`
+          : `http://localhost:5000/api/medicine/${medicineId}`;
 
       const response = await axios.delete(endpoint, {
         headers: { Authorization: `Bearer ${token}` },

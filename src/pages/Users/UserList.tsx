@@ -28,7 +28,7 @@ export default function UserList() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        "https://medikalija-api.vercel.app/api/auth/users",
+        "http://localhost:5000/api/auth/users",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(res.data.users);
@@ -45,7 +45,7 @@ export default function UserList() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/auth/users/${id}`,
+        `http://localhost:5000/api/auth/users/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(users.filter((u: any) => u._id !== id));

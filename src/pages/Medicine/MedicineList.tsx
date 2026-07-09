@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import ComponentCard from "../../components/common/ComponentCard";
+import { useNavigate } from "react-router";
+
 
 interface Medicine {
   _id: string;
@@ -57,7 +59,8 @@ export default function MedicineList({ search }: MedicineListProps) {
   const [patientSearch, setPatientSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const API = "https://medikalija-api.vercel.app/api";
+  const API = "http://localhost:5000/api";
+  const navigate = useNavigate()
 
   /* ================= FETCH DOM MEDICINES ================= */
   const fetchMedicines = async () => {
@@ -176,6 +179,7 @@ const fetchPatientMedicines = async (patientId: string) => {
               {filteredMedicines.map((m) => (
                 <TableRow key={m._id}>
                   <TableCell>{m.name}</TableCell>
+                  <div onClick={() => navigate(`/medicine/${m._id}`)}>Klikni</div>
                   <TableCell>{m.packageCount ?? 0}</TableCell>
                   <TableCell>{m.quantity}</TableCell>
                   <TableCell>

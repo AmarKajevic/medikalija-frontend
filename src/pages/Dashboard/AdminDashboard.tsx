@@ -1,22 +1,19 @@
 import { Link } from "react-router";
-import { FaUserPlus, FaUsers, FaUserShield, FaTrashAlt, FaPills, FaPrescriptionBottleAlt, FaUserNurse, FaDiaspora, FaYCombinator, FaDochub, FaMedkit, FaBookMedical } from "react-icons/fa";
+import { FaUserPlus, FaUsers, FaUserShield, FaPrescriptionBottleAlt, FaUserNurse, FaDiaspora, FaYCombinator, FaDochub, FaMedkit, FaBookMedical } from "react-icons/fa";
 
 function AdminDashboard() {
   const links = [
     { to: "../patient-page", label: "Dodaj pacijenta", icon: <FaUserPlus /> },
     { to: "../patient-list", label: "Lista pacijenata", icon: <FaUsers /> },
     { to: "/signup", label: "Registruj sestru", icon: <FaUserShield /> },
-    { to: "/patient/Delete/:patientId", label: "Izbriši pacijenta", icon: <FaTrashAlt /> },
-    { to: "/medicine/addMedicine", label: "Dodaj lekove", icon: <FaPills /> },
-    { to: "/medicine", label: "Lista lekova", icon: <FaPrescriptionBottleAlt /> },
-    { to: "/analysis/list", label: "lista Analiza", icon: <FaDochub /> },
-    { to: "/combinationGroup", label: "kombinacije analiza ", icon: <FaYCombinator /> },
-    { to: "/articles", label: "artikli ", icon: <FaDiaspora /> },
+    { to: "/medicine-new", label: "Lista lekova ", icon: <FaPrescriptionBottleAlt /> },
+    { to: "/analyses-list", label: "lista Analiza ", icon: <FaDochub /> },
+    { to: "/combinations", label: "kombinacije analiza ", icon: <FaYCombinator /> },
+    { to: "/articlesNew", label: " Artikl lista ", icon: <FaDiaspora /> },
     { to: "/nurse-actions", label: "Kontrola sestara ", icon: <FaUserNurse/> },
     { to: "/users-list", label: "Lista korisnika aplikacije ", icon: <FaUserPlus/> },
     { to: "/adding-to-reserve-list", label: "dodavanje rezervnih lekova", icon: <FaMedkit/> },
     { to: "/reserve-list", label: "Lista rezervnih lekova", icon: <FaBookMedical/> },
-    { to: "/patient-medicines", label: "Lekovi pacijenata", icon: <FaPills/> },
 
 
   ];

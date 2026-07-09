@@ -11,6 +11,7 @@ import {
 
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { FaBookMedical, FaClinicMedical, FaFileMedical } from "react-icons/fa";
 
 
 type NavItem = {
@@ -35,6 +36,21 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Sestre Pocetna",
     path: "/nurseDashboard",
+  },
+  {
+    icon: <FaBookMedical />,
+    name: "Lekovi",
+    path: "/medicine-new",
+  },
+  {
+    icon: <FaFileMedical />,
+    name: "Analize",
+    path: "/analyses-list",
+  },
+  {
+    icon: <FaClinicMedical />,
+    name: "Kombinacije Analiza",
+    path: "/combinations",
   },
   {
     icon: <CalenderIcon />,

@@ -2,16 +2,18 @@ import { useParams } from "react-router";
 import usePatient from "../../hooks/Patient/usePatient";
 import PatientInfo from "../../components/patients/PatientInfo";
 import { useDiagnoses } from "../../hooks/Patient/useDiagnosis";
-import DiagnosisSection from "../../components/diagnosis/DiagnosisSection";
 import PatientDataTable from "../Tables/PatientDataTable";
 import { useMedicine } from "../../hooks/Patient/useMedicine";
 
-import UseMedicine from "../Medicine/UseMedicine";
-import AddArticleToPatient from "../../components/articles/AddArticleToPatient";
 import useArticles from "../../hooks/Patient/useArticle";
-import { useCombinations } from "../../hooks/Patient/useCombination";
-import PatientComb from "../../components/patients/PatientComb";
+
+
 import PatientSpecification from "../../components/patients/PatientSpecification";
+import { PatientStockMedicines } from "../../features/medicine/ui/PatientStockMedicines";
+import { useUsedCombination } from "../../features/combinations/hooks/useUsedCombination";
+
+
+
 
 
 export default function PatientProfile() {
@@ -26,15 +28,13 @@ export default function PatientProfile() {
   const { getPatientArticles } = useArticles();
   const { data: usedArticles = [] } = getPatientArticles;
 
-  const { usedCombination } = useCombinations(patientId!);
+  const { data: usedCombination } = useUsedCombination(patientId!);
 
   if (isLoading) return <p>Učitavanje...</p>;
   if (error) return <p>Greška pri učitavanju</p>;
   if (!patient) return <p>Pacijent nije pronađen</p>;
 
-  const handleMedicineUsed = () => {
-    refetchMedicines();
-  };
+
 
   return (
     <div className="p-4 space-y-6">
@@ -48,38 +48,29 @@ export default function PatientProfile() {
 
             <a
               href={`/patient/${patientId}/specification-history`}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
             >
               Pogledaj istoriju specifikacija
             </a>
 
             <a
               href={`/patient/${patient._id}/future-specifications`}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+              className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
             >
               Specifikacije za naredne godine
             </a>
             <a
             href={`/patient-profile-nurse/${patient._id}`}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+            className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
           >
             Sta su sestre dodale
           </a>
+           <PatientStockMedicines patientId={patient._id}/>
           </div>
         )}
       </div>
 
-      {/* Use Medicine + Add Article */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DiagnosisSection patientId={patient._id} />
-        <AddArticleToPatient patientId={patient._id} />
-      </div>
 
-      {/* Diagnosis + Combinations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UseMedicine patientId={patient._id} onMedicineUsed={handleMedicineUsed} />
-        <PatientComb patientId={patient._id} />
-      </div>
       <div className="flex">
         <PatientSpecification patientId={patient._id} />
       </div>
@@ -88,7 +79,7 @@ export default function PatientProfile() {
       <PatientDataTable
         diagnoses={diagnoses}
         medicines={usedMedicine}
-        usedCombinations={usedCombination.data || []}
+        usedCombinations={usedCombination || []}
         usedArticles={usedArticles}
         patientId={patient._id}      // 🔥 NOVO
         refetch={() => {

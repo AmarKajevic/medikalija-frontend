@@ -19,7 +19,7 @@ export default function AddDiagnosis({ patientId }: DiagnosisProps) {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "https://medikalija-api.vercel.app/api/diagnosis/addDiagnosis",
+        "http://localhost:5000/api/diagnosis/addDiagnosis",
         { patient: patientId, description }, // 👈 ključ mora biti "patientId"
         {
           headers: {

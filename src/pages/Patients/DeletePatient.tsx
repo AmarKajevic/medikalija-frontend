@@ -25,7 +25,7 @@ export default function DeletePatient() {
       try {
         const token = localStorage.getItem("token")
         const response = await axios.get(
-          "https://medikalija-api.vercel.app/api/patient",
+          "http://localhost:5000/api/patient",
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -51,7 +51,7 @@ export default function DeletePatient() {
     if (!window.confirm("Da li ste sigurni da želite da obrišete pacijenta?")) return;
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/patient/${id}`,
+        `http://localhost:5000/api/patient/${id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`

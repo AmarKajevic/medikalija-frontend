@@ -25,7 +25,7 @@ export const usePatientCombination = (patientId: string) => {
     queryKey: ["combinations", patientId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `https://medikalija-api.vercel.app/api/analysis/patient/${patientId}/assigned-combination`,
+        `http://localhost:5000/api/analysis/patient/${patientId}/assigned-combination`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

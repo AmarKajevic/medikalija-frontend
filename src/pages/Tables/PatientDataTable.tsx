@@ -2,8 +2,11 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../compon
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { UsedArticle } from "../../hooks/Patient/useArticle";
-import { UsedCombination } from "../../hooks/Patient/useCombination";
+
 import { useEffect, useState } from "react";
+import { UsedCombination } from "../../features/combinations/types/types";
+
+
 
 interface Props {
   diagnoses: any[];
@@ -15,33 +18,28 @@ interface Props {
 }
 
 export default function PatientDataTable({
-  diagnoses,
-  medicines,
-  usedCombinations,
-  usedArticles,
+  diagnoses = [],
+  medicines = [],
+  usedCombinations = [],
+  usedArticles = [],
   patientId,
   refetch
 }: Props) {
 
   const { token } = useAuth();
 
-  // -------------------------------------
-  //   🔥 dozvoljene role za prikaz
-  // -------------------------------------
   const allowedRoles = ["admin", "head-nurse"];
 
+  // Sada arr je sigurno niz jer smo dali default, ali ipak ostavljamo proveru
   const filterByRole = (arr: any[]) =>
-    arr.filter(item => allowedRoles.includes(item?.createdBy?.role));
+    Array.isArray(arr) ? arr.filter(item => allowedRoles.includes(item?.createdBy?.role)) : [];
 
-  // -------------------------------------
-  // 🔥 Lokalni state — prikazuje samo admin + glavna sestra
-  // -------------------------------------
   const [localDiagnoses, setLocalDiagnoses] = useState(filterByRole(diagnoses));
   const [localMedicines, setLocalMedicines] = useState(filterByRole(medicines));
   const [localCombinations, setLocalCombinations] = useState(filterByRole(usedCombinations));
   const [localArticles, setLocalArticles] = useState(filterByRole(usedArticles));
 
-  // Sync kada refetch donese nove podatke
+  // useEffect-ovi ostaju isti, ali sad filterByRole prima sigurno niz
   useEffect(() => setLocalDiagnoses(filterByRole(diagnoses)), [diagnoses]);
   useEffect(() => setLocalMedicines(filterByRole(medicines)), [medicines]);
   useEffect(() => setLocalCombinations(filterByRole(usedCombinations)), [usedCombinations]);
@@ -55,7 +53,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
+        `http://localhost:5000/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -75,7 +73,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/medicines/delete-all`,
+        `http://localhost:5000/api/medicine/patient/${patientId}/medicines/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -95,7 +93,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
+        `http://localhost:5000/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -115,7 +113,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/articles/patient/${patientId}/articles/delete-all`,
+        `http://localhost:5000/api/articles/patient/${patientId}/articles/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

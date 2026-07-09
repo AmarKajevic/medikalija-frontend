@@ -1,107 +1,126 @@
-import { useState } from "react";
-import useAddPatient from "../../hooks/Patient/useAddPatient";
+import { useForm, Controller } from "react-hook-form";
 import DatePicker from "../form/date-picker";
+import { useAddPatient } from "../../features/patients/hooks/useAddPatient";
+
+type CreatePatientDto = {
+  name: string;
+  lastName: string;
+  dateOfBirth: Date | null;
+  admissionDate: Date | null;
+  address: string;
+  contactPerson?: string;
+};
 
 export default function AddPatientForm() {
-  const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [admissionDate, setAdmissionDate] = useState<Date | null>(null);
-  const [address, setAddress] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
-  const addPatient = useAddPatient();
+  const { mutate, isPending } = useAddPatient();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<CreatePatientDto>({
+    defaultValues: {
+      dateOfBirth: null,
+      admissionDate: null,
+    },
+  });
 
-    if (!dateOfBirth || !admissionDate) {
+  const onSubmit = (data: CreatePatientDto) => {
+    if (!data.dateOfBirth || !data.admissionDate) {
       alert("Molimo izaberite oba datuma");
       return;
     }
 
-    try {
-      addPatient.mutate(
-        {
-          name,
-          lastName,
-          dateOfBirth,        // ← šaljemo PRAVI DATE objekat
-          admissionDate,      // ← šaljemo PRAVI DATE objekat
-          address,
-          contactPerson,
+    mutate(
+      {
+        ...data,
+        // backend najčešće očekuje string
+        dateOfBirth: data.dateOfBirth.toISOString(),
+        admissionDate: data.admissionDate.toISOString(),
+      },
+      {
+        onSuccess: () => {
+          reset();
         },
-        {
-          onSuccess: () => {
-            console.log("Pacijent uspešno dodat");
-
-            setName("");
-            setLastName("");
-            setDateOfBirth(null);
-            setAdmissionDate(null);
-            setAddress("");
-            setContactPerson("");
-          },
-          onError: (error: any) => {
-            console.error("Greška pri dodavanju pacijenta:", error.response?.data || error);
-            alert(error?.response?.data?.message || "Greška pri dodavanju pacijenta");
-          },
-        }
-      );
-    } catch (err) {
-      console.error("Neočekivana greška:", err);
-    }
+        onError: (error: any) => {
+          alert(error?.response?.data?.message || "Greška pri dodavanju pacijenta");
+        },
+      }
+    );
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="mb-4 space-y-2">
+      
       <input
         type="text"
         placeholder="Ime"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        {...register("name", { required: "Ime je obavezno" })}
         className="border p-2 w-full"
       />
+      {errors.name && <span>{errors.name.message}</span>}
 
       <input
         type="text"
         placeholder="Prezime"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
+        {...register("lastName", { required: "Prezime je obavezno" })}
         className="border p-2 w-full"
       />
+      {errors.lastName && <span>{errors.lastName.message}</span>}
 
-      <DatePicker
-        id="dateOfBirth"
-        label="Datum rođenja"
-        placeholder="DD-MM-YYYY"
-        defaultDate={dateOfBirth || undefined}
-        onChange={([selectedDate]) => setDateOfBirth(selectedDate as Date)}
+      {/* DateOfBirth */}
+      <Controller
+        control={control}
+        name="dateOfBirth"
+        render={({ field }) => (
+          <DatePicker
+            id="dateOfBirth"
+            label="Datum rođenja"
+            placeholder="DD-MM-YYYY"
+            defaultDate={field.value || undefined}
+            onChange={([date]) => field.onChange(date)}
+          />
+        )}
       />
 
-      <DatePicker
-        id="admissionDate"
-        label="Datum prijema"
-        placeholder="DD-MM-YYYY"
-        defaultDate={admissionDate || undefined}
-        onChange={([selectedDate]) => setAdmissionDate(selectedDate as Date)}
+      {/* AdmissionDate */}
+      <Controller
+        control={control}
+        name="admissionDate"
+        render={({ field }) => (
+          <DatePicker
+            id="admissionDate"
+            label="Datum prijema"
+            placeholder="DD-MM-YYYY"
+            defaultDate={field.value || undefined}
+            onChange={([date]) => field.onChange(date)}
+          />
+        )}
       />
 
       <input
         type="text"
         placeholder="Adresa"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
+        {...register("address", { required: "Adresa je obavezna" })}
         className="border p-2 w-full"
       />
+      {errors.address && <span>{errors.address.message}</span>}
+
       <input
         type="text"
-        placeholder="Kontakt osoba (ime, telefon…)"
-        value={contactPerson}
-        onChange={(e) => setContactPerson(e.target.value)}
+        placeholder="Kontakt osoba"
+        {...register("contactPerson")}
         className="border p-2 w-full"
       />
 
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-        Dodaj pacijenta
+      <button
+        type="submit"
+        disabled={isPending}
+        className="bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        {isPending ? "Dodavanje..." : "Dodaj pacijenta"}
       </button>
     </form>
   );

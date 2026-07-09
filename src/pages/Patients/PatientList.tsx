@@ -1,201 +1,109 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Link } from "react-router";
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.css";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import { useRef } from "react";
+import { Link } from "react-router-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { usePatients } from "../../features/patients/hooks/usePatients";
+import DeleteButton from "../../shared/ui/DeleteButton";
+import { useDeletePatient } from "../../features/patients/hooks/useDeletePatient";
 
-interface Patient {
-  _id: string;
-  name: string;
-  lastName: string;
-  dateOfBirth: string;
-  address: string;
-  admissionDate: string;
-  contactPerson: string;
-  dischargeDate?: string | null;
-}
 
 function PatientList() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data, isLoading, error } = usePatients();
+  const {mutate} = useDeletePatient()
+  const parentRef = useRef<HTMLDivElement | null>(null)
 
-  // ✅ NOVO: lokalni search (identično kao lekovi / artikli)
-  const [search, setSearch] = useState("");
+  
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
+  const patients = data?.patients|| [];
 
-  const fetchPatients = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "https://medikalija-api.vercel.app/api/patient",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+  const rowVirtualizer = useVirtualizer({
+    count: patients.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 110,
+    overscan: 10
+  })
+  const virtualRows = rowVirtualizer.getVirtualItems();
 
-      if (response.data.success) {
-        setPatients(
-          response.data.patients.map((p: any) => ({
-            ...p,
-            _id: p._id.toString(),
-          }))
-        );
-      } else {
-        setError("Nije moguće učitati pacijente");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Greška sa serverom");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading)
+    return <p className="text-center py-4 text-gray-500">Učitavanje...</p>;
 
-  const updateDischargeDate = async (patientId: string, date: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      const isoDate = new Date(date).toISOString();
+  if (error)
+    return <p className="text-red-500 text-center py-4">{error.message}</p>;
 
-      await axios.patch(
-        `https://medikalija-api.vercel.app/api/patient/${patientId}/discharge`,
-        { dischargeDate: isoDate },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  if (!patients.length)
+    return <p className="text-center py-4">Nema pacijenata</p>;
 
-      setPatients((prev) =>
-        prev.map((p) =>
-          p._id === patientId ? { ...p, dischargeDate: isoDate } : p
-        )
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Greška prilikom postavljanja datuma otpusta");
-    }
-  };
 
-  // DatePicker init
-  useEffect(() => {
-    patients.forEach((p) => {
-      if (p.dischargeDate) return;
-
-      flatpickr(`#dp-${p._id}`, {
-        dateFormat: "d-m-Y",
-        onChange: (selectedDates) => {
-          if (selectedDates[0]) {
-            updateDischargeDate(p._id, selectedDates[0].toString());
-          }
-        },
-      });
-    });
-  }, [patients]);
-
-  if (loading) return <p className="text-center py-4 text-gray-500">Učitavanje...</p>;
-  if (error) return <p className="text-red-500 text-center py-4">{error}</p>;
-  if (!patients.length) return <p className="text-center py-4">Nema pacijenata</p>;
-
-  // ✅ filtriranje – NE menja dizajn
-  const safeSearch = search.toLowerCase();
-  const filteredPatients = patients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(safeSearch) ||
-      p.lastName.toLowerCase().includes(safeSearch)
-  );
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
 
-      {/* ✅ SEARCH BAR – ISTI KAO OSTALI */}
-      <div className="p-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Pretraži pacijente..."
-          className="w-full max-w-md border-2 rounded px-3 py-2 bg-white"
-        />
-      </div>
 
       <div className="max-w-full overflow-x-auto">
-        <Table>
+        <div className="grid grid-cols-7 p-3 font-semibold border-b bg-gray-100">
+        <div>Ime </div>
+        <div>Prezime</div>
+        <div>Datum prijema</div>
+        <div>Otpusten</div>
+        <div>Kontakt osoba</div>
+        <div>Profil</div>
+        <div>Izbrisi</div>
 
-          <TableHeader className="border-b">
-            <TableRow>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Ime</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Prezime</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum rođenja</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Adresa</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum prijema</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Datum otpusta</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Akcija</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Kontakt osoba</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Profil</TableCell>
-            </TableRow>
-          </TableHeader>
+      </div>
 
-          <TableBody>
-            {filteredPatients.map((patient) => (
-              <TableRow key={patient._id} className="hover:bg-gray-50">
-                <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.name}</TableCell>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.lastName}</TableCell>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  {new Date(patient.dateOfBirth).toLocaleDateString("sr-RS")}
-                </TableCell>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">{patient.address}</TableCell>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
-                </TableCell>
 
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  {patient.dischargeDate ? (
-                    <span className="font-medium text-gray-700">
-                      {new Date(patient.dischargeDate).toLocaleDateString("sr-RS")}
-                    </span>
-                  ) : (
-                    <input
-                      id={`dp-${patient._id}`}
-                      placeholder="Izaberi datum"
-                      className="h-9 w-36 rounded-md border px-2 text-sm text-gray-700"
-                    />
-                  )}
-                </TableCell>
+          
 
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  {patient.dischargeDate ? (
-                    <span className="text-gray-400 italic">Otpušten</span>
-                  ) : (
-                    <span className="text-gray-400 italic">Čeka datum</span>
-                  )}
-                </TableCell>
+         <div ref={parentRef} className="h-[600px] overflow-auto">
+            <div
+    style={{
+      height: rowVirtualizer.getTotalSize(),
+      position: "relative",
+    }}
+  >
+    {virtualRows.map((virtualRow) => {
+      const patient = patients[virtualRow.index];
 
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  {patient.contactPerson}
-                </TableCell>
+    return (
+      <div
+        key={patient?._id}
+        style={{
+          position: "absolute",
+          top: 0,
+          transform: `translateY(${virtualRow.start}px)`,
+          width: "100%",
+          left: 0,
+        }}
+      >
+        <div className="grid grid-cols-7  w-full border-b p-2 hover:bg-gray-50">
+          <div>{patient?.name}</div>
+          <div>{patient?.lastName}</div>
+          <div>
+            {new Date(patient?.admissionDate).toLocaleDateString("sr-RS")}
+          </div>
+          <div>
+            {patient?.dischargeDate ? "Otpušten" : "Čeka datum"}
+          </div>
+          <div>{patient?.contactPerson}</div>
+          <div>
+            <Link
+              to={`/patient/${patient._id}`}
+              className="px-3 py-1 bg-blue-600 text-white rounded"
+            >
+              Profil
+            </Link>
+          </div>
+          <div>
+            <DeleteButton onConfirm={() => mutate(patient._id)} />
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+            </div>
+           
 
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  <Link
-                    to={`/patient/${patient._id}`}
-                    className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                  >
-                    Profil
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
 
-        </Table>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import DischargeDate from "../../features/patients/ui/DischargeDate";
 import { User } from "../../types";
 
 interface Patient {
@@ -9,6 +10,7 @@ interface Patient {
   createdAt?: string;
   createdBy: User;
   admissionDate: string | Date;
+  dischargeDate: string | Date;
 
 }
 
@@ -29,6 +31,9 @@ export default function PatientInfo({ patient }: { patient: Patient }) {
         <strong>Datum Prijema</strong>{" "}
         {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
       </p>
+      <div>
+        <DischargeDate patient={patient}/>
+      </div>
 
     </div>
 

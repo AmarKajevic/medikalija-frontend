@@ -22,7 +22,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   const api = axios.create({
-    baseURL: "https://medikalija-api.vercel.app/api",
+    baseURL: "http://localhost:5000/api",
     withCredentials: true,
   });
 

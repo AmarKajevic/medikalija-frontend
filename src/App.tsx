@@ -10,12 +10,23 @@ import PrivateRoutes from "./utils.tsx/PrivateRoutes";
 
 import AppLayout from "./layout/AppLayout";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import AddArticleFromFamily from "./components/articles/AddArticleFromFamily";
 import UserList from "./pages/Users/UserList";
 import MedicineReserveManager from "./pages/Medicine/MedicineReserveManager";
 import MedicineReserveList from "./pages/Medicine/MedicineReserveList";
 import PatientMedicineFromFamily from "./pages/Medicine/PatientMedicineFromFamily";
+import MedicineDetailesPage from "./pages/Medicine/MedicineDetailesPage";
+import ArticlesListNew from "./features/articles/ui/ArticlesListNew";
+import ArticleDetails from "./features/articles/ui/ArticleDetails";
+import MedicineListWidget from "./widgets/medicine-list/MedicineListWidget";
+import AnalysesList from "./features/analysis/ui/AnalysesList";
+import AnalysisDetailPage from "./features/analysis/ui/AnalysisDetailPage";
+import AddAnalysisNew from "./features/analysis/ui/AddAnalysis";
+import { CombinationsWidget } from "./widgets/combinations-list/CombinationsWidget";
+import SpecViewPage from "./features/specification/ui/SpecViewPage";
+
+
 
 
 // -------------------------------------------------------
@@ -41,20 +52,17 @@ const PatientProfile = lazy(() => import("./pages/Patients/PatientProfile"));
 const AddDiagnosisTemplate = lazy(() => import("./pages/Diagnosis/AddDiagnosisTemplate"));
 const AddMedicine = lazy(() => import("./pages/Medicine/AddMedicine"));
 const MedicineList = lazy(() => import("./pages/Medicine/MedicineList"));
-const AddAnalysis = lazy(() => import("./pages/Analysis/AddAnalysis"));
-const AnalysisList = lazy(() => import("./pages/Analysis/AnalysisList"));
+
 const PatientsPage = lazy(() => import("./components/patients/PatientPage"));
 const ArticlesList = lazy(() => import("./components/articles/ArticlesList"));
-const CombinationGroupManager = lazy(() => import("./components/combination/CombinationGroupManager"));
 const NurseDashboard = lazy(() => import("./pages/Dashboard/NurseDashboard"));
-const PatientTable = lazy(() => import("./components/patients/PatientTable"));
 const ProfileSpecification = lazy(() => import("./pages/Patients/ProfileSpecification"));
 const SpecificationHistoryPage = lazy(() => import("./components/patients/SpecificationHistoryPage"));
-const SpecificationViewPage = lazy(() => import("./components/patients/SpecificationViewPage"));
+
 const FutureSpecificationsPage = lazy(() => import("./components/patients/FutureSpecificationsPage"));
 const NurseActionsList = lazy(() => import("./pages/Nurses/NurseActionsList"));
 const AddMedicineFromFamily = lazy(() => import("./pages/Medicine/AddMedicineFromFamily"));
-const AddFamilyMedicine = lazy(() => import("./pages/FamilyMedicine/AddFamilyMedicine"));
+
 const AllNotificationsPage = lazy(() => import("./components/header/AllNotificationsPage"));
 const PatientProfileForNurse = lazy(() => import("./pages/Patients/PatientProfileForNurse"));
 
@@ -67,12 +75,12 @@ const Loader = () => (
 );
 
 
-const queryClient = new QueryClient();
+
 
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+
       <Router>
         <ScrollToTop />
 
@@ -96,28 +104,34 @@ export default function App() {
               <Route index path="/" element={<AdminDashboard />} />
 
               <Route path="patient-list" element={<PatientList />} />
+
               <Route path="/patient/:patientId" element={<PatientProfile />} />
               <Route path="/patient/Delete/:patientId" element={<DeletePatient />} />
 
               <Route path="/add-diagnosisTemplate" element={<AddDiagnosisTemplate />} />
 
               <Route path="/medicine/addMedicine" element={<AddMedicine />} />
+              <Route path="/medicine/:id" element={<MedicineDetailesPage />} />
               <Route path="/medicine" element={<MedicineList />} />
+              <Route path="/medicine-new" element={<MedicineListWidget />} />
 
-              <Route path="/analysis/add" element={<AddAnalysis />} />
-              <Route path="/analysis/list" element={<AnalysisList />} />
 
-              <Route path="/addFamilyMedicine" element={<AddFamilyMedicine />} />
+              <Route path="/analyses-list" element={<AnalysesList />} />
+              <Route path="/analysisDetail/:analysisId" element={<AnalysisDetailPage />} />
+              <Route path="/add-Analysis" element={<AddAnalysisNew />} />
+
+
+
 
               <Route path="/patient/:patientId/specification" element={<ProfileSpecification />} />
               <Route path="/patient/:patientId/specification-history" element={<SpecificationHistoryPage />} />
-              <Route path="/specification-view/:specificationId" element={<SpecificationViewPage />} />
+              <Route path="/specification-view/:specificationId" element={<SpecViewPage />} />
               <Route path="/patient/:patientId/future-specifications" element={<FutureSpecificationsPage />} />
 
               <Route path="/notifications" element={<AllNotificationsPage />} />
               <Route path="/nurse-actions" element={<NurseActionsList />} />
 
-              <Route path="/combinationGroup" element={<CombinationGroupManager />} />
+              <Route path="/combinations" element={<CombinationsWidget />} />
               <Route path="/users-list" element={<UserList />} />
               <Route path="/adding-to-reserve-list" element={<MedicineReserveManager />} />
               <Route path="/reserve-list" element={<MedicineReserveList />} />
@@ -151,7 +165,6 @@ export default function App() {
             >
               <Route path="/nurseDashboard" element={<NurseDashboard />} />
               <Route path="/familyMedicine" element={<AddMedicineFromFamily />} />
-              <Route path="/patient-table" element={<PatientTable />} />
               <Route path="/family-articles" element={<AddArticleFromFamily />} />
               <Route path="/patient-medicines" element={<PatientMedicineFromFamily />} />
             </Route>
@@ -167,6 +180,8 @@ export default function App() {
               }
             >
               <Route path="/articles" element={<ArticlesList />} />
+              <Route path="/articlesNew" element={<ArticlesListNew />} />
+              <Route path="/articles/:id" element={<ArticleDetails />} />
               <Route path="/patient-page" element={<PatientsPage />} />
               <Route path="/patient-profile-nurse/:patientId" element={<PatientProfileForNurse />} />
             </Route>
@@ -177,6 +192,6 @@ export default function App() {
           </Routes>
         </Suspense>
       </Router>
-    </QueryClientProvider>
+
   );
 }

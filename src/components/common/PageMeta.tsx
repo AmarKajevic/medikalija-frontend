@@ -1,4 +1,5 @@
 import { HelmetProvider, Helmet } from "react-helmet-async";
+import { ModalProvider } from "../../shared/ui/modal/ModalProvider";
 
 const PageMeta = ({
   title,
@@ -14,7 +15,11 @@ const PageMeta = ({
 );
 
 export const AppWrapper = ({ children }: { children: React.ReactNode }) => (
-  <HelmetProvider>{children}</HelmetProvider>
+  <HelmetProvider>
+    <ModalProvider>
+    {children}
+    </ModalProvider>
+    </HelmetProvider>
 );
 
 export default PageMeta;
