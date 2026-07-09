@@ -20,7 +20,7 @@ export const ExchangeRateProvider = ({ children }: { children: ReactNode }) => {
   const [rates, setRates] = useState<ExchangeRates>({ lower: 0, middle: 0 });
 
   const refreshRates = async () => {
-    const { data } = await api.get('/exchange-rates');
+    const { data } = await api.get('/api/exchange-rates');
     setRates(data.rates);
   };
 
