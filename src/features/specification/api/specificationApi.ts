@@ -5,12 +5,12 @@ import { Specification } from "../types/types";
 
 
 export const fetchSpecification = async (id: string): Promise<Specification> => {
-  const { data } = await api.get(`/specification/view/${id}`);
+  const { data } = await api.get(`/api/specification/view/${id}`);
   return data.specification;
 };
 
 export const addExtraCost = async (specId: string, amount: number, label: string) => {
-  const { data } = await api.post(`/specification/${specId}/add-costs`, {
+  const { data } = await api.post(`/api/specification/${specId}/add-costs`, {
     extraCostAmount: amount,
     extraCostLabel: label,
   });
