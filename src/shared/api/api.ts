@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "https://medikalija-frontend.vercel.app",
+  baseURL: "https://medikalija-api.vercel.app",
 });
 
 api.interceptors.request.use((config) => {
