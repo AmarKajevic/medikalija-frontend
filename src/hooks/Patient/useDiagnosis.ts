@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
 
-const API_URL = "https://medikalija-frontend.vercel.app/api/diagnosis";
+const API_URL = "https://medikalija-api.vercel.app/api/diagnosis";
 
 export const useDiagnoses = (patientId: string) => {
   const {token} = useAuth()

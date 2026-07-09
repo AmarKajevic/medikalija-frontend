@@ -43,7 +43,7 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     const fetchCalendarEvents = async () => {
       try {
-        const res = await axios.get("https://medikalija-frontend.vercel.app/api/calendar", {
+        const res = await axios.get("https://medikalija-api.vercel.app/api/calendar", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -117,7 +117,7 @@ const Calendar: React.FC = () => {
       if (selectedEvent?._id) {
         // UPDATE DOGAĐAJA
         const res = await axios.put(
-          `https://medikalija-frontend.vercel.app/api/calendar/${selectedEvent._id}`,
+          `https://medikalija-api.vercel.app/api/calendar/${selectedEvent._id}`,
           {
             title: eventTitle,
             start: eventStartDate,
@@ -145,7 +145,7 @@ const Calendar: React.FC = () => {
       } else {
         // DODAJ NOVI DOGAĐAJ
         const res = await axios.post(
-          "https://medikalija-frontend.vercel.app/api/calendar",
+          "https://medikalija-api.vercel.app/api/calendar",
           {
             title: eventTitle,
             start: eventStartDate,
@@ -182,7 +182,7 @@ const Calendar: React.FC = () => {
 
     try {
       await axios.delete(
-        `https://medikalija-frontend.vercel.app/api/calendar/${selectedEvent._id}`,
+        `https://medikalija-api.vercel.app/api/calendar/${selectedEvent._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

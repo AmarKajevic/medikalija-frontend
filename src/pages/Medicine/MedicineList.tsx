@@ -59,7 +59,7 @@ export default function MedicineList({ search }: MedicineListProps) {
   const [patientSearch, setPatientSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const API = "https://medikalija-frontend.vercel.app/api";
+  const API = "https://medikalija-api.vercel.app/api";
   const navigate = useNavigate()
 
   /* ================= FETCH DOM MEDICINES ================= */

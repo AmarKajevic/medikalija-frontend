@@ -121,7 +121,7 @@ export default function SpecificationViewPage() {
   const addCosts = async () => {
     try {
       await axios.post(
-        `https://medikalija-frontend.vercel.app/api/specification/${spec._id}/add-costs`,
+        `https://medikalija-api.vercel.app/api/specification/${spec._id}/add-costs`,
         {
           extraCostAmount:
             extraCostAmount === "" ? 0 : Number(extraCostAmount),
@@ -144,7 +144,7 @@ export default function SpecificationViewPage() {
   const saveBilling = async () => {
     try {
       await axios.post(
-        `https://medikalija-frontend.vercel.app/api/specification/${spec._id}/billing`,
+        `https://medikalija-api.vercel.app/api/specification/${spec._id}/billing`,
         {
           previousDebtEUR: debtEUR,
           nextLodgingEUR: lodgingEUR,

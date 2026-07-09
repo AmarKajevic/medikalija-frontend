@@ -41,7 +41,7 @@ export default function SignUpForm() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://medikalija-frontend.vercel.app/api/auth/register",
+        "https://medikalija-api.vercel.app/api/auth/register",
         { name, lastName, email, password, role },
         {
           headers: {

@@ -18,7 +18,7 @@ export default function AddDiagnosisTemplate() {
 
     try {
       const response = await axios.post(
-        "https://medikalija-frontend.vercel.app/api/diagnosisTemplate/add",
+        "https://medikalija-api.vercel.app/api/diagnosisTemplate/add",
         { name, description },
         { headers: { Authorization: `Bearer ${token}` } }
       );

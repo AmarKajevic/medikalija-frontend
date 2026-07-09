@@ -24,7 +24,7 @@ export default function FutureSpecificationsPage() {
     queryKey: ["future-specs", patientId],
     queryFn: async () => {
       const res = await axios.get(
-        `https://medikalija-frontend.vercel.app/api/specification/${patientId}/future-spec-periods`,
+        `https://medikalija-api.vercel.app/api/specification/${patientId}/future-spec-periods`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data.periods;

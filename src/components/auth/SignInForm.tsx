@@ -41,7 +41,7 @@ export default function SignInForm() {
 
   try {
     const response = await axios.post(
-      "https://medikalija-frontend.vercel.app/api/auth/login",
+      "https://medikalija-api.vercel.app/api/auth/login",
       { name, lastName, password },
       { withCredentials: true }
     );

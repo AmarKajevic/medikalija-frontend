@@ -30,7 +30,7 @@ export default function AddArticleFromFamily() {
   const loadArticles = async () => {
     try {
       const res = await axios.get(
-        "https://medikalija-frontend.vercel.app/api/articles",
+        "https://medikalija-api.vercel.app/api/articles",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -104,7 +104,7 @@ export default function AddArticleFromFamily() {
         };
 
         const res = await axios.put(
-          `https://medikalija-frontend.vercel.app/api/articles/${selectedId}`,
+          `https://medikalija-api.vercel.app/api/articles/${selectedId}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -125,7 +125,7 @@ export default function AddArticleFromFamily() {
         };
 
         const res = await axios.post(
-          "https://medikalija-frontend.vercel.app/api/articles/add",
+          "https://medikalija-api.vercel.app/api/articles/add",
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
