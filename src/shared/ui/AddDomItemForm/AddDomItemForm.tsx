@@ -26,6 +26,7 @@ export const AddDomItemForm = <TItem extends { name: string; price?: number; pri
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<DomFormValues>({
     defaultValues: {
@@ -71,6 +72,18 @@ export const AddDomItemForm = <TItem extends { name: string; price?: number; pri
 
 const onSubmit = useCallback(
   (data: DomFormValues) => {
+     if (data.mode === "new") {
+      const exists = items.some(
+        (item) => item.name.toLowerCase() === data.name.toLowerCase()
+      );
+      if (exists) {
+        setError("name", {
+          type: "manual",
+          message: `${config.itemNameSingular} sa tim nazivom već postoji`,
+        });
+        return; // ne šalji
+      }
+    }
     const payload = config.buildPayload(data, false);  // ← fromFamily = false
     mutate(payload, {
       onSuccess: () => reset(),
