@@ -51,7 +51,7 @@ export default function PatientSpecification({
             to={`/patient/${patientId}/specification-history`}
             className="border-0 shadow-md p-2 gap-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-md"
           >
-            Istorija
+            pregled specifikacije
           </Link>
         </div>
       </div>
