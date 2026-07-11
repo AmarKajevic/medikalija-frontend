@@ -6,6 +6,7 @@ export const updateMedicine = async ({
 }: {
   medicineId: string;
   data: Partial<{
+    name: string;
     pricePerUnit: number;
     unitsPerPackage: number;
     quantity: number;

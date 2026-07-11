@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router";
+
 
 type Props = {
   open: boolean;
@@ -13,6 +15,7 @@ type Props = {
   cancelText?: string;
 
   variant?: "danger" | "primary" | "warning";
+  redirectTo?: string;
 };
 
 const variantStyles = {
@@ -31,8 +34,17 @@ const ConfirmModal = ({
   confirmText = "Potvrdi",
   cancelText = "Otkaži",
   variant = "danger",
+  redirectTo
 }: Props) => {
   if (!open) return null;
+
+   const navigate = useNavigate();
+  
+
+   const handleConfirm = async () => {
+    onConfirm();
+    if (redirectTo) navigate(redirectTo);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -56,7 +68,7 @@ const ConfirmModal = ({
           </button>
 
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={loading}
             className={`px-4 py-2 text-sm text-white rounded-md transition ${
               variantStyles[variant]

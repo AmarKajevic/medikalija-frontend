@@ -33,13 +33,19 @@ export const SelectItemsForm = ({
   const filtered = useMemo(
     () =>
       options.filter((o) =>
-        o.label.toLowerCase().includes(search.toLowerCase())
+        o.label.toLowerCase().startsWith(search.toLowerCase())
       ),
     [options, search]
   );
 
   useEffect(() => {
-    if (selected) setSearch(selected.label);
+    if (selected)
+      {
+        setSearch(selected.label);
+
+      } else {
+        setSearch('')
+      }
   }, [selected]);
 
 

@@ -3,6 +3,7 @@ import useCleanForm from "../../shared/api/forms/UseCleanForm";
 import FormInput from "../../shared/api/forms/InputField";
 
 type FormValues = {
+  name?: string;
   pricePerUnit?: number;
   unitsPerPackage?: number;
   quantity?: number;
@@ -15,10 +16,16 @@ const UpdateMedicine = ({ medicineId }: { medicineId: string }) => {
 
 const { register, handleSubmit, getPayload } = useCleanForm<FormValues>();
 
-    const onSubmit = (data: FormValues) => {
-    const payload = getPayload(data);
-    mutate({ medicineId, data: payload });
-    };
+const onSubmit = (data: FormValues) => {
+  console.log("Raw data:", data);
+  const payload = getPayload(data);
+  console.log("Payload:", payload);
+  if (Object.keys(payload).length === 0) {
+    console.warn("Nema podataka za slanje");
+    return;
+  }
+  mutate({ medicineId, data: payload });
+};
 
 
   return (
@@ -26,10 +33,11 @@ const { register, handleSubmit, getPayload } = useCleanForm<FormValues>();
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-4 space-y-1 border-0 shadow-md rounded-md p-8 max-w-2xl"
     >
-        <FormInput name="pricePerUnit" register={register} placeholder="Cena" />
+        <FormInput name="name" register={register} placeholder="promeni Ime" type="text" />
+        <FormInput name="pricePerUnit" register={register} placeholder="promeni cenu" />
 
-        <FormInput name="quantity" register={register} placeholder="ukupna količina" />
-        <FormInput name="unitsPerPackage" register={register} placeholder="broj tableta u pakovanju" />
+        <FormInput name="quantity" register={register} placeholder=" promeni ukupnu količinu" />
+        <FormInput name="unitsPerPackage" register={register} placeholder="promeni broj tableta u pakovanju" />
         <FormInput name="addQuantity" register={register} placeholder="Dodaj komade tableta" />
         <FormInput name="packages" register={register} placeholder="Dodaj cela pakovanja" />
 

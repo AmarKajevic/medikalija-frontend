@@ -26,6 +26,7 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
     resolver: zodResolver(useMedicineSchema) as any,
     defaultValues: {
       amount: undefined, 
+      medicineId: '',
     },
   });
 
@@ -34,6 +35,17 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
   const portion = watch("portion") || 0;
 
   const calculated = days * timesPerDay * portion;
+
+  const portions = [
+  { label: "Cela tableta", value: 1 },
+  { label: "Polovina", value: 0.5 },
+  { label: "Trećina", value: 0.33 },
+  { label: "Četvrtina", value: 0.25 },
+  { label: "Celo i jedna polovina", value: 1.5 },
+  { label: "Celo i jedna četvrtina", value: 1.25 },
+  { label: "Celo i jedna trećina", value: 1.33 },
+  { label: "Dva cela", value: 2 },
+];
 
 
   useEffect(() => {
@@ -82,29 +94,40 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
       />
 
       <input 
-      className="border-2 p-2 border-gray-200 text-black rounded-md "
+      className="border-2 p-2 border-gray-200 text-black rounded-md  w-full"
         type="number"
         placeholder="Dani"
         {...register("days")}
       />
 
       <input
-      className="border-2 p-2 border-gray-200 text-black rounded-md "
+      className="border-2 p-2 border-gray-200 text-black rounded-md  w-full"
         type="number"
         placeholder="Koliko puta dnevno"
         {...register("timesPerDay")}
       />
 
-      <input
-      className="border-2 p-2 border-gray-200 text-black rounded-md "
-        type="number"
-        step="0.01"
-        placeholder="Doza (npr 0.5)"
-        {...register("portion")}
-      />
+        <Controller
+          name="portion"
+          control={control}
+          render={({ field }) => (
+            <select
+              {...field}
+              value={field.value ?? 1}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              className="border-2 p-2 border-gray-200 text-black rounded-md w-full"
+            >
+              {portions.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          )}
+        />
 
       <input
-      className="border-2 p-2 border-gray-200 text-black rounded-md "
+      className="border-2 p-2 border-gray-200 text-black rounded-md w-full"
         type="number"
         step="0.01"
         placeholder="Ukupna količina"

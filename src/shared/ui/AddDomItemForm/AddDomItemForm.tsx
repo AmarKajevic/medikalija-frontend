@@ -4,7 +4,15 @@ import { SearchableSelect } from "../SearchableSelect/SearchableSelect";
 import type { Option } from "../SearchableSelect/types";
 import type { DomItemFormConfig, DomFormValues } from "./types";
 
-export const AddDomItemForm = <TItem extends { name: string; price?: number; pricePerUnit?: number; quantity: number; familyQuantity?: number }>({
+export const AddDomItemForm = <
+  TItem extends {
+    name: string;
+    price?: number;
+    pricePerUnit?: number;
+    quantity: number;
+    familyQuantity?: number;
+  },
+>({
   config,
 }: {
   config: DomItemFormConfig<TItem>;
@@ -24,9 +32,9 @@ export const AddDomItemForm = <TItem extends { name: string; price?: number; pri
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
     setError,
+    clearErrors,
     formState: { errors },
   } = useForm<DomFormValues>({
     defaultValues: {
@@ -38,7 +46,7 @@ export const AddDomItemForm = <TItem extends { name: string; price?: number; pri
     },
   });
 
-  const mode = watch("mode");
+
 
   const selectOptions = useMemo<Option<{ home: number; family: number }>[]>(
     () => [
@@ -49,134 +57,108 @@ export const AddDomItemForm = <TItem extends { name: string; price?: number; pri
         extra: { home: item.quantity, family: item.familyQuantity ?? 0 },
       })),
     ],
-    [items]
+    [items],
   );
 
   const handleItemChange = useCallback(
     (value: string) => {
       setValue("name", value);
       if (value) {
-        const found = items.find((i) => i.name === value);
+        const found = items.find(
+          (item) => item.name.toLowerCase() === value.toLowerCase(),
+        );
         if (found) {
-          const priceValue = config.priceFieldName === "price" ? (found as any).price : (found as any).pricePerUnit;
+          const priceValue =
+            config.priceFieldName === "price"
+              ? (found as any).price
+              : (found as any).pricePerUnit;
           setValue("price", priceValue ?? "");
+          setError("name", {
+            type: "manual",
+            message: `${config.itemNameSingular} sa tim nazivom već postoji.`,
+          });
+        } else {
+          setValue("price", "");
+          clearErrors("name");
         }
       } else {
         setValue("price", "");
+        clearErrors("name");
       }
       setValue("unitsPerPackage", "");
       setValue("quantity", "");
     },
-    [items, setValue, config.priceFieldName]
+    [items, setValue, setError, clearErrors, config.priceFieldName],
   );
 
-const onSubmit = useCallback(
-  (data: DomFormValues) => {
-     if (data.mode === "new") {
+  const onSubmit = useCallback(
+    (data: DomFormValues) => {
       const exists = items.some(
-        (item) => item.name.toLowerCase() === data.name.toLowerCase()
+        (item) => item.name.toLowerCase() === data.name.toLowerCase(),
       );
       if (exists) {
         setError("name", {
           type: "manual",
-          message: `${config.itemNameSingular} sa tim nazivom već postoji`,
+          message: `${config.itemNameSingular} sa tim nazivom već postoji.`,
         });
-        return; // ne šalji
+        return;
       }
-    }
-    const payload = config.buildPayload(data, false);  // ← fromFamily = false
-    mutate(payload, {
-      onSuccess: () => reset(),
-    });
-  },
-  [mutate, reset, config]
-);
+      const payload = config.buildPayload(data, false);
+      mutate(payload, {
+        onSuccess: () => reset(),
+      });
+    },
+    [mutate, reset, config, items, setError],
+  );
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl space-y-4">
       <h2 className="text-xl font-bold">{config.title}</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="new"
-              {...register("mode")}
-              onChange={() => {
-                setValue("mode", "new");
-                setValue("name", "");
-                setValue("price", "");
-              }}
-            />
-            Novi {config.itemNameSingular}
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="existing"
-              {...register("mode")}
-              onChange={() => {
-                setValue("mode", "existing");
-                setValue("name", "");
-                setValue("price", "");
-              }}
-            />
-            Postojeći {config.itemNameSingular}
-          </label>
-        </div>
-
-        {mode === "existing" && (
-          <Controller
-            name="name"
-            control={control}
-            rules={{ required: `Morate izabrati ${config.itemNameSingular}` }}
-            render={({ field, fieldState }) => (
-              <div>
-                <SearchableSelect
-                  value={field.value}
-                  onChange={handleItemChange}
-                  options={selectOptions}
-                  renderOption={(opt) => (
-                    <>
-                      <div className="font-medium">{opt.label}</div>
-                      {opt.value !== "" && (
-                        <div className="text-xs text-gray-500">
-                          🏥 {opt.extra?.home} | 👪 {opt.extra?.family}
-                        </div>
-                      )}
-                    </>
-                  )}
-                  placeholder={`Izaberi ${config.itemNameSingular}...`}
-                />
-                {fieldState.error && (
-                  <p className="text-red-500 text-sm mt-1">{fieldState.error.message}</p>
+        {/* SearchableSelect za naziv */}
+        <Controller
+          name="name"
+          control={control}
+          rules={{ required: `Naziv ${config.itemNameSingular}a je obavezan` }}
+          render={({ field, fieldState }) => (
+            <div>
+              <SearchableSelect
+                value={field.value}
+                onChange={handleItemChange}
+                options={selectOptions}
+                renderOption={(opt) => (
+                  <>
+                    <div className="font-medium">{opt.label}</div>
+                    {opt.value !== "" && (
+                      <div className="text-xs text-gray-500">
+                        🏥 {opt.extra?.home} | 👪 {opt.extra?.family}
+                      </div>
+                    )}
+                  </>
                 )}
-              </div>
-            )}
-          />
-        )}
-
-        {mode === "new" && (
-          <div className="space-y-2">
-            <input
-              {...register("name", { required: `Naziv ${config.itemNameSingular}a je obavezan` })}
-              placeholder={`Naziv ${config.itemNameSingular}a`}
-              className="border p-2 w-full rounded"
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
-
-            <input
-              type="number"
-              step="0.01"
-              {...register("price", {
-                required: "Cena je obavezna",
-                valueAsNumber: true,
-                min: { value: 0, message: "Cena mora biti pozitivna" },
-              })}
-              placeholder={config.placeholderPrice}
-              className="border p-2 w-full rounded"
-            />
-            {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
-          </div>
+                placeholder={`Izaberi ili unesi naziv ${config.itemNameSingular}a...`}
+                allowFreeText={true} // ← ključno
+              />
+              {fieldState.error && (
+                <p className="text-red-500 text-sm mt-1">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </div>
+          )}
+        />
+        <input
+          type="number"
+          step="0.01"
+          {...register("price", {
+            required: "Cena je obavezna",
+            valueAsNumber: true,
+            min: { value: 0, message: "Cena mora biti pozitivna" },
+          })}
+          placeholder={config.placeholderPrice}
+          className="border p-2 w-full rounded"
+        />
+        {errors.price && (
+          <p className="text-red-500 text-sm">{errors.price.message}</p>
         )}
 
         <input
@@ -196,14 +178,16 @@ const onSubmit = useCallback(
             valueAsNumber: true,
             min: { value: 1, message: "Mora biti najmanje 1" },
           })}
-          placeholder={mode === "existing" ? "Dodaj količinu na ukupnu" : "Ukupna količina"}
+          placeholder="Ukupna količina"
           className="border p-2 w-full rounded"
         />
-        {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
+        {errors.quantity && (
+          <p className="text-red-500 text-sm">{errors.quantity.message}</p>
+        )}
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || !!errors.name}
           className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-blue-300"
         >
           {isPending ? "Čuvanje..." : "Sačuvaj"}

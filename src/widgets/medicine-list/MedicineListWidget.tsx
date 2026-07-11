@@ -11,8 +11,8 @@ const MedicineListWidget = () => {
   if (isLoading) return <p>Učitavanje...</p>;
 
   return (
-    <ComponentCard title="LEKOVI — MEDIKALIJA (DOM)">
-      <div className="flex gap-2">
+    <ComponentCard title="LEKOVI — MEDIKALIJA ">
+      <div className="flex gap-2 ">
               <AddMedicineFormNew/>
               <AddMedicineFromFamilyFormNew/>
 
