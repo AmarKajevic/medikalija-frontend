@@ -1,6 +1,6 @@
 // shared/ui/SearchableSelect/SearchableSelect.tsx
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import type { SearchableSelectProps, Option } from "./types";
+import type { SearchableSelectProps, Option } from "@shared/ui/SearchableSelect/types";
 
 export const SearchableSelect = <T extends Option>({
   value,

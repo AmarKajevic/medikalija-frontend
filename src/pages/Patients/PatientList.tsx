@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { usePatients } from "../../features/patients/hooks/usePatients";
-import DeleteButton from "../../shared/ui/DeleteButton";
-import { useDeletePatient } from "../../features/patients/hooks/useDeletePatient";
+import { usePatients } from "@features/patients/hooks/usePatients";
+import DeleteButton from "@shared/ui/DeleteButton";
+import { useDeletePatient } from "@features/patients/hooks/useDeletePatient";
 
 
 function PatientList() {

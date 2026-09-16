@@ -1,7 +1,7 @@
 // ui/SpecificationHistoryTable.tsx
 import { Link } from "react-router";
-import { useSpecificationHistory } from "../hooks/useSpecificationHistory";
-import { formatDate } from "../lib/helpers";
+import { useSpecificationHistory } from "@features/specification/hooks/useSpecificationHistory";
+import { formatDate } from "@features/specification/lib/helpers";
 
 interface SpecificationHistoryTableProps {
   patientId: string;

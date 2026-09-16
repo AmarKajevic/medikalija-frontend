@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 
-import { useDeleteMedicine } from "../hooks/useDeleteMedicine";
+import { useDeleteMedicine } from "@features/medicine/hooks/useDeleteMedicine";
 
 type Props = {
 

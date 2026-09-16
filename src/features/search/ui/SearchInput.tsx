@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearch } from "../hooks/useSearch";
-import SearchDropdown from "./SearchDropdown";
+import { useSearch } from "@features/search/hooks/useSearch";
+import SearchDropdown from "@features/search/ui/SearchDropdown";
 
 const SearchInput = () => {
   const [query, setQuery] = useState("");

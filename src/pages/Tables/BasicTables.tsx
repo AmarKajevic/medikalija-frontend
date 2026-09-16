@@ -1,7 +1,7 @@
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
-import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
+import PageBreadcrumb from "@shared/ui/common/PageBreadCrumb";
+import ComponentCard from "@shared/ui/common/ComponentCard";
+import PageMeta from "@shared/ui/common/PageMeta";
+import BasicTableOne from "@shared/ui/tables/BasicTableOne";
 
 export default function BasicTables() {
   return (

@@ -1,7 +1,7 @@
-import { AddDomItemForm } from "../../../shared/ui/AddDomItemForm/AddDomItemForm";
-import { useAddArticle } from "../hooks/useAddArticle";
-import { useGetArticles } from "../hooks/useGetArticles";
-import { buildArticlePayload } from "../lib/buildArticlePayload";
+import { AddDomItemForm } from "@shared/ui/AddDomItemForm/AddDomItemForm";
+import { useAddArticle } from "@features/articles/hooks/useAddArticle";
+import { useGetArticles } from "@features/articles/hooks/useGetArticles";
+import { buildArticlePayload } from "@features/articles/lib/buildArticlePayload";
 
 export const AddArticleFormNew = () => (
   <AddDomItemForm

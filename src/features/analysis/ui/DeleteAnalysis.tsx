@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useDeleteAnalysis } from "../hooks/useDeleteAnalysis";
-import ConfirmModal from "../../../shared/ui/ConfirmModal";
+import { useDeleteAnalysis } from "@features/analysis/hooks/useDeleteAnalysis";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 
 
 const DeleteAnalysisButton = ({ id }: { id: string }) => {

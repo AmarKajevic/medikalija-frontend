@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
-import { TrashBinIcon } from "../../icons";
+import { api } from "@shared/api/api";
+import { useAuth } from "@app/providers/AuthContext";
+import { TrashBinIcon } from "@shared/icons";
 
 export default function UserList() {
   const { user } = useAuth();
@@ -26,11 +26,7 @@ export default function UserList() {
 
   const loadUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        "https://medikalija-api.vercel.app/api/auth/users",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get("/api/auth/users");
       setUsers(res.data.users);
     } catch (err) {
       console.log(err);
@@ -43,11 +39,7 @@ export default function UserList() {
     if (!window.confirm("Da li ste sigurni da želite obrisati korisnika?")) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `https://medikalija-api.vercel.app/api/auth/users/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/auth/users/${id}`);
       setUsers(users.filter((u: any) => u._id !== id));
     } catch (err) {
       console.log(err);

@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useAddAnalysis } from "../hooks/useAddAnalysis";
+import { useAddAnalysis } from "@features/analysis/hooks/useAddAnalysis";
 
 const AddAnalysisNew = () => {
   const { mutate, isPending } = useAddAnalysis();

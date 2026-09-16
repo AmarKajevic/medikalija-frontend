@@ -1,7 +1,7 @@
 
 import { useParams } from 'react-router'
-import { useGetAnalysis } from '../hooks/useGetAnalysis'
-import UpdateAnalysisForm from './UpdateAnalysis'
+import { useGetAnalysis } from "@features/analysis/hooks/useGetAnalysis"
+import UpdateAnalysisForm from "@features/analysis/ui/UpdateAnalysis"
 
 const AnalysisDetailPage = () => {
     const {analysisId} = useParams()

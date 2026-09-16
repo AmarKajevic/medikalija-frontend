@@ -1,4 +1,4 @@
-import { User } from "../../users/types/User";
+import { User } from "@features/users/types/User";
 
 
 export type Patient = {

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { previewBilling } from "../api/specificationApi";
+import { previewBilling } from "@features/specification/api/specificationApi";
 
 export const usePreviewBilling = (specId: string) => {
   return useMutation({

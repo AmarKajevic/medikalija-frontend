@@ -1,6 +1,6 @@
-import PageBreadcrumb from "../components/common/PageBreadCrumb";
+import PageBreadcrumb from "@shared/ui/common/PageBreadCrumb";
 
-import PageMeta from "../components/common/PageMeta";
+import PageMeta from "@shared/ui/common/PageMeta";
 
 export default function UserProfiles() {
   return (

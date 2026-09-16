@@ -1,8 +1,8 @@
 import { useForm, Controller } from "react-hook-form";
 import { useCallback, useMemo } from "react";
-import { SearchableSelect } from "../SearchableSelect/SearchableSelect";
-import PatientSelect from "../../../features/patients/ui/PatientSelect"; // ili shared
-import type { FamilyItemFormConfig, FamilyFormValues } from "./types";
+import { SearchableSelect } from "@shared/ui/SearchableSelect/SearchableSelect";
+import PatientSelect from "@features/patients/ui/PatientSelect"; // ili shared
+import type { FamilyItemFormConfig, FamilyFormValues } from "@shared/ui/AddFamilyItemForm/types";
 
 export const AddFamilyItemForm = <TItem extends { name: string; quantity: number; familyQuantity?: number }>({
   config,

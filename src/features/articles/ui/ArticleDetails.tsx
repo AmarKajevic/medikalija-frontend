@@ -1,7 +1,7 @@
 
 
 import { useParams } from 'react-router'
-import { useGetArticle } from '../hooks/useGetArticle'
+import { useGetArticle } from "@features/articles/hooks/useGetArticle"
 
 const ArticleDetails = () => {
     const {id} = useParams()

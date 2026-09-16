@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import PatientSpecification from "../../components/patients/PatientSpecification";
+import PatientSpecification from "@features/specification/ui/PatientSpecification";
 
 export default function ProfileSpecification() {
   const { patientId } = useParams<{ patientId: string }>();

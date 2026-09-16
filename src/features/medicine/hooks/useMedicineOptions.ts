@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPatientStockMedicines } from "../api/getPatientStockMedicines";
-import { getMedicines } from "../api/getMedicines";
+import { getPatientStockMedicines } from "@features/medicine/api/getPatientStockMedicines";
+import { getMedicines } from "@features/medicine/api/getMedicines";
 
 type Option = {
   value: string;

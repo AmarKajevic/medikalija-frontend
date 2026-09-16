@@ -1,5 +1,5 @@
-import { api } from "../../../shared/api/api";
-import { UseMedicinePayload } from "../types/types";
+import { api } from "@shared/api/api";
+import { UseMedicinePayload } from "@features/medicine/types/types";
 
 
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { useAddCombination } from "../hooks/useAddCombination";
+import { useAddCombination } from "@features/combinations/hooks/useAddCombination";
 import { useForm } from "react-hook-form";
-import { useGetAnalyses } from "../../analysis/hooks/useGetAnalyses";
-import { useGetCombinations } from "../hooks/useGetCombinations";
+import { useGetAnalyses } from "@features/analysis/hooks/useGetAnalyses";
+import { useGetCombinations } from "@features/combinations/hooks/useGetCombinations";
 
 const AddCombinationForm = () => {
   const { mutate, isPending } = useAddCombination();

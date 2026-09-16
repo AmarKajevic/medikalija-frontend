@@ -1,6 +1,6 @@
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
-import { UsedArticle } from "../../hooks/Patient/useArticle";
-import { UsedMedicine } from "../../hooks/Patient/useMedicine";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@shared/ui/table/index";
+import { UsedArticle } from "@entities/article/hooks/useArticle";
+import { UsedMedicine } from "@entities/medicine/hooks/useMedicine";
 
 
 

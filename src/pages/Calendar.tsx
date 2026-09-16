@@ -4,11 +4,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventInput, DateSelectArg, EventClickArg } from "@fullcalendar/core";
-import { Modal } from "../components/ui/modal";
-import { useModal } from "../hooks/useModal";
-import PageMeta from "../components/common/PageMeta";
+import { Modal } from "@shared/ui/modal-kit/index";
+import { useModal } from "@shared/lib/useModal";
+import PageMeta from "@shared/ui/common/PageMeta";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@app/providers/AuthContext";
 
 interface CalendarEvent extends EventInput {
   _id?: string;
@@ -43,7 +43,7 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     const fetchCalendarEvents = async () => {
       try {
-        const res = await axios.get("https://medikalija-api.vercel.app/api/calendar", {
+        const res = await axios.get("http://localhost:5000/api/calendar", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -117,7 +117,7 @@ const Calendar: React.FC = () => {
       if (selectedEvent?._id) {
         // UPDATE DOGAĐAJA
         const res = await axios.put(
-          `https://medikalija-api.vercel.app/api/calendar/${selectedEvent._id}`,
+          `http://localhost:5000/api/calendar/${selectedEvent._id}`,
           {
             title: eventTitle,
             start: eventStartDate,
@@ -145,7 +145,7 @@ const Calendar: React.FC = () => {
       } else {
         // DODAJ NOVI DOGAĐAJ
         const res = await axios.post(
-          "https://medikalija-api.vercel.app/api/calendar",
+          "http://localhost:5000/api/calendar",
           {
             title: eventTitle,
             start: eventStartDate,
@@ -182,7 +182,7 @@ const Calendar: React.FC = () => {
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/calendar/${selectedEvent._id}`,
+        `http://localhost:5000/api/calendar/${selectedEvent._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -1,8 +1,8 @@
 import { createContext, useState, ReactNode } from "react";
-import { Drawer } from "../drawer";
-import { UseMedicineForm } from "../../../features/medicine/ui/UseMedicineForm";
-import AddCombinationToPatientForm from "../../../features/combinations/ui/AddCombinationToPatientForm";
-import UseArticleForm from "../../../features/articles/ui/UseArticleForm";
+import { Drawer } from "@shared/ui/drawer";
+import { UseMedicineForm } from "@features/medicine/ui/UseMedicineForm";
+import AddCombinationToPatientForm from "@features/combinations/ui/AddCombinationToPatientForm";
+import UseArticleForm from "@features/articles/ui/UseArticleForm";
 
 
 type ModalType = "medicine" | "combination" | "article" |null;

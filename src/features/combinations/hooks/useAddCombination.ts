@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { addCombination, addCombinationToGroup } from "../api/addCombination"
+import { addCombination, addCombinationToGroup } from "@features/combinations/api/addCombination"
 
 export const useAddCombination = () => {
   const queryClient = useQueryClient();

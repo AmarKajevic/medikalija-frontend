@@ -1,5 +1,5 @@
 
-import { usePatient } from '../../features/patients/hooks/usePatient'
+import { usePatient } from "@features/patients/hooks/usePatient"
 import { useParams } from 'react-router'
 
 const PatientDetailPage = () => {

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@app/providers/AuthContext";
 import axios from "axios";
-import EditMedicine from "./EditMedicine";
-import DeleteMedicine from "./DeleteMedicine";
+import EditMedicine from "@pages/Medicine/EditMedicine";
+import DeleteMedicine from "@pages/Medicine/DeleteMedicine";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import ComponentCard from "../../components/common/ComponentCard";
+} from "@shared/ui/table/index";
+import ComponentCard from "@shared/ui/common/ComponentCard";
 
 interface Patient {
   _id: string;
@@ -43,7 +43,7 @@ export default function PatientMedicineFromFamily() {
   const [patientSearch, setPatientSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const API = "https://medikalija-api.vercel.app/api";
+  const API = "http://localhost:5000/api";
 
   /* ================= FETCH PATIENTS ================= */
   const fetchPatients = async () => {

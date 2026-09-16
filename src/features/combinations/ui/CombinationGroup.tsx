@@ -1,6 +1,6 @@
 
-import { CombinationItem } from "./CombinationItem";
-import DeleteCombinationGroup from "./DeleteCombinationGroup";
+import { CombinationItem } from "@features/combinations/ui/CombinationItem";
+import DeleteCombinationGroup from "@features/combinations/ui/DeleteCombinationGroup";
 import { useState } from "react";
 
 

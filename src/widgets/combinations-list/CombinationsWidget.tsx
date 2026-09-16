@@ -1,6 +1,6 @@
-import { useGetCombinations } from "../../features/combinations/hooks/useGetCombinations";
-import AddCombinationForm from "../../features/combinations/ui/AddCombinationForm";
-import { CombinationList } from "../../features/combinations/ui/CombinationsList";
+import { useGetCombinations } from "@features/combinations/hooks/useGetCombinations";
+import AddCombinationForm from "@features/combinations/ui/AddCombinationForm";
+import { CombinationList } from "@features/combinations/ui/CombinationsList";
 
 
 export const CombinationsWidget = () => {

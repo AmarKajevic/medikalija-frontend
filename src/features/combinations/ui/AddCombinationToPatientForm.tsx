@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useAddCombinationToPatient } from "../hooks/useAddCombinationToPatient";
-import { useGetCombinations } from "../hooks/useGetCombinations";
+import { useAddCombinationToPatient } from "@features/combinations/hooks/useAddCombinationToPatient";
+import { useGetCombinations } from "@features/combinations/hooks/useGetCombinations";
 
 const AddCombinationToPatientForm = ({ patientId }: { patientId: string }) => {
   const { mutate, isPending } = useAddCombinationToPatient();

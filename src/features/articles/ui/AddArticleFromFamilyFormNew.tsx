@@ -1,8 +1,8 @@
-import { AddFamilyItemForm } from "../../../shared/ui/AddFamilyItemForm/AddFamilyItemForm";
-import { useAddArticle } from "../hooks/useAddArticle";
-import { useGetArticles } from "../hooks/useGetArticles";
-import { usePatients } from "../../patients/hooks/usePatients";
-import { buildFamilyArticlePayload } from "../lib/buildFamilyArticlePayload";
+import { AddFamilyItemForm } from "@shared/ui/AddFamilyItemForm/AddFamilyItemForm";
+import { useAddArticle } from "@features/articles/hooks/useAddArticle";
+import { useGetArticles } from "@features/articles/hooks/useGetArticles";
+import { usePatients } from "@features/patients/hooks/usePatients";
+import { buildFamilyArticlePayload } from "@features/articles/lib/buildFamilyArticlePayload";
 
 export const AddArticleFromFamilyFormNew = () => (
   <AddFamilyItemForm

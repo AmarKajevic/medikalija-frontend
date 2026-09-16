@@ -1,13 +1,13 @@
 import { useParams } from "react-router";
-import useArticles from "../../hooks/Patient/useArticle";
-import { useDiagnoses } from "../../hooks/Patient/useDiagnosis";
-import usePatient from "../../hooks/Patient/usePatient";
-import PatientInfo from "../../components/patients/PatientInfo";
-import DiagnosisSection from "../../components/diagnosis/DiagnosisSection";
-import AddArticleToPatient from "../../components/articles/AddArticleToPatient";
-import PatientDataTableForNurse from "../Tables/PatientDataTableForNurse";
-import { useMedicine } from "../../hooks/Patient/useMedicine";
-import UseMedicine from "../Medicine/UseMedicine";
+import useArticles from "@entities/article/hooks/useArticle";
+import { useDiagnoses } from "@entities/diagnosis/hooks/useDiagnosis";
+import usePatient from "@entities/patient/hooks/usePatient";
+import PatientInfo from "@entities/patient/ui/PatientInfo";
+import DiagnosisSection from "@features/diagnosis/ui/DiagnosisSection";
+import AddArticleToPatient from "@features/articles/ui/AddArticleToPatient";
+import PatientDataTableForNurse from "@pages/Tables/PatientDataTableForNurse";
+import { useMedicine } from "@entities/medicine/hooks/useMedicine";
+import UseMedicine from "@pages/Medicine/UseMedicine";
 
 export default function PatientProfileForNurse() {
   const { patientId } = useParams<{ patientId: string }>();

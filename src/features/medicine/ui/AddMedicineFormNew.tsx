@@ -1,7 +1,7 @@
-import { AddDomItemForm } from "../../../shared/ui/AddDomItemForm/AddDomItemForm";
-import { useAddMedicine } from "../hooks/useAddMedicine";
-import { useMedicines } from "../hooks/useMedicines";
-import { buildMedicinePayload } from "../lib/buildMedicinePayload";
+import { AddDomItemForm } from "@shared/ui/AddDomItemForm/AddDomItemForm";
+import { useAddMedicine } from "@features/medicine/hooks/useAddMedicine";
+import { useMedicines } from "@features/medicine/hooks/useMedicines";
+import { buildMedicinePayload } from "@features/medicine/lib/buildMedicinePayload";
 
 export const AddMedicineFormNew = () => (
   <AddDomItemForm

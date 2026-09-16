@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getCombinationGroup } from "../api/getCombinationGroup"
+import { getCombinationGroup } from "@features/combinations/api/getCombinationGroup"
 
 export const useGetCombinationGroup =  () => {
     return useQuery({

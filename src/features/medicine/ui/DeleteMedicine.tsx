@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useDeleteMedicine } from "../hooks/useDeleteMedicine";
-import ConfirmModal from "../../../shared/ui/ConfirmModal";
+import { useDeleteMedicine } from "@features/medicine/hooks/useDeleteMedicine";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 
 const DeleteMedicineButton = ({ id }: { id: string }) => {
   const { mutate, isPending } = useDeleteMedicine();

@@ -1,4 +1,4 @@
-import { CombinationGroup } from "./CombinationGroup";
+import { CombinationGroup } from "@features/combinations/ui/CombinationGroup";
 
 
 export const CombinationList = ({ groups }: any) => {

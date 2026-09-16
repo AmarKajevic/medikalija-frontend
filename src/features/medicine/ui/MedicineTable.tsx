@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import MedicineRow from "./MedicineRow";
+import MedicineRow from "@features/medicine/ui/MedicineRow";
 
 type Props = {
   medicines: any[];

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import DatePicker from '../../../components/form/date-picker';
-import { useUpdateDischargeDate } from '../hooks/useUpdateDischargeDate';
-import ConfirmModal from '../../../shared/ui/ConfirmModal';
+import DatePicker from "@shared/ui/form/date-picker";
+import { useUpdateDischargeDate } from "@features/patients/hooks/useUpdateDischargeDate";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 
 interface Patient {
     dischargeDate: string | Date;

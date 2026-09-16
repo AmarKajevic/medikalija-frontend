@@ -1,6 +1,6 @@
 
-import { useGetArticles } from "../hooks/useGetArticles"
-import { useGetPatientStockArticles } from "../hooks/useGetPatientStockArticles"
+import { useGetArticles } from "@features/articles/hooks/useGetArticles"
+import { useGetPatientStockArticles } from "@features/articles/hooks/useGetPatientStockArticles"
 
 type Option = {
   value: string;

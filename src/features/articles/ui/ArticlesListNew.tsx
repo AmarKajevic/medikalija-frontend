@@ -1,10 +1,10 @@
 
-import { useGetArticles } from '../hooks/useGetArticles'
+import { useGetArticles } from "@features/articles/hooks/useGetArticles"
 import { useNavigate } from 'react-router-dom';
 
-import ArticleListWidget from '../../../widgets/article-list/ArticleListWidget';
-import { AddArticleFormNew } from './AddArticleFormNew';
-import { AddArticleFromFamilyFormNew } from './AddArticleFromFamilyFormNew';
+import ArticleListWidget from "@widgets/article-list/ArticleListWidget";
+import { AddArticleFormNew } from "@features/articles/ui/AddArticleFormNew";
+import { AddArticleFromFamilyFormNew } from "@features/articles/ui/AddArticleFromFamilyFormNew";
 
 
 

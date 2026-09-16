@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../components/ui/table";
-import ComponentCard from "../../components/common/ComponentCard";
-import { useAuth } from "../../context/AuthContext";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "@shared/ui/table/index";
+import ComponentCard from "@shared/ui/common/ComponentCard";
+import { useAuth } from "@app/providers/AuthContext";
 
 interface NurseAction {
   type: string;
@@ -23,7 +23,7 @@ export default function NurseActionsList() {
 
   const fetchActions = async () => {
     try {
-      const response = await axios.get("https://medikalija-api.vercel.app/api/nurse-actions", {
+      const response = await axios.get("http://localhost:5000/api/nurse-actions", {
         headers: { Authorization: `Bearer ${token}` }
       });
 

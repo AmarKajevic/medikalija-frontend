@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getArrticles } from "../api/getArticles"
+import { getArrticles } from "@features/articles/api/getArticles"
 
 export const useGetArticles = () => {
     return useQuery({

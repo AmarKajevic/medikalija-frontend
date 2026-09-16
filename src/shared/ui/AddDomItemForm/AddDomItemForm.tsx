@@ -1,8 +1,8 @@
 import { useForm, Controller } from "react-hook-form";
 import { useCallback, useMemo } from "react";
-import { SearchableSelect } from "../SearchableSelect/SearchableSelect";
-import type { Option } from "../SearchableSelect/types";
-import type { DomItemFormConfig, DomFormValues } from "./types";
+import { SearchableSelect } from "@shared/ui/SearchableSelect/SearchableSelect";
+import type { Option } from "@shared/ui/SearchableSelect/types";
+import type { DomItemFormConfig, DomFormValues } from "@shared/ui/AddDomItemForm/types";
 
 export const AddDomItemForm = <
   TItem extends {

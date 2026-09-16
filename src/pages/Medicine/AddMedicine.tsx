@@ -1,6 +1,6 @@
 
-import { AddMedicineFormNew } from "../../features/medicine/ui/AddMedicineFormNew";
-import { AddMedicineFromFamilyFormNew } from "../../features/medicine/ui/AddMedicineFromFamilyFormNew";
+import { AddMedicineFormNew } from "@features/medicine/ui/AddMedicineFormNew";
+import { AddMedicineFromFamilyFormNew } from "@features/medicine/ui/AddMedicineFromFamilyFormNew";
 
 
 const AddMedicine = () => {

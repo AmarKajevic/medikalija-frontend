@@ -1,7 +1,7 @@
 
-import ComponentCard from '../../components/common/ComponentCard'
-import { useGetArticles } from '../../features/articles/hooks/useGetArticles'
-import ArticleTable from '../../features/articles/ui/ArticleTable'
+import ComponentCard from "@shared/ui/common/ComponentCard"
+import { useGetArticles } from "@features/articles/hooks/useGetArticles"
+import ArticleTable from "@features/articles/ui/ArticleTable"
 
 const ArticleListWidget = () => {
     const {data, isLoading} = useGetArticles()

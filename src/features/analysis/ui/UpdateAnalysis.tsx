@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useUpdateAnalysis } from "../hooks/useUpdateAnalysis";
+import { useUpdateAnalysis } from "@features/analysis/hooks/useUpdateAnalysis";
 
 const UpdateAnalysisForm = ({ analysis }: any) => {
   const { mutate, isPending } = useUpdateAnalysis();

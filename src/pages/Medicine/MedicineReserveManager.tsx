@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
-import ComponentCard from "../../components/common/ComponentCard";
+import { useAuth } from "@app/providers/AuthContext";
+import ComponentCard from "@shared/ui/common/ComponentCard";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import Input from "../../components/form/input/InputField";
+} from "@shared/ui/table/index";
+import Input from "@shared/ui/form/input/InputField";
 
 interface Patient {
   _id: string;
@@ -39,7 +39,7 @@ export default function MedicineReserveManager() {
 
 
 
-  const API = "https://medikalija-api.vercel.app/api";
+  const API = "http://localhost:5000/api";
 
   /* ================= FETCH PACIJENATA ================= */
   const fetchPatients = async () => {

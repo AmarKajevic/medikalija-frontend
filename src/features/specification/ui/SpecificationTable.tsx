@@ -4,58 +4,56 @@ type Props = {
 };
 
 export const SpecificationTable = ({ data, onDelete }: Props) => {
-
- 
-  console.log(data);
   return (
-    <table className="w-full border-collapse border border-gray-300">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="border p-2 text-left">Opis</th>
-          <th className="border p-2 text-right">Količina</th>
-          <th className="border p-2 text-right">Cena (RSD)</th>
-          <th className="border p-2 text-center">izbrisi</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {data.items.map((item: any) => (
-          <tr key={item._id}>
-            <td className="border p-2">
-              {item.analyses && item.analyses.length > 0 ? (
-                item.analyses.map((a: any) => (
-                  <p key={a._id}>{a.name}</p>
-                ))
-              ) : (
-                item.name
-              )}
-            </td>
-            <td className="border p-2 text-right">
-              {Number(item.amount).toFixed(2)} 
-            </td>
-            <td className="border p-2 text-right">
-              {item.price.toFixed(2)}
-            </td>
-            <td className="border p-2 text-center">
-              <button
-                onClick={() => onDelete(item._id)}
-                className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded"
-              >
-                ❌ Obriši
-              </button>
-            </td>
+    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 print:hidden">
+            <th className="p-3 font-medium">Opis</th>
+            <th className="p-3 text-right font-medium">Količina</th>
+            <th className="p-3 text-right font-medium">Cena (RSD)</th>
+            <th className="p-3 text-center font-medium">Izbriši</th>
           </tr>
-        ))}
+        </thead>
 
-        <tr className="font-semibold bg-gray-50">
-          <td></td>
-          <td className="border p-2 text-right">Ukupno:</td>
-          <td className="border p-2 text-right">
-            {data.totalPrice?.toFixed(2)} RSD
-          </td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          {data.items.length === 0 && (
+            <tr>
+              <td colSpan={4} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                Nema stavki u ovom periodu.
+              </td>
+            </tr>
+          )}
+          {data.items.map((item: any) => (
+            <tr key={item._id} className="text-gray-700 dark:text-gray-300">
+              <td className="p-3">
+                {item.analyses && item.analyses.length > 0 ? (
+                  item.analyses.map((a: any) => <p key={a._id}>{a.name}</p>)
+                ) : (
+                  item.name
+                )}
+              </td>
+              <td className="p-3 text-right">{Number(item.amount).toFixed(2)}</td>
+              <td className="p-3 text-right">{item.price.toFixed(2)}</td>
+              <td className="p-3 text-center print:hidden">
+                <button
+                  onClick={() => onDelete(item._id)}
+                  className="rounded-md bg-error-50 px-3 py-1 text-xs font-medium text-error-600 hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
+                >
+                  Obriši
+                </button>
+              </td>
+            </tr>
+          ))}
+
+          <tr className="bg-gray-50 font-semibold text-gray-800 dark:bg-white/[0.03] dark:text-white/90">
+            <td className="p-3"></td>
+            <td className="p-3 text-right">Ukupno:</td>
+            <td className="p-3 text-right">{data.totalPrice?.toFixed(2)} RSD</td>
+            <td className="p-3"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 };

@@ -1,8 +1,8 @@
-import ComponentCard from "../../components/common/ComponentCard";
-import { useMedicines } from "../../features/medicine/hooks/useMedicines";
-import { AddMedicineFormNew } from "../../features/medicine/ui/AddMedicineFormNew";
-import { AddMedicineFromFamilyFormNew } from "../../features/medicine/ui/AddMedicineFromFamilyFormNew";
-import MedicineTable from "../../features/medicine/ui/MedicineTable";
+import ComponentCard from "@shared/ui/common/ComponentCard";
+import { useMedicines } from "@features/medicine/hooks/useMedicines";
+import { AddMedicineFormNew } from "@features/medicine/ui/AddMedicineFormNew";
+import { AddMedicineFromFamilyFormNew } from "@features/medicine/ui/AddMedicineFromFamilyFormNew";
+import MedicineTable from "@features/medicine/ui/MedicineTable";
 
 
 const MedicineListWidget = () => {

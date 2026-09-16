@@ -2,11 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 
-import { useMedicineSchema, UseMedicineFormValues } from "../model/schema";
-import { useUseMedicine } from "../hooks/useUseMedicine";
-import { useMedicineOptions } from "../hooks/useMedicineOptions";
+import { useMedicineSchema, UseMedicineFormValues } from "@features/medicine/model/schema";
+import { useUseMedicine } from "@features/medicine/hooks/useUseMedicine";
+import { useMedicineOptions } from "@features/medicine/hooks/useMedicineOptions";
 import { Controller } from "react-hook-form";
-import { SelectItemsForm } from "../../../shared/ui/SelectItemsForm/SelectItemsForm";
+import { SelectItemsForm } from "@shared/ui/SelectItemsForm/SelectItemsForm";
 
 export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
   const { mutate, isPending } = useUseMedicine(patientId);

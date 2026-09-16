@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router";
-import { useGetAnalyses } from "../hooks/useGetAnalyses";
-import AddAnalysisNew from "./AddAnalysis";
+import { useGetAnalyses } from "@features/analysis/hooks/useGetAnalyses";
+import AddAnalysisNew from "@features/analysis/ui/AddAnalysis";
 import { useState } from "react";
-import DeleteAnalysis from "./DeleteAnalysis";
+import DeleteAnalysis from "@features/analysis/ui/DeleteAnalysis";
 
 const AnalysesList = () => {
   const { data, isLoading, error } = useGetAnalyses();

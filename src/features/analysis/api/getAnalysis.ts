@@ -1,4 +1,4 @@
-import { api } from "../../../shared/api/api"
+import { api } from "@shared/api/api"
 
 export const getAnalysis = async (analysisId: string) => {
     console.log(analysisId)

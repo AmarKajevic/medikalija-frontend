@@ -1,8 +1,8 @@
-import { AddFamilyItemForm } from "../../../shared/ui/AddFamilyItemForm/AddFamilyItemForm";
-import { useAddMedicine } from "../hooks/useAddMedicine";
-import { useMedicines } from "../hooks/useMedicines";
-import { usePatients } from "../../patients/hooks/usePatients";
-import { buildFamilyMedicinePayload } from "../lib/buildFamilyMedicinePayload";
+import { AddFamilyItemForm } from "@shared/ui/AddFamilyItemForm/AddFamilyItemForm";
+import { useAddMedicine } from "@features/medicine/hooks/useAddMedicine";
+import { useMedicines } from "@features/medicine/hooks/useMedicines";
+import { usePatients } from "@features/patients/hooks/usePatients";
+import { buildFamilyMedicinePayload } from "@features/medicine/lib/buildFamilyMedicinePayload";
 
 export const AddMedicineFromFamilyFormNew = () => (
   <AddFamilyItemForm

@@ -1,16 +1,16 @@
-import { useParams } from "react-router";
-import usePatient from "../../hooks/Patient/usePatient";
-import PatientInfo from "../../components/patients/PatientInfo";
-import { useDiagnoses } from "../../hooks/Patient/useDiagnosis";
-import PatientDataTable from "../Tables/PatientDataTable";
-import { useMedicine } from "../../hooks/Patient/useMedicine";
+import { useParams, Link } from "react-router";
+import usePatient from "@entities/patient/hooks/usePatient";
+import PatientInfo from "@entities/patient/ui/PatientInfo";
+import { useDiagnoses } from "@entities/diagnosis/hooks/useDiagnosis";
+import PatientDataTable from "@pages/Tables/PatientDataTable";
+import { useMedicine } from "@entities/medicine/hooks/useMedicine";
 
-import useArticles from "../../hooks/Patient/useArticle";
+import useArticles from "@entities/article/hooks/useArticle";
 
 
-import PatientSpecification from "../../components/patients/PatientSpecification";
-import { PatientStockMedicines } from "../../features/medicine/ui/PatientStockMedicines";
-import { useUsedCombination } from "../../features/combinations/hooks/useUsedCombination";
+import PatientSpecification from "@features/specification/ui/PatientSpecification";
+import { PatientStockMedicines } from "@features/medicine/ui/PatientStockMedicines";
+import { useUsedCombination } from "@features/combinations/hooks/useUsedCombination";
 
 
 
@@ -43,29 +43,27 @@ export default function PatientProfile() {
         <PatientInfo patient={patient} />
 
         {patient && patient._id && (
-          <div className="flex flex-col sm:flex-row gap-2">
-          
-
-            <a
-              href={`/patient/${patientId}/specification-history`}
-              className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to={`/patient/${patientId}/specification-history`}
+              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
             >
-              Pogledaj istoriju specifikacija
-            </a>
+              Istorija specifikacija
+            </Link>
 
-            <a
-              href={`/patient/${patient._id}/future-specifications`}
-              className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
+            <Link
+              to={`/patient/${patient._id}/future-specifications`}
+              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
             >
               Specifikacije za naredne godine
-            </a>
-            <a
-            href={`/patient-profile-nurse/${patient._id}`}
-            className="px-4 py-2 bg-zinc-900 text-white rounded hover:bg-zinc-700 transition"
-          >
-            Sta su sestre dodale
-          </a>
-           <PatientStockMedicines patientId={patient._id}/>
+            </Link>
+            <Link
+              to={`/patient-profile-nurse/${patient._id}`}
+              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
+            >
+              Šta su sestre dodale
+            </Link>
+            <PatientStockMedicines patientId={patient._id} />
           </div>
         )}
       </div>

@@ -1,10 +1,10 @@
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@shared/ui/table/index";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
-import { UsedArticle } from "../../hooks/Patient/useArticle";
+import { useAuth } from "@app/providers/AuthContext";
+import { UsedArticle } from "@entities/article/hooks/useArticle";
 
 import { useEffect, useState } from "react";
-import { UsedCombination } from "../../features/combinations/types/types";
+import { UsedCombination } from "@features/combinations/types/types";
 
 
 
@@ -53,7 +53,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
+        `http://localhost:5000/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -73,7 +73,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/medicine/patient/${patientId}/medicines/delete-all`,
+        `http://localhost:5000/api/medicine/patient/${patientId}/medicines/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -93,7 +93,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
+        `http://localhost:5000/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -113,7 +113,7 @@ export default function PatientDataTable({
 
     try {
       await axios.delete(
-        `https://medikalija-api.vercel.app/api/articles/patient/${patientId}/articles/delete-all`,
+        `http://localhost:5000/api/articles/patient/${patientId}/articles/delete-all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

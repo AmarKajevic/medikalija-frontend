@@ -1,5 +1,5 @@
 
-import { useDeletePatient } from '../hooks/useDeletePatient'
+import { useDeletePatient } from "@features/patients/hooks/useDeletePatient"
 
 type Props = {
     id:string;

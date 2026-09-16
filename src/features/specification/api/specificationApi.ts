@@ -1,5 +1,5 @@
-import { api } from "../../../shared/api/api";
-import { Specification } from "../types/types";
+import { api } from "@shared/api/api";
+import { Specification } from "@features/specification/types/types";
 
 
 
@@ -38,5 +38,25 @@ export const previewBilling = async (specId: string, payload: {
 };
 export const fetchSpecificationHistory = async (patientId: string) => {
   const { data } = await api.get(`/api/specification/history/${patientId}`);
-  return data; 
+  return data;
+};
+
+// Kreira/aktivira period po ručno unetom opsegu datuma (nadoknada propuštenog
+// perioda ili unapred izabran period).
+export const activateSpecificationPeriod = async (
+  patientId: string,
+  startDate: string,
+  endDate: string
+) => {
+  const { data } = await api.post(`/api/specification/${patientId}/activate`, {
+    startDate,
+    endDate,
+  });
+  return data.specification;
+};
+
+// Reaktivira POSTOJEĆU specifikaciju iz istorije po ID-u.
+export const activateExistingSpecification = async (patientId: string, specId: string) => {
+  const { data } = await api.post(`/api/specification/${patientId}/activate/${specId}`);
+  return data.specification;
 };

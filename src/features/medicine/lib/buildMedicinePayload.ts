@@ -1,4 +1,4 @@
-import { DomFormValues } from "../../../shared/ui/AddDomItemForm/types";
+import { DomFormValues } from "@shared/ui/AddDomItemForm/types";
 export const buildMedicinePayload = (data: DomFormValues, fromFamily: boolean) => {
   const payload: any = {
     name: data.name,

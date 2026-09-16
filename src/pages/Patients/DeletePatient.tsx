@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 
 interface Patient {
   _id: string;
@@ -23,15 +23,7 @@ export default function DeletePatient() {
     const fetchPatient = async () => {
       setLoading(true)
       try {
-        const token = localStorage.getItem("token")
-        const response = await axios.get(
-          "https://medikalija-api.vercel.app/api/patient",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
+        const response = await api.get("/api/patient")
         if (response.data.success) {
           setPatients(response.data.patients)
         } else {
@@ -50,14 +42,7 @@ export default function DeletePatient() {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Da li ste sigurni da želite da obrišete pacijenta?")) return;
     try {
-      await axios.delete(
-        `https://medikalija-api.vercel.app/api/patient/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        }
-      )
+      await api.delete(`/api/patient/${id}`)
       setPatients((prev) => prev.filter((p) => p._id !== id))
     } catch (error) {
       console.log(error)

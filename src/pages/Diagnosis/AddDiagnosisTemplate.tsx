@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
-import Input from "../../components/form/input/InputField";
-import { useAuth } from "../../context/AuthContext";
+import Input from "@shared/ui/form/input/InputField";
+import { useAuth } from "@app/providers/AuthContext";
 
 
 export default function AddDiagnosisTemplate() {
@@ -18,7 +18,7 @@ export default function AddDiagnosisTemplate() {
 
     try {
       const response = await axios.post(
-        "https://medikalija-api.vercel.app/api/diagnosisTemplate/add",
+        "http://localhost:5000/api/diagnosisTemplate/add",
         { name, description },
         { headers: { Authorization: `Bearer ${token}` } }
       );

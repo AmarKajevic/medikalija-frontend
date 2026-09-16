@@ -1,8 +1,8 @@
 // features/medicine/ui/PatientStockMedicines.tsx
 import { useEffect, useCallback, useMemo } from "react";
 
-import { useGetPatientStockMedicines } from "../hooks/useGetPatientStockMedicines";
-import { useModal } from "../../../hooks/useModal";
+import { useGetPatientStockMedicines } from "@features/medicine/hooks/useGetPatientStockMedicines";
+import { useModal } from "@shared/lib/useModal";
 
 // Tip za jedan lek iz stock-a (prilagodi stvarnom odgovoru API-ja)
 interface PatientMedicineStock {

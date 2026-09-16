@@ -1,5 +1,5 @@
-import PageBreadcrumb from "../components/common/PageBreadCrumb";
-import PageMeta from "../components/common/PageMeta";
+import PageBreadcrumb from "@shared/ui/common/PageBreadCrumb";
+import PageMeta from "@shared/ui/common/PageMeta";
 
 export default function Blank() {
   return (

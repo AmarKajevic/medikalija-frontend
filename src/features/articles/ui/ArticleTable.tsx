@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import  { useRef } from 'react'
-import ArticleRow from './ArticleRow';
+import ArticleRow from "@features/articles/ui/ArticleRow";
 
 type Props = {
     articles: any[]

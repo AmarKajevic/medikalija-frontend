@@ -1,8 +1,8 @@
-import { useGetMedicine } from '../../features/medicine/hooks/useGetMedicine'
+import { useGetMedicine } from "@features/medicine/hooks/useGetMedicine"
 import {useParams } from 'react-router-dom'
-import UpdateMedicine from './UpdateMedicine'
-import InfoRow from '../../shared/ui/InfoRow'
-import DeleteMedicineButton from '../../features/medicine/ui/DeleteMedicine'
+import UpdateMedicine from "@pages/Medicine/UpdateMedicine"
+import InfoRow from "@shared/ui/InfoRow"
+import DeleteMedicineButton from "@features/medicine/ui/DeleteMedicine"
 
 
 const MedicineDetailesPage = () => {

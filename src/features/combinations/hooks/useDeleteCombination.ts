@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteCombination } from "../api/deleteCombination"
+import { deleteCombination } from "@features/combinations/api/deleteCombination"
 
 export const useDeleteCombination = () => {
     const queryClient = useQueryClient()

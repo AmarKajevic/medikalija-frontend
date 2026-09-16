@@ -1,5 +1,5 @@
-import { AnalysisItem } from "./AnalysisItem";
-import DeleteCombination from "./DeleteCombination";
+import { AnalysisItem } from "@features/combinations/ui/AnalysisItem";
+import DeleteCombination from "@features/combinations/ui/DeleteCombination";
 
 
 export const CombinationItem = ({ combination }: any) => {

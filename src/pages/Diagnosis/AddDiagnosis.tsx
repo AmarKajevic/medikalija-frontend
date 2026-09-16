@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "@shared/api/api";
 import React, { useState } from "react";
 
 interface DiagnosisProps {
@@ -17,16 +17,10 @@ export default function AddDiagnosis({ patientId }: DiagnosisProps) {
     console.log({ patientId, description }); // 👈 vidi da li ima vrednosti
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        "https://medikalija-api.vercel.app/api/diagnosis/addDiagnosis",
-        { patient: patientId, description }, // 👈 ključ mora biti "patientId"
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await api.post("/api/diagnosis/addDiagnosis", {
+        patient: patientId,
+        description,
+      });
 
       if (response.data.success) {
         setMessage("Dijagnoza uspešno dodata");

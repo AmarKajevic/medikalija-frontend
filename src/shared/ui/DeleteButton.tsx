@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 
 type Props = {
   onConfirm: () => void;

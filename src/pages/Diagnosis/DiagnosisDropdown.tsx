@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import Select from 'react-select';
 
 interface DiagnosisTemplate {
@@ -17,14 +17,10 @@ export default function DiagnosisDropdown({ onSelect }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await axios.get("https://medikalija-api.vercel.app/api/diagnosisTemplate", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get("/api/diagnosisTemplate");
         if (response.data.success) {
           setTemplates(response.data.diagnosisTemplates || []);
         }
@@ -36,7 +32,7 @@ export default function DiagnosisDropdown({ onSelect }: Props) {
       }
     };
     fetchTemplates();
-  }, [token]);
+  }, []);
   
 
   if (error) return <p className="text-red-500">{error}</p>;

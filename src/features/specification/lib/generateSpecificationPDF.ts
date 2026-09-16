@@ -1,7 +1,7 @@
 // features/specification/lib/generateSpecificationPDF.ts
 import pdfMake from "pdfmake/build/pdfmake";
 import vfsFonts from "pdfmake/build/vfs_fonts";
-import { loadImageAsBase64 } from "../../../shared/lib/loadImageAsBase64";
+import { loadImageAsBase64 } from "@shared/lib/loadImageAsBase64";
 import logoUrl from "../../../../public/images/logo/logo-medikalija.webp"
 
 (pdfMake as any).vfs = vfsFonts;

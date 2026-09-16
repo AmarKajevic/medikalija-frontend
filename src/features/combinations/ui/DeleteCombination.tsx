@@ -1,6 +1,6 @@
 import  { useState } from "react";
-import { useDeleteCombination } from "../hooks/useDeleteCombination";
-import ConfirmModal from "../../../shared/ui/ConfirmModal";
+import { useDeleteCombination } from "@features/combinations/hooks/useDeleteCombination";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 
 const DeleteCombination = ({ id }: { id: string }) => {
   const { mutate, isPending } = useDeleteCombination();

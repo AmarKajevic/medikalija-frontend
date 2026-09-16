@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateDischargeDate } from "../api/updateDischargeDate";
+import { updateDischargeDate } from "@features/patients/api/updateDischargeDate";
 
 export const useUpdateDischargeDate = () => {
   const queryClient = useQueryClient();

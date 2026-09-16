@@ -1,6 +1,6 @@
 import  { useState } from 'react'
-import { useDeleteCombinationGroup } from '../hooks/useDeleteCombinationGroup'
-import ConfirmModal from '../../../shared/ui/ConfirmModal'
+import { useDeleteCombinationGroup } from "@features/combinations/hooks/useDeleteCombinationGroup"
+import ConfirmModal from "@shared/ui/ConfirmModal"
 
 const DeleteCombinationGroup = ({id} : {id: string}) => {
 

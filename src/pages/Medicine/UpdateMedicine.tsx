@@ -1,6 +1,6 @@
-import { useUpdateMedicine } from "../../features/medicine/hooks/useUpdateMedicine";
-import useCleanForm from "../../shared/api/forms/UseCleanForm";
-import FormInput from "../../shared/api/forms/InputField";
+import { useUpdateMedicine } from "@features/medicine/hooks/useUpdateMedicine";
+import useCleanForm from "@shared/api/forms/UseCleanForm";
+import FormInput from "@shared/api/forms/InputField";
 
 type FormValues = {
   name?: string;

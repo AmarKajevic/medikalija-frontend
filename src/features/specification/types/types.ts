@@ -4,6 +4,7 @@ export type Specification = {
   startDate: string;
   endDate: string;
   totalPrice: number;
+  isActive?: boolean;
   items: Array<{
     _id: string;
     name: string;

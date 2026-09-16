@@ -1,8 +1,8 @@
 // pages/Medicine/AddMedicineFromFamily.tsx
 import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@app/providers/AuthContext";
 import axios from "axios";
-import Input from "../../components/form/input/InputField";
+import Input from "@shared/ui/form/input/InputField";
 
 interface Medicine {
   _id: string;
@@ -31,7 +31,7 @@ export default function AddMedicineFromFamily() {
   const loadMedicines = async () => {
     try {
       const res = await axios.get(
-        "https://medikalija-api.vercel.app/api/medicine",
+        "http://localhost:5000/api/medicine",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -104,7 +104,7 @@ export default function AddMedicineFromFamily() {
         };
 
         const res = await axios.put(
-          `https://medikalija-api.vercel.app/api/medicine/${selectedId}`,
+          `http://localhost:5000/api/medicine/${selectedId}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -125,7 +125,7 @@ export default function AddMedicineFromFamily() {
         };
 
         const res = await axios.post(
-          "https://medikalija-api.vercel.app/api/medicine/add",
+          "http://localhost:5000/api/medicine/add",
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );

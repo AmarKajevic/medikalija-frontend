@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addCombinationToPatient } from "../api/addCombinationToPatient";
+import { addCombinationToPatient } from "@features/combinations/api/addCombinationToPatient";
 
 export const useAddCombinationToPatient = () => {
   const qc = useQueryClient();

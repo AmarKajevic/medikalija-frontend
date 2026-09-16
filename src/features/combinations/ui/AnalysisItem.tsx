@@ -1,4 +1,4 @@
-import DeleteAnalysisButton from "../../analysis/ui/DeleteAnalysis";
+import DeleteAnalysisButton from "@features/analysis/ui/DeleteAnalysis";
 
 export const AnalysisItem = ({ analysis }: any) => {
   return (

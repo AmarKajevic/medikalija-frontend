@@ -821,3 +821,20 @@ span.flatpickr-weekday,
   border-color: currentColor !important;
 }
 
+/* Štampanje specifikacije: prikazuje se samo [data-print-area], bez sidebar-a/header-a */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  [data-print-area],
+  [data-print-area] * {
+    visibility: visible;
+  }
+  [data-print-area] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+

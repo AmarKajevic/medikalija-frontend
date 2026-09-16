@@ -1,7 +1,7 @@
-import { useUseArticle } from '../hooks/useUseArticle'
+import { useUseArticle } from "@features/articles/hooks/useUseArticle"
 import { Controller, useForm } from 'react-hook-form'
-import { useArticleOptions } from './useArticleOptions'
-import { SelectItemsForm } from '../../../shared/ui/SelectItemsForm/SelectItemsForm'
+import { useArticleOptions } from "@features/articles/ui/useArticleOptions"
+import { SelectItemsForm } from "@shared/ui/SelectItemsForm/SelectItemsForm"
 
 const UseArticleForm = ({patientId} : {patientId: string}) => {
 
