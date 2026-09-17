@@ -83,8 +83,11 @@ const AddCombinationForm = () => {
     );
   };
 
+  const fieldInputClass =
+    "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
       {/* Polje za grupu – dropdown */}
       <div className="relative ">
         <input
@@ -93,21 +96,21 @@ const AddCombinationForm = () => {
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
           onFocus={() => setShowGroupDropdown(true)}
-          className="border p-2 w-full bg-white rounded-lg"
+          className={fieldInputClass}
           required
         />
         {showGroupDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg"
+            className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
           >
             {groupsLoading ? (
-              <div className="p-2 text-gray-500">Učitavanje...</div>
+              <div className="p-2 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</div>
             )  : (
               filteredGroups.map((g: any) => (
                 <div
                   key={g._id}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                  className="cursor-pointer p-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5"
                   onClick={() => selectGroup(g.name)}
                 >
                   {g.name}
@@ -116,7 +119,7 @@ const AddCombinationForm = () => {
             )}
           </div>
         )}
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
           {groupsLoading
             ? "Učitavanje grupa..."
             : "Izaberite postojeću ili upišite novu"}
@@ -127,7 +130,7 @@ const AddCombinationForm = () => {
       <input
         placeholder="Naziv kombinacije"
         {...register("name", { required: true })}
-        className="border p-2 w-full bg-white rounded-lg"
+        className={fieldInputClass}
       />
 
       {/* Pretraga analiza */}
@@ -136,20 +139,20 @@ const AddCombinationForm = () => {
         placeholder="Pretraži analize..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="border p-2 w-full bg-white rounded-lg"
+        className={fieldInputClass}
       />
 
       {/* Lista analiza sa checkbox-ovima */}
-      <div className="border rounded-lg max-h-90 max-w-3xl overflow-y-auto p-2 space-y-1 bg-white ">
+      <div className="max-h-90 max-w-3xl space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-gray-800">
         {isLoading ? (
-          <p>Učitavanje...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-gray-500">Nema rezultata</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Nema rezultata</p>
         ) : (
           filtered.map((a: any) => (
             <label
               key={a._id}
-              className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded"
+              className="flex cursor-pointer items-center gap-2 rounded p-1 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5"
             >
               <input
                 type="checkbox"
@@ -169,7 +172,7 @@ const AddCombinationForm = () => {
           return (
             <span
               key={id}
-              className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm"
+              className="rounded bg-brand-50 px-2 py-1 text-sm text-brand-500 dark:bg-brand-500/15 dark:text-brand-400"
             >
               {item?.name}
             </span>
@@ -179,7 +182,7 @@ const AddCombinationForm = () => {
 
       <button
         disabled={isPending}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
+        className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:bg-gray-400"
       >
         {isPending ? "Čuvanje..." : "Sačuvaj"}
       </button>

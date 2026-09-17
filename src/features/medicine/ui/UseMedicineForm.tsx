@@ -69,8 +69,11 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
     );
   };
 
+  const fieldInputClass =
+    "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className=" p-2 space-y-3 border-0 border-gray-300 rounded-lg shadow-md ">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-lg border border-gray-200 p-4 shadow-theme-xs dark:border-gray-800">
 
 
       <Controller
@@ -85,7 +88,7 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
             />
 
             {fieldState.error && (
-              <p className="text-red-500 text-sm">
+              <p className="text-sm text-error-500">
                 {fieldState.error.message}
               </p>
             )}
@@ -93,15 +96,15 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
         )}
       />
 
-      <input 
-      className="border-2 p-2 border-gray-200 text-black rounded-md  w-full"
+      <input
+      className={fieldInputClass}
         type="number"
         placeholder="Dani"
         {...register("days")}
       />
 
       <input
-      className="border-2 p-2 border-gray-200 text-black rounded-md  w-full"
+      className={fieldInputClass}
         type="number"
         placeholder="Koliko puta dnevno"
         {...register("timesPerDay")}
@@ -115,7 +118,7 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
               {...field}
               value={field.value ?? 1}
               onChange={(e) => field.onChange(Number(e.target.value))}
-              className="border-2 p-2 border-gray-200 text-black rounded-md w-full"
+              className={fieldInputClass}
             >
               {portions.map((p) => (
                 <option key={p.value} value={p.value}>
@@ -127,22 +130,22 @@ export const UseMedicineForm = ({ patientId }: { patientId: string }) => {
         />
 
       <input
-      className="border-2 p-2 border-gray-200 text-black rounded-md w-full"
+      className={fieldInputClass}
         type="number"
         step="0.01"
         placeholder="Ukupna količina"
         {...register("amount", {
           valueAsNumber: true,
-          onChange: () => setManualOverride(true), 
+          onChange: () => setManualOverride(true),
         })}
       />
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         Auto izračunato: {calculated.toFixed(2)}
       </p>
       <div className="flex items-center justify-center">
-         
-      <button disabled={isPending} className="bg-zinc-900 p-2 text-shite border-0 border-white rounded-md shadow-md text-white">
+
+      <button disabled={isPending} className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:bg-gray-400">
         Dodaj lek
       </button>
 

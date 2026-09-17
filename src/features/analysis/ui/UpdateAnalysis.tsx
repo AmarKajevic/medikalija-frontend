@@ -18,26 +18,29 @@ const UpdateAnalysisForm = ({ analysis }: any) => {
     });
   };
 
+  const fieldInputClass =
+    "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <input
         {...register("name")}
-        className="border p-2 w-full"
+        className={fieldInputClass}
         placeholder="Naziv"
       />
 
       <input
         type="number"
         {...register("price")}
-        className="border p-2 w-full"
+        className={fieldInputClass}
         placeholder="Cena"
       />
 
       <button
         disabled={isPending}
-        className="bg-blue-600 text-white p-2 w-full"
+        className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:bg-gray-400"
       >
-        {isPending ? "Čuvanje..." : "Update"}
+        {isPending ? "Čuvanje..." : "Sačuvaj izmene"}
       </button>
     </form>
   );

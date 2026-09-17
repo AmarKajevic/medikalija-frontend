@@ -17,7 +17,7 @@ const DeleteAnalysisButton = ({ id }: { id: string }) => {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-white border-0 bg-red-900 rounded-md shadow-md px-3 py-1"
+        className="rounded-md bg-error-50 px-3 py-1.5 text-sm font-medium text-error-600 transition hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
       >
         Obriši analizu
       </button>

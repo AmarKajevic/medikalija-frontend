@@ -6,7 +6,7 @@ import ArticleTable from "@features/articles/ui/ArticleTable"
 const ArticleListWidget = () => {
     const {data, isLoading} = useGetArticles()
 
-    if(isLoading) return <div>Ucitavanje...</div>
+    if(isLoading) return <p className="py-4 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>
   return (
     <ComponentCard title="ARTIKLI — MEDIKALIJA (DOM)">
         <ArticleTable articles={data}/>

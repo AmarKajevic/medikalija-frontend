@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 
 
 
@@ -29,16 +28,14 @@ export interface UsedMedicine {
 }
 
 export const useMedicine = (patientId: string) => {
-  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch used medicines
   const usedMedicineQuery = useQuery({
     queryKey: ["usedMedicine", patientId],
     queryFn: async () => {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/medicine/patient/${patientId}/medicines`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const { data } = await api.get(
+        `/api/medicine/patient/${patientId}/medicines`
       );
       // backend vraća data.usedMedicine, default na prazan niz
       return data?.usedMedicine as UsedMedicine[];
@@ -48,11 +45,7 @@ export const useMedicine = (patientId: string) => {
   // Add medicine
   const addMedicine = useMutation({
     mutationFn: async (medicine: { medicineId: string; amount: number }) => {
-      const { data } = await axios.post(
-        `http://localhost:5000/api/medicine/use`,
-        { patientId, ...medicine },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.post(`/api/medicine/use`, { patientId, ...medicine });
       return data;
     },
     onSuccess: () => {

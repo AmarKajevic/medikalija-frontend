@@ -40,7 +40,6 @@ const AddDiagnosisTemplate = lazy(() => import("@pages/Diagnosis/AddDiagnosisTem
 const AddMedicine = lazy(() => import("@pages/Medicine/AddMedicine"));
 
 const PatientsPage = lazy(() => import("@pages/Patients/PatientPage"));
-const ArticlesList = lazy(() => import("@features/articles/ui/ArticlesList"));
 const NurseDashboard = lazy(() => import("@pages/Dashboard/NurseDashboard"));
 const ProfileSpecification = lazy(() => import("@pages/Patients/ProfileSpecification"));
 const SpecificationHistoryPage = lazy(() => import("@pages/Patients/SpecificationHistoryPage"));
@@ -149,7 +148,6 @@ export default function App() {
                 </PrivateRoutes>
               }
             >
-              <Route path="/articles" element={<ArticlesList />} />
               <Route path="/articlesNew" element={<ArticlesListNew />} />
               <Route path="/articles/:id" element={<ArticleDetails />} />
               <Route path="/patient-page" element={<PatientsPage />} />

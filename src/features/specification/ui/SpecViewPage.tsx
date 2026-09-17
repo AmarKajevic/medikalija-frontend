@@ -10,14 +10,14 @@ export default function SpecificationViewPage() {
   const { data: patient } = usePatient(spec?.patientId || "");
   const deleteItem = useDeleteSpecificationItem(spec?.patientId || "");
 
-  if (isLoading) return <p>Učitavanje...</p>;
-  if (isError || !spec) return <p>Greška pri učitavanju specifikacije.</p>;
+  if (isLoading) return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>;
+  if (isError || !spec) return <p className="p-6 text-sm text-error-500">Greška pri učitavanju specifikacije.</p>;
 
   const patientName = patient ? `${patient.name} ${patient.lastName}` : "";
 
   return (
     <div className="p-5">
-      <button onClick={() => window.history.back()} className="mb-4 text-blue-600 hover:underline print:hidden">
+      <button onClick={() => window.history.back()} className="mb-4 text-brand-500 hover:underline print:hidden">
         ← Nazad
       </button>
 

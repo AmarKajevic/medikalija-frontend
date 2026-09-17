@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import { Dropdown } from "@shared/ui/dropdown/Dropdown";
 import { DropdownItem } from "@shared/ui/dropdown/DropdownItem";
 import { Link } from "react-router";
@@ -23,9 +23,7 @@ export default function NotificationDropdown() {
     if (!token) return;
 
     try {
-      const res = await axios.get("http://localhost:5000/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/notifications");
 
       const fetched = res.data.notifications ?? [];
 
@@ -57,11 +55,7 @@ export default function NotificationDropdown() {
     // ako se OTVARA, označi kao pročitano
     if (!isOpen && unreadCount > 0) {
       try {
-        await axios.put(
-          "http://localhost:5000/api/notifications/read-all",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.put("/api/notifications/read-all", {});
 
         // odmah ažuriraj frontend bez refresh-a
         const updated = notifications.map((n) => ({
@@ -92,7 +86,7 @@ export default function NotificationDropdown() {
       >
         {/* Brojač */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-lg">
+          <span className="absolute -right-1 -top-1 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-error-500 px-1.5 text-[10px] font-bold text-white shadow-lg">
             {unreadCount}
           </span>
         )}
@@ -127,7 +121,7 @@ export default function NotificationDropdown() {
         {/* Lista obaveštenja */}
         <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
           {notifications.length === 0 ? (
-            <p className="py-4 text-sm text-center text-gray-500">
+            <p className="py-4 text-sm text-center text-gray-500 dark:text-gray-400">
               Nema obaveštenja.
             </p>
           ) : (
@@ -136,7 +130,7 @@ export default function NotificationDropdown() {
                 <DropdownItem
                   onItemClick={closeDropdown}
                   className={`flex gap-3 rounded-lg border-b border-gray-100 p-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${
-                    !n.isRead ? "bg-orange-50" : ""
+                    !n.isRead ? "bg-warning-50 dark:bg-warning-500/10" : ""
                   }`}
                 >
                   <span className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-xs font-bold text-white bg-brand-500 rounded-full">
@@ -147,7 +141,7 @@ export default function NotificationDropdown() {
                     <span className="text-sm text-gray-800 dark:text-white">
                       {n.message}
                     </span>
-                    <span className="mt-1 text-xs text-gray-500">
+                    <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(n.createdAt)}
                     </span>
                   </div>

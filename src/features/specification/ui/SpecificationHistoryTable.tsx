@@ -10,9 +10,9 @@ interface SpecificationHistoryTableProps {
 export const SpecificationHistoryTable = ({ patientId }: SpecificationHistoryTableProps) => {
   const { data, isLoading, isError } = useSpecificationHistory(patientId);
 
-  if (isLoading) return <p>Učitavanje istorije...</p>;
-  if (isError) return <p className="text-red-500">Greška pri učitavanju istorije.</p>;
-  if (!data) return <p>Nema dostupnih podataka.</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-400">Učitavanje istorije...</p>;
+  if (isError) return <p className="text-sm text-error-500">Greška pri učitavanju istorije.</p>;
+  if (!data) return <p className="text-sm text-gray-500 dark:text-gray-400">Nema dostupnih podataka.</p>;
 
   const { activeSpec, history } = data;
 
@@ -21,19 +21,19 @@ export const SpecificationHistoryTable = ({ patientId }: SpecificationHistoryTab
       {/* Aktivna specifikacija */}
       {activeSpec ? (
         <div>
-          <h2 className="text-lg font-semibold mb-3 text-green-700">Aktivna specifikacija</h2>
-          <div className="overflow-x-auto shadow border border-gray-200 rounded-lg">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-green-50 text-gray-700">
+          <h2 className="mb-3 text-lg font-semibold text-success-600 dark:text-success-500">Aktivna specifikacija</h2>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-theme-xs dark:border-gray-800">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-success-50 text-gray-700 dark:bg-success-500/10 dark:text-gray-300">
                 <tr>
-                  <th className="p-3 border">Period</th>
-                  <th className="p-3 border">Ukupna cena</th>
-                  <th className="p-3 border text-center">Detalji</th>
+                  <th className="border border-gray-200 p-3 dark:border-gray-800">Period</th>
+                  <th className="border border-gray-200 p-3 dark:border-gray-800">Ukupna cena</th>
+                  <th className="border border-gray-200 p-3 text-center dark:border-gray-800">Detalji</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="p-3 border">
+                <tr className="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                  <td className="border border-gray-200 p-3 text-gray-700 dark:border-gray-800 dark:text-gray-300">
                     {formatDate(activeSpec.startDate)} —{" "}
                     {activeSpec.dischargeDate
                       ? formatDate(activeSpec.dischargeDate)
@@ -41,9 +41,9 @@ export const SpecificationHistoryTable = ({ patientId }: SpecificationHistoryTab
                       ? formatDate(activeSpec.endDate)
                       : "Otvorena"}
                   </td>
-                  <td className="p-3 border">{(activeSpec.totalPrice ?? 0).toFixed(2)} RSD</td>
-                  <td className="p-3 border text-center">
-                    <Link to={`/specification-view/${activeSpec._id}`} className="text-blue-600 hover:underline">
+                  <td className="border border-gray-200 p-3 text-gray-700 dark:border-gray-800 dark:text-gray-300">{(activeSpec.totalPrice ?? 0).toFixed(2)} RSD</td>
+                  <td className="border border-gray-200 p-3 text-center dark:border-gray-800">
+                    <Link to={`/specification-view/${activeSpec._id}`} className="text-brand-500 hover:underline">
                       Otvori
                     </Link>
                   </td>
@@ -53,28 +53,28 @@ export const SpecificationHistoryTable = ({ patientId }: SpecificationHistoryTab
           </div>
         </div>
       ) : (
-        <p className="text-gray-600 italic">Nema aktivne specifikacije.</p>
+        <p className="italic text-gray-500 dark:text-gray-400">Nema aktivne specifikacije.</p>
       )}
 
       {/* Istorija specifikacija */}
       <div>
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">Istorija specifikacija</h2>
+        <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white/90">Istorija specifikacija</h2>
         {!history || history.length === 0 ? (
-          <p>Nema prethodnih specifikacija.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Nema prethodnih specifikacija.</p>
         ) : (
-          <div className="overflow-x-auto shadow border border-gray-200 rounded-lg">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-gray-100 text-gray-700">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-theme-xs dark:border-gray-800">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-700 dark:bg-white/[0.03] dark:text-gray-300">
                 <tr>
-                  <th className="p-3 border">Period</th>
-                  <th className="p-3 border">Ukupna cena</th>
-                  <th className="p-3 border text-center">Detalji</th>
+                  <th className="border border-gray-200 p-3 dark:border-gray-800">Period</th>
+                  <th className="border border-gray-200 p-3 dark:border-gray-800">Ukupna cena</th>
+                  <th className="border border-gray-200 p-3 text-center dark:border-gray-800">Detalji</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((spec: any) => (
-                  <tr key={spec._id} className="hover:bg-gray-50">
-                    <td className="p-3 border">
+                  <tr key={spec._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                    <td className="border border-gray-200 p-3 text-gray-700 dark:border-gray-800 dark:text-gray-300">
                       {formatDate(spec.startDate)} —{" "}
                       {spec.dischargeDate
                         ? formatDate(spec.dischargeDate)
@@ -82,9 +82,9 @@ export const SpecificationHistoryTable = ({ patientId }: SpecificationHistoryTab
                         ? formatDate(spec.endDate)
                         : "—"}
                     </td>
-                    <td className="p-3 border">{(spec.totalPrice ?? 0).toFixed(2)} RSD</td>
-                    <td className="p-3 border text-center">
-                      <Link to={`/specification-view/${spec._id}`} className="text-blue-600 hover:underline">
+                    <td className="border border-gray-200 p-3 text-gray-700 dark:border-gray-800 dark:text-gray-300">{(spec.totalPrice ?? 0).toFixed(2)} RSD</td>
+                    <td className="border border-gray-200 p-3 text-center dark:border-gray-800">
+                      <Link to={`/specification-view/${spec._id}`} className="text-brand-500 hover:underline">
                         Otvori
                       </Link>
                     </td>

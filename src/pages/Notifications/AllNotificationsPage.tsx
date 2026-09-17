@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
-import { Link } from "react-router";
+import { api } from "@shared/api/api";
+import { useNavigate } from "react-router";
 
 interface Notification {
   _id: string;
@@ -12,15 +11,13 @@ interface Notification {
 }
 
 export default function AllNotificationsPage() {
-  const { token } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/notifications");
 
       setNotifications(res.data.notifications || []);
     } catch (err) {
@@ -31,13 +28,7 @@ export default function AllNotificationsPage() {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put(
-        "http://localhost:5000/api/notifications/read-all",
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.put("/api/notifications/read-all", {});
       fetchNotifications();
     } catch (err) {
       console.error("Greška pri označavanju:", err);
@@ -46,13 +37,7 @@ export default function AllNotificationsPage() {
 
   const markOneAsRead = async (id: string) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/notifications/${id}/read`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.put(`/api/notifications/${id}/read`, {});
       fetchNotifications();
     } catch (err) {
       console.error("Greška pri označavanju jedne:", err);
@@ -66,40 +51,43 @@ export default function AllNotificationsPage() {
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleString("sr-RS");
 
-  if (loading) return <p>Učitavanje...</p>;
+  if (loading) return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>;
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Sva obaveštenja</h2>
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 text-sm text-brand-500 hover:underline"
+      >
+        ← Nazad
+      </button>
+
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">Sva obaveštenja</h1>
 
         <button
           onClick={markAllAsRead}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="rounded-lg bg-success-500 px-4 py-2 text-sm font-medium text-white hover:bg-success-600"
         >
           Označi sve kao pročitano
         </button>
       </div>
 
-      <Link to={-1 as any} className="text-blue-600 underline">
-        ← Nazad
-      </Link>
-
-      <div className="mt-4 border rounded-lg bg-white shadow">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         {notifications.length === 0 ? (
-          <p className="p-4 text-gray-500">Nema obaveštenja.</p>
+          <p className="p-4 text-sm text-gray-500 dark:text-gray-400">Nema obaveštenja.</p>
         ) : (
-          <ul>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {notifications.map((n) => (
               <li
                 key={n._id}
-                className={`border-b p-4 flex justify-between items-center ${
-                  n.isRead ? "bg-white" : "bg-orange-50"
+                className={`flex items-center justify-between p-4 ${
+                  n.isRead ? "" : "bg-warning-50 dark:bg-warning-500/10"
                 }`}
               >
                 <div>
-                  <p className="font-medium">{n.message}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-gray-800 dark:text-white/90">{n.message}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {formatDate(n.createdAt)}
                   </p>
                 </div>
@@ -107,7 +95,7 @@ export default function AllNotificationsPage() {
                 {!n.isRead && (
                   <button
                     onClick={() => markOneAsRead(n._id)}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="rounded-md bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
                   >
                     Označi kao pročitano
                   </button>
