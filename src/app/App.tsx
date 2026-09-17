@@ -32,19 +32,7 @@ import SpecViewPage from "@features/specification/ui/SpecViewPage";
 // -------------------------------------------------------
 // LAZY IMPORTS – OVO JE OPTIMIZACIJA
 // -------------------------------------------------------
-const UserProfiles = lazy(() => import("@pages/UserProfiles"));
-const Videos = lazy(() => import("@pages/UiElements/Videos"));
-const Images = lazy(() => import("@pages/UiElements/Images"));
-const Alerts = lazy(() => import("@pages/UiElements/Alerts"));
-const Badges = lazy(() => import("@pages/UiElements/Badges"));
-const Avatars = lazy(() => import("@pages/UiElements/Avatars"));
-const Buttons = lazy(() => import("@pages/UiElements/Buttons"));
-const LineChart = lazy(() => import("@pages/Charts/LineChart"));
-const BarChart = lazy(() => import("@pages/Charts/BarChart"));
 const Calendar = lazy(() => import("@pages/Calendar"));
-const BasicTables = lazy(() => import("@pages/Tables/BasicTables"));
-const FormElements = lazy(() => import("@pages/Forms/FormElements"));
-const Blank = lazy(() => import("@pages/Blank"));
 const AdminDashboard = lazy(() => import("@pages/Dashboard/AdminDashboard"));
 const PatientList = lazy(() => import("@pages/Patients/PatientList"));
 const DeletePatient = lazy(() => import("@pages/Patients/DeletePatient"));
@@ -136,21 +124,7 @@ export default function App() {
               <Route path="/adding-to-reserve-list" element={<MedicineReserveManager />} />
               <Route path="/reserve-list" element={<MedicineReserveList />} />
 
-              {/* UI PAGES */}
-              <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/blank" element={<Blank />} />
-              <Route path="/form-elements" element={<FormElements />} />
-              <Route path="/basic-tables" element={<BasicTables />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/avatars" element={<Avatars />} />
-              <Route path="/badge" element={<Badges />} />
-              <Route path="/buttons" element={<Buttons />} />
-              <Route path="/images" element={<Images />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/line-chart" element={<LineChart />} />
-              <Route path="/bar-chart" element={<BarChart />} />
-
             </Route>
 
             {/* NURSE + ADMIN shared */}
