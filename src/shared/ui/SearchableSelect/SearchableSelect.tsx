@@ -20,8 +20,12 @@ export const SearchableSelect = <T extends Option>({
   const selectedOptionRef = useRef<HTMLDivElement>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
+  // opt.value === "" je prazna/placeholder opcija (nikad "stvarno" selektovana) —
+  // dok se ništa ne izabere, value je i dalje "" pa bi se inače lažno poklopila
+  // sa njom i onemogućila commitFreeText() na blur (dugme "Sačuvaj" ne bi radilo
+  // za potpuno nov naziv unet slobodnim tekstom).
   const selected = useMemo(
-    () => options.find((opt) => opt.value === value),
+    () => options.find((opt) => opt.value !== "" && opt.value === value),
     [options, value]
   );
 
