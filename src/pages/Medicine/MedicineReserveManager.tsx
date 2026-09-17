@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 import ComponentCard from "@shared/ui/common/ComponentCard";
 import {
   Table,
@@ -28,8 +27,6 @@ interface ReserveItem {
 }
 
 export default function MedicineReserveManager() {
-  const { token } = useAuth();
-
   const [patients, setPatients] = useState<Patient[]>([]);
   const [reserve, setReserve] = useState<Record<string, ReserveItem[]>>({});
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
@@ -39,23 +36,16 @@ export default function MedicineReserveManager() {
 
 
 
-  const API = "http://localhost:5000/api";
-
   /* ================= FETCH PACIJENATA ================= */
   const fetchPatients = async () => {
-    const res = await axios.get(`${API}/patient`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await api.get("/api/patient");
 
     setPatients(res.data.patients || []);
   };
 
   /* ================= FETCH REZERVE PO PACIJENTU ================= */
   const fetchReserve = async (patientId: string) => {
-    const res = await axios.get(
-      `${API}/medicine-reserve?patientId=${patientId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const res = await api.get(`/api/medicine-reserve?patientId=${patientId}`);
 
     setReserve((prev) => ({
       ...prev,
@@ -67,9 +57,7 @@ export default function MedicineReserveManager() {
   const deleteReserve = async (id: string, patientId: string) => {
     if (!confirm("Obrisati lek iz rezerve?")) return;
 
-    await axios.delete(`${API}/medicine-reserve/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await api.delete(`/api/medicine-reserve/${id}`);
 
     fetchReserve(patientId);
   };
@@ -81,11 +69,7 @@ export default function MedicineReserveManager() {
 
     if (!amount || amount <= 0) return alert("Unesi količinu!");
 
-    await axios.post(
-      `${API}/medicine-reserve/return`,
-      { reserveId, amount, destination },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post("/api/medicine-reserve/return", { reserveId, amount, destination });
 
     setReturnAmounts((prev) => ({ ...prev, [reserveId]: 0 }));
     fetchReserve(patientId);
@@ -127,12 +111,12 @@ export default function MedicineReserveManager() {
 
       <div className="space-y-4">
         {filteredPatients.map((patient) => (
-          <div key={patient._id} className="border rounded-lg overflow-hidden">
-            
+          <div key={patient._id} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+
             {/* HEADER */}
             <div
               onClick={() => togglePatient(patient._id)}
-              className="p-4 bg-gray-100 cursor-pointer hover:bg-gray-200 font-semibold flex justify-between"
+              className="flex cursor-pointer justify-between bg-gray-50 p-4 font-semibold text-gray-800 hover:bg-gray-100 dark:bg-white/[0.03] dark:text-white/90 dark:hover:bg-white/5"
             >
               <span>
                 {patient.name} {patient.lastName}
@@ -144,9 +128,9 @@ export default function MedicineReserveManager() {
 
             {/* REZERVA */}
             {expandedPatient === patient._id && (
-              <div className="p-4 bg-white">
+              <div className="bg-white p-4 dark:bg-white/[0.02]">
                 {(reserve[patient._id] || []).length === 0 ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Nema lekova u rezervi.
                   </p>
                 ) : (
@@ -197,7 +181,7 @@ export default function MedicineReserveManager() {
                                   [r._id]: e.target.value as "family" | "home",
                                 })
                               }
-                              className="mt-1 w-full border rounded px-2 py-1 text-xs"
+                              className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                             >
                               <option value="family">Vrati pacijentu</option>
                               <option value="home">Vrati u dom</option>
@@ -205,7 +189,7 @@ export default function MedicineReserveManager() {
 
                             <button
                               onClick={() => returnFromReserve(r._id, patient._id)}
-                              className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-1 rounded text-xs"
+                              className="mt-2 w-full rounded-md bg-success-500 py-1 text-xs font-medium text-white hover:bg-success-600"
                             >
                               Vrati
                             </button>
@@ -217,7 +201,7 @@ export default function MedicineReserveManager() {
                               onClick={() =>
                                 deleteReserve(r._id, patient._id)
                               }
-                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                              className="rounded-md bg-error-50 px-3 py-1.5 text-xs font-medium text-error-600 hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
                             >
                               Obriši
                             </button>

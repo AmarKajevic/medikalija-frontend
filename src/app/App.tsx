@@ -32,26 +32,12 @@ import SpecViewPage from "@features/specification/ui/SpecViewPage";
 // -------------------------------------------------------
 // LAZY IMPORTS – OVO JE OPTIMIZACIJA
 // -------------------------------------------------------
-const UserProfiles = lazy(() => import("@pages/UserProfiles"));
-const Videos = lazy(() => import("@pages/UiElements/Videos"));
-const Images = lazy(() => import("@pages/UiElements/Images"));
-const Alerts = lazy(() => import("@pages/UiElements/Alerts"));
-const Badges = lazy(() => import("@pages/UiElements/Badges"));
-const Avatars = lazy(() => import("@pages/UiElements/Avatars"));
-const Buttons = lazy(() => import("@pages/UiElements/Buttons"));
-const LineChart = lazy(() => import("@pages/Charts/LineChart"));
-const BarChart = lazy(() => import("@pages/Charts/BarChart"));
 const Calendar = lazy(() => import("@pages/Calendar"));
-const BasicTables = lazy(() => import("@pages/Tables/BasicTables"));
-const FormElements = lazy(() => import("@pages/Forms/FormElements"));
-const Blank = lazy(() => import("@pages/Blank"));
 const AdminDashboard = lazy(() => import("@pages/Dashboard/AdminDashboard"));
 const PatientList = lazy(() => import("@pages/Patients/PatientList"));
-const DeletePatient = lazy(() => import("@pages/Patients/DeletePatient"));
 const PatientProfile = lazy(() => import("@pages/Patients/PatientProfile"));
 const AddDiagnosisTemplate = lazy(() => import("@pages/Diagnosis/AddDiagnosisTemplate"));
 const AddMedicine = lazy(() => import("@pages/Medicine/AddMedicine"));
-const MedicineList = lazy(() => import("@pages/Medicine/MedicineList"));
 
 const PatientsPage = lazy(() => import("@pages/Patients/PatientPage"));
 const ArticlesList = lazy(() => import("@features/articles/ui/ArticlesList"));
@@ -106,13 +92,11 @@ export default function App() {
               <Route path="patient-list" element={<PatientList />} />
 
               <Route path="/patient/:patientId" element={<PatientProfile />} />
-              <Route path="/patient/Delete/:patientId" element={<DeletePatient />} />
 
               <Route path="/add-diagnosisTemplate" element={<AddDiagnosisTemplate />} />
 
               <Route path="/medicine/addMedicine" element={<AddMedicine />} />
               <Route path="/medicine/:id" element={<MedicineDetailesPage />} />
-              <Route path="/medicine" element={<MedicineList />} />
               <Route path="/medicine-new" element={<MedicineListWidget />} />
 
 
@@ -136,21 +120,7 @@ export default function App() {
               <Route path="/adding-to-reserve-list" element={<MedicineReserveManager />} />
               <Route path="/reserve-list" element={<MedicineReserveList />} />
 
-              {/* UI PAGES */}
-              <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/blank" element={<Blank />} />
-              <Route path="/form-elements" element={<FormElements />} />
-              <Route path="/basic-tables" element={<BasicTables />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/avatars" element={<Avatars />} />
-              <Route path="/badge" element={<Badges />} />
-              <Route path="/buttons" element={<Buttons />} />
-              <Route path="/images" element={<Images />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/line-chart" element={<LineChart />} />
-              <Route path="/bar-chart" element={<BarChart />} />
-
             </Route>
 
             {/* NURSE + ADMIN shared */}

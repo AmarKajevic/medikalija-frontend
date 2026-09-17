@@ -1,5 +1,4 @@
-import { useAuth } from "@app/providers/AuthContext";
-import axios from "axios";
+import { api } from "@shared/api/api";
 
 interface DeleteMedicineProps {
   medicineId: string;
@@ -12,18 +11,14 @@ export default function DeleteMedicine({
   mode = "home",
   onDeleted,
 }: DeleteMedicineProps) {
-  const { token } = useAuth();
-
   const handleDelete = async () => {
     try {
       const endpoint =
         mode === "family"
-          ? `http://localhost:5000/api/medicine/patient-stock/${medicineId}`
-          : `http://localhost:5000/api/medicine/${medicineId}`;
+          ? `/api/medicine/patient-stock/${medicineId}`
+          : `/api/medicine/${medicineId}`;
 
-      const response = await axios.delete(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.delete(endpoint);
 
       if (response.data.success) {
         onDeleted();
@@ -35,7 +30,7 @@ export default function DeleteMedicine({
 
   return (
     <button
-      className="rounded bg-red-500 text-white px-3 py-1 hover:bg-red-600"
+      className="rounded-md bg-error-50 px-3 py-1.5 text-xs font-medium text-error-600 hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
       onClick={handleDelete}
     >
       Obriši

@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // Props for Table
 interface TableProps {
@@ -31,34 +33,58 @@ interface TableCellProps {
   className?: string; // Optional className for styling
 }
 
+const cx = (...classes: (string | undefined)[]) => clsx(twMerge(classes.filter(Boolean).join(" ")));
+
 // Table Component
 const Table: React.FC<TableProps> = ({ children, className }) => {
-  return <table className={`min-w-full  ${className}`}>{children}</table>;
+  return <table className={cx("min-w-full text-sm", className)}>{children}</table>;
 };
 
 // TableHeader Component
 const TableHeader: React.FC<TableHeaderProps> = ({ children, className }) => {
-  return <thead className={className}>{children}</thead>;
+  return (
+    <thead
+      className={cx(
+        "border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]",
+        className,
+      )}
+    >
+      {children}
+    </thead>
+  );
 };
 
 // TableBody Component
 const TableBody: React.FC<TableBodyProps> = ({ children, className }) => {
-  return <tbody className={className}>{children}</tbody>;
+  return (
+    <tbody className={cx("divide-y divide-gray-100 dark:divide-gray-800", className)}>
+      {children}
+    </tbody>
+  );
 };
 
 // TableRow Component
 const TableRow: React.FC<TableRowProps> = ({ children, className }) => {
-  return <tr className={className}>{children}</tr>;
+  return (
+    <tr className={cx("text-gray-700 dark:text-gray-300", className)}>{children}</tr>
+  );
 };
 
 // TableCell Component
-const TableCell: React.FC<TableCellProps> = ({
-  children,
-  isHeader = false,
-  className,
-}) => {
+const TableCell: React.FC<TableCellProps> = ({ children, isHeader = false, className }) => {
   const CellTag = isHeader ? "th" : "td";
-  return <CellTag className={` ${className}`}>{children}</CellTag>;
+  return (
+    <CellTag
+      className={cx(
+        isHeader
+          ? "px-3 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400"
+          : "px-3 py-3",
+        className,
+      )}
+    >
+      {children}
+    </CellTag>
+  );
 };
 
 export { Table, TableHeader, TableBody, TableRow, TableCell };

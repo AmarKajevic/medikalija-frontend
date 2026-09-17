@@ -1,7 +1,6 @@
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 
 // ⭐ DOCX
 import {
@@ -18,21 +17,17 @@ import { saveAs } from "file-saver";
 
 export default function FutureSpecificationsPage() {
   const { patientId } = useParams<{ patientId: string }>();
-  const { token } = useAuth();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["future-specs", patientId],
     queryFn: async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/specification/${patientId}/future-spec-periods`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/specification/${patientId}/future-spec-periods`);
       return res.data.periods;
     },
   });
 
-  if (isLoading) return <p>Učitavanje...</p>;
-  if (isError) return <p className="text-red-500">Greška pri učitavanju.</p>;
+  if (isLoading) return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>;
+  if (isError) return <p className="p-6 text-sm text-error-500">Greška pri učitavanju.</p>;
 
   // ----------------------------
   // ⭐ Grupisanje po godinama
@@ -125,13 +120,20 @@ export default function FutureSpecificationsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-10">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Specifikacije za narednih 10 godina</h1>
+    <div className="mx-auto max-w-4xl space-y-8 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+            Specifikacije za narednih 10 godina
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Pregled svih budućih 30-dnevnih obračunskih perioda za ovog pacijenta.
+          </p>
+        </div>
 
         <button
           onClick={downloadWord}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="rounded-lg bg-success-500 px-4 py-2 text-sm font-medium text-white hover:bg-success-600"
         >
           ⬇️ Preuzmi Word
         </button>
@@ -139,29 +141,29 @@ export default function FutureSpecificationsPage() {
 
       {/* Render tabele po godinama */}
       {Object.keys(groupedByYear).map((year) => (
-        <div key={year}>
-          <h2 className="text-xl font-bold mb-3 text-blue-700">
+        <div key={year} className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+          <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">
             Godina {year}
           </h2>
 
-          <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-300">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-gray-200 text-gray-800">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
                 <tr>
-                  <th className="p-3 border font-semibold">#</th>
-                  <th className="p-3 border font-semibold">Početak</th>
-                  <th className="p-3 border font-semibold">Kraj</th>
+                  <th className="p-3">#</th>
+                  <th className="p-3">Početak</th>
+                  <th className="p-3">Kraj</th>
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {groupedByYear[Number(year)].map((p: any, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-3 border">{index + 1}</td>
-                    <td className="p-3 border">
+                  <tr key={index} className="text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                    <td className="p-3">{index + 1}</td>
+                    <td className="p-3">
                       {new Date(p.startDate).toLocaleDateString("sr-RS")}
                     </td>
-                    <td className="p-3 border">
+                    <td className="p-3">
                       {new Date(p.endDate).toLocaleDateString("sr-RS")}
                     </td>
                   </tr>

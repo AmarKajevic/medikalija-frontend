@@ -1,7 +1,6 @@
 // pages/Medicine/AddMedicineFromFamily.tsx
 import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "@app/providers/AuthContext";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import Input from "@shared/ui/form/input/InputField";
 
 interface Medicine {
@@ -13,8 +12,6 @@ interface Medicine {
 }
 
 export default function AddMedicineFromFamily() {
-  const { token } = useAuth();
-
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [selectedId, setSelectedId] = useState("");
 
@@ -30,10 +27,7 @@ export default function AddMedicineFromFamily() {
   // ---------------------------------------------------
   const loadMedicines = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/medicine",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get("/api/medicine");
       if (res.data.success) {
         setMedicines(res.data.medicines);
       }
@@ -44,7 +38,7 @@ export default function AddMedicineFromFamily() {
 
   useEffect(() => {
     loadMedicines();
-  }, [token]);
+  }, []);
 
   // ---------------------------------------------------
   // SELECTED MEDICINE
@@ -103,11 +97,7 @@ export default function AddMedicineFromFamily() {
           addQuantity: loose,
         };
 
-        const res = await axios.put(
-          `http://localhost:5000/api/medicine/${selectedId}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.put(`/api/medicine/${selectedId}`, payload);
 
         if (res.data.success) {
           setMessage("Uspešno dodata količina (porodica).");
@@ -124,11 +114,7 @@ export default function AddMedicineFromFamily() {
           quantity: loose,
         };
 
-        const res = await axios.post(
-          "http://localhost:5000/api/medicine/add",
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.post("/api/medicine/add", payload);
 
         if (res.data.success) {
           setMessage("Lek uspešno dodat (porodica).");
@@ -148,21 +134,22 @@ export default function AddMedicineFromFamily() {
   // RENDER
   // ---------------------------------------------------
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl space-y-4">
-      <h2 className="text-xl font-bold">
+    <div className="mx-auto max-w-md p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h2 className="mb-5 text-base font-semibold text-gray-800 dark:text-white/90">
         {selectedId ? "Dodaj količinu (porodica)" : "Dodaj novi lek (porodica)"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* SELECT */}
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
             Odaberi postojeći lek ili unesi novi
           </label>
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full border px-3 py-2 rounded-lg"
+            className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
           >
             <option value="">— Novi lek —</option>
             {medicines.map((m) => (
@@ -204,13 +191,16 @@ export default function AddMedicineFromFamily() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
+          className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-brand-300"
         >
           {loading ? "Čuvanje..." : "Sačuvaj"}
         </button>
       </form>
 
-      {message && <p className="text-center text-sm">{message}</p>}
+      {message && (
+        <p className="mt-3 text-center text-sm text-gray-600 dark:text-gray-400">{message}</p>
+      )}
+      </div>
     </div>
   );
 }

@@ -12,24 +12,26 @@ const MedicineDetailesPage = () => {
     const medicine = data?.medicine;
     console.log("Medicine details", medicine)
 
-    if(isLoading) return <div>Loading...</div>
-    if(error) return <div>{error.message}</div>
+    if (isLoading) return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>;
+    if (error) return <p className="p-6 text-sm text-error-500">{error.message}</p>;
   return (
-    <div className='flex justify-between shadow-md rounded-md'>
-      
-        <div className='w-full '>
-          <div className='flex '>
-        <DeleteMedicineButton id={id!}/>
-      </div>
-          <h1 className='text-2xl font-bold underline mt-2 p-2'>{medicine?.name}</h1>
-           <InfoRow label='Količina' value={medicine?.quantity} />
-           <InfoRow label='Cena po jedinici' value={medicine?.pricePerUnit} />
-           <InfoRow label='Pakovanja' value={medicine?.packageCount} />
+    <div className="p-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+              {medicine?.name}
+            </h1>
+            <DeleteMedicineButton id={id!} />
+          </div>
+          <div>
+            <InfoRow label="Količina" value={medicine?.quantity} />
+            <InfoRow label="Cena po jedinici" value={medicine?.pricePerUnit} />
+            <InfoRow label="Pakovanja" value={medicine?.packageCount} />
+          </div>
         </div>
 
-
-      <div className='w-full'>
-          <UpdateMedicine medicineId={id!}/>
+        <UpdateMedicine medicineId={id!} />
       </div>
     </div>
   )

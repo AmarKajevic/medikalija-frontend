@@ -52,63 +52,55 @@ export default function UserList() {
 
   if (!user || !["admin", "main-nurse"].includes(user.role)) {
     return (
-      <div className="text-center text-red-500 font-semibold text-lg pt-10">
-        ❌ Nemate ovlašćenja za prikaz korisnika.
+      <div className="pt-10 text-center text-lg font-semibold text-error-500">
+        Nemate ovlašćenja za prikaz korisnika.
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="text-center pt-10 text-gray-700 text-lg font-medium">
+      <div className="pt-10 text-center text-sm text-gray-500 dark:text-gray-400">
         Učitavanje korisnika...
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Lista korisnika</h1>
+    <div className="mx-auto max-w-5xl p-6">
+      <h1 className="mb-6 text-xl font-semibold text-gray-800 dark:text-white/90">
+        Lista korisnika
+      </h1>
 
       {/* TABLE WRAPPER */}
-      <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
+          <table className="w-full">
+            <thead className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]">
               <tr className="text-left">
-                <th className="p-4 text-sm font-semibold">Ime</th>
-                <th className="p-4 text-sm font-semibold">Prezime</th>
-                <th className="p-4 text-sm font-semibold hidden md:table-cell">
+                <th className="p-4 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Ime</th>
+                <th className="p-4 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Prezime</th>
+                <th className="hidden p-4 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 md:table-cell">
                   Email
                 </th>
-                <th className="p-4 text-sm font-semibold">Uloga</th>
-                <th className="p-4 text-sm font-semibold text-center">Akcija</th>
+                <th className="p-4 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Uloga</th>
+                <th className="p-4 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Akcija</th>
               </tr>
             </thead>
 
-            <tbody>
-              {users.map((u: any, i: number) => (
-                <tr
-                  key={u._id}
-                  className={`border-t transition hover:bg-gray-50 ${
-                    i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                  }`}
-                >
-                  <td className="p-4 font-medium text-gray-900">{u.name}</td>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {users.map((u: any) => (
+                <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                  <td className="p-4 font-medium text-gray-800 dark:text-white/90">{u.name}</td>
 
-                  <td className="p-4 text-gray-700">{u.lastName}</td>
+                  <td className="p-4 text-gray-700 dark:text-gray-300">{u.lastName}</td>
 
-                  <td className="p-4 text-gray-600 text-sm hidden md:table-cell">
+                  <td className="hidden p-4 text-sm text-gray-500 dark:text-gray-400 md:table-cell">
                     {u.email || "—"}
                   </td>
 
                   <td className="p-4">
-                    <span
-                      className="
-                      px-3 py-1 text-xs font-semibold rounded-full
-                      bg-blue-100 text-blue-700
-                    "
-                    >
+                    <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-500 dark:bg-brand-500/15 dark:text-brand-400">
                       {ROLE_LABELS[u.role] || u.role}
                     </span>
                   </td>
@@ -116,12 +108,7 @@ export default function UserList() {
                   <td className="p-4 text-center">
                     <button
                       onClick={() => handleDelete(u._id)}
-                      className="
-                        inline-flex items-center gap-1
-                        px-3 py-1.5 text-sm font-medium rounded-lg
-                        bg-red-100 text-red-700 hover:bg-red-200
-                        transition
-                      "
+                      className="inline-flex items-center gap-1 rounded-lg bg-error-50 px-3 py-1.5 text-sm font-medium text-error-600 transition hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
                     >
                       <TrashBinIcon className="h-4 w-4" />
                       Obriši
@@ -136,7 +123,7 @@ export default function UserList() {
       </div>
 
       {/* RESPONSIVE FOOTNOTE FOR MOBILE */}
-      <p className="text-xs text-gray-500 mt-3 md:hidden">
+      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 md:hidden">
         * Za više informacija (email), pogledajte u landscape modu ili na desktopu.
       </p>
     </div>

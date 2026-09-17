@@ -1,6 +1,5 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@shared/ui/table/index";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 import { UsedArticle } from "@entities/article/hooks/useArticle";
 
 import { useEffect, useState } from "react";
@@ -26,9 +25,7 @@ export default function PatientDataTable({
   refetch
 }: Props) {
 
-  const { token } = useAuth();
-
-  const allowedRoles = ["admin", "head-nurse"];
+  const allowedRoles = ["admin", "main-nurse"];
 
   // Sada arr je sigurno niz jer smo dali default, ali ipak ostavljamo proveru
   const filterByRole = (arr: any[]) =>
@@ -52,10 +49,7 @@ export default function PatientDataTable({
     if (!confirm("Obrisati sve dijagnoze?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/diagnosis/patient/${patientId}/diagnoses/delete-all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/diagnosis/patient/${patientId}/diagnoses/delete-all`);
 
       setLocalDiagnoses([]);
       refetch();
@@ -72,10 +66,7 @@ export default function PatientDataTable({
     if (!confirm("Obrisati sve lekove?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/medicine/patient/${patientId}/medicines/delete-all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/medicine/patient/${patientId}/medicines/delete-all`);
 
       setLocalMedicines([]);
       refetch();
@@ -92,10 +83,7 @@ export default function PatientDataTable({
     if (!confirm("Obrisati sve kombinacije?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/analysis/combination/patient/${patientId}/combinations/delete-all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/analysis/combination/patient/${patientId}/combinations/delete-all`);
 
       setLocalCombinations([]);
       refetch();
@@ -112,10 +100,7 @@ export default function PatientDataTable({
     if (!confirm("Obrisati sve artikle?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/articles/patient/${patientId}/articles/delete-all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/articles/patient/${patientId}/articles/delete-all`);
 
       setLocalArticles([]);
       refetch();
@@ -126,36 +111,36 @@ export default function PatientDataTable({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] p-4">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
 
       <div className="max-w-full overflow-x-auto">
         <Table>
-          <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+          <TableHeader className="border-b border-gray-100 dark:border-gray-800">
             <TableRow>
-              <TableCell isHeader className="px-5 py-3 font-large text-gray-500">
+              <TableCell isHeader>
                 Dijagnoze
-                <button onClick={deleteDiagnoses} className="ml-2 text-red-500 underline text-xs">
+                <button onClick={deleteDiagnoses} className="ml-2 text-xs font-medium text-error-500 hover:underline">
                   Obriši sve
                 </button>
               </TableCell>
 
-              <TableCell isHeader className="px-5 py-3 font-large text-gray-500">
+              <TableCell isHeader>
                 Lekovi
-                <button onClick={deleteMedicines} className="ml-2 text-red-500 underline text-xs">
+                <button onClick={deleteMedicines} className="ml-2 text-xs font-medium text-error-500 hover:underline">
                   Obriši sve
                 </button>
               </TableCell>
 
-              <TableCell isHeader className="px-5 py-3 font-large text-gray-500">
+              <TableCell isHeader>
                 Kombinacije
-                <button onClick={deleteCombinations} className="ml-2 text-red-500 underline text-xs">
+                <button onClick={deleteCombinations} className="ml-2 text-xs font-medium text-error-500 hover:underline">
                   Obriši sve
                 </button>
               </TableCell>
 
-              <TableCell isHeader className="px-5 py-3 font-large text-gray-500">
+              <TableCell isHeader>
                 Artikli
-                <button onClick={deleteArticles} className="ml-2 text-red-500 underline text-xs">
+                <button onClick={deleteArticles} className="ml-2 text-xs font-medium text-error-500 hover:underline">
                   Obriši sve
                 </button>
               </TableCell>
@@ -166,72 +151,72 @@ export default function PatientDataTable({
             <TableRow>
 
               {/* ===================== DIJAGNOZE ===================== */}
-              <TableCell className="px-5 py-3 align-top">
+              <TableCell className="align-top">
                 {localDiagnoses.length ? (
                   localDiagnoses.map((d) => (
                     <div key={d._id} className="mb-3">
-                      <p className="font-medium">{d.description}</p>
-                      <span className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-800 dark:text-white/90">{d.description}</p>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         Dodao/la: {d.createdBy?.name} ({d.createdBy?.role}) <br />
                         {new Date(d.createdAt).toLocaleString("sr-RS")}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p>Nema dijagnoza</p>
+                  <p className="text-gray-500 dark:text-gray-400">Nema dijagnoza</p>
                 )}
               </TableCell>
 
               {/* ===================== LEKOVI ===================== */}
-              <TableCell className="px-5 py-3 align-top">
+              <TableCell className="align-top">
                 {localMedicines.length ? (
                   localMedicines.map((m) => (
                     <div key={m._id} className="mb-3">
-                      <p>
+                      <p className="text-gray-700 dark:text-gray-300">
                         {m?.medicine?.name} || {m.amount} kom. || Cena leka = {m.priceAtTheTime.toFixed(2)} RSD
                         <br />|| Ukupno = {(m.amount * m.priceAtTheTime).toFixed(2)} RSD
                       </p>
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-400 dark:text-gray-500">
                         Dodao/la: {m.createdBy?.name} ({m.createdBy?.role})<br/>
                         {new Date(m.createdAt).toLocaleDateString("sr-RS")}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p>Nema lekova</p>
+                  <p className="text-gray-500 dark:text-gray-400">Nema lekova</p>
                 )}
               </TableCell>
 
               {/* ===================== KOMBINACIJE ===================== */}
-              <TableCell className="px-5 py-3 align-top">
+              <TableCell className="align-top">
                 {localCombinations?.length ? (
                   localCombinations.map((ua) => (
-                    <div key={ua._id} className="mb-4 border-b border-gray-200 pb-2">
+                    <div key={ua._id} className="mb-4 border-b border-gray-100 pb-2 dark:border-gray-800">
                       {ua?.analyses.map((a: any) => (
-                        <p key={a._id} className="text-sm">
-                          {a.name} — <span className="text-gray-600">{a.price} RSD</span>
+                        <p key={a._id} className="text-sm text-gray-700 dark:text-gray-300">
+                          {a.name} — <span className="text-gray-500 dark:text-gray-400">{a.price} RSD</span>
                         </p>
                       ))}
-                      <p className="mt-2 font-semibold">
+                      <p className="mt-2 font-semibold text-gray-800 dark:text-white/90">
                         Ukupno: {ua?.analyses[0]?.totalPrice ?? 0} RSD
                       </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500">Nema dodeljenih kombinacija</p>
+                  <p className="text-gray-500 dark:text-gray-400">Nema dodeljenih kombinacija</p>
                 )}
               </TableCell>
 
               {/* ===================== ARTIKLI ===================== */}
-              <TableCell className="px-5 py-3 align-top">
+              <TableCell className="align-top">
                 {localArticles?.length ? (
                   localArticles.map((ua) => (
-                    <div key={ua._id} className="mb-4 border-b border-gray-200 pb-2">
-                      <p>
+                    <div key={ua._id} className="mb-4 border-b border-gray-100 pb-2 dark:border-gray-800">
+                      <p className="text-gray-700 dark:text-gray-300">
                         {ua.article.name} || {ua.amount} kom. || Cena artikla = {ua.article.price.toFixed(2)} RSD
                         <br />|| Ukupno = {(ua.article.price * ua.amount).toFixed(2)} RSD
                       </p>
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-400 dark:text-gray-500">
                         Dodao/la: {ua.createdBy?.name} ({ua.createdBy?.role})
                         <br />
                         vreme: {new Date(ua.createdAt).toLocaleString("sr-RS")}
@@ -239,7 +224,7 @@ export default function PatientDataTable({
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500">Nema artikala</p>
+                  <p className="text-gray-500 dark:text-gray-400">Nema artikala</p>
                 )}
               </TableCell>
 

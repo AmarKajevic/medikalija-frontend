@@ -31,24 +31,27 @@ const onSubmit = (data: FormValues) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4 space-y-1 border-0 shadow-md rounded-md p-8 max-w-2xl"
+      className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]"
     >
-        <FormInput name="name" register={register} placeholder="promeni Ime" type="text" />
-        <FormInput name="pricePerUnit" register={register} placeholder="promeni cenu" />
+      <h2 className="mb-5 text-base font-semibold text-gray-800 dark:text-white/90">
+        Izmeni lek
+      </h2>
 
-        <FormInput name="quantity" register={register} placeholder=" promeni ukupnu količinu" />
-        <FormInput name="unitsPerPackage" register={register} placeholder="promeni broj tableta u pakovanju" />
+      <div className="space-y-4">
+        <FormInput name="name" register={register} placeholder="Promeni ime" type="text" />
+        <FormInput name="pricePerUnit" register={register} placeholder="Promeni cenu" />
+        <FormInput name="quantity" register={register} placeholder="Promeni ukupnu količinu" />
+        <FormInput name="unitsPerPackage" register={register} placeholder="Promeni broj tableta u pakovanju" />
         <FormInput name="addQuantity" register={register} placeholder="Dodaj komade tableta" />
         <FormInput name="packages" register={register} placeholder="Dodaj cela pakovanja" />
+      </div>
 
-
-     
       <button
-        className="border-0 bg-blue-500 rounded-md shadow-md text-white p-2"
+        className="mt-5 w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-brand-300"
         type="submit"
         disabled={isPending}
       >
-        Sačuvaj
+        {isPending ? "Čuvanje..." : "Sačuvaj"}
       </button>
     </form>
   );

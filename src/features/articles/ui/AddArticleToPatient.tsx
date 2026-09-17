@@ -79,12 +79,11 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Pretraži artikal (npr. pelene, rukavice...)"
-            className="w-full border p-2 rounded"
           />
 
           {/* ✅ DROPDOWN */}
           {showDropdown && filteredArticles.length > 0 && (
-            <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
+            <div className="absolute left-0 right-0 z-50 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
               {filteredArticles.map((a) => (
                 <div
                   key={a._id}
@@ -93,10 +92,10 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
                     setSearch(a.name);
                     setShowDropdown(false);
                   }}
-                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b"
+                  className="cursor-pointer border-b border-gray-100 px-3 py-2 text-sm last:border-0 hover:bg-brand-50 dark:border-gray-800 dark:hover:bg-brand-500/10"
                 >
-                  <div className="font-medium">{a.name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="font-medium text-gray-800 dark:text-white/90">{a.name}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     💰 Cena: {a.price} RSD · 🏥 Stanje: {a.quantity} · 👪 Porodica: {a.familyQuantity}
                   </div>
                 </div>
@@ -113,14 +112,13 @@ export default function AddArticleToPatient({ patientId }: AddArticleProps) {
           placeholder="Unesi količinu"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="border p-2 rounded"
         />
 
         {/* ✅ DUGME */}
         <button
           onClick={handleAdd}
           disabled={addArticleToPatient.isPending}
-          className="bg-blue-500 w-fit self-end text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="w-fit self-end rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {addArticleToPatient.isPending ? "Dodavanje..." : "Dodaj pacijentu"}
         </button>

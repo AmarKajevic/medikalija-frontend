@@ -17,26 +17,23 @@ const MedicineRow = ({ data }: Props) => {
 
   return (
     <div
-
-      className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] p-5 items-center px-3 border-b cursor-pointer hover:bg-gray-50"
+      className="grid cursor-pointer grid-cols-[2fr_1fr_1fr_1fr_1fr] items-center border-b border-gray-100 px-3 py-4 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
       onClick={() => navigate(`/medicine/${data._id}`)}
     >
-      <div
-        className="cursor-pointer font-medium "
-        
-      >
-        {data.name}
-      </div>
+      <div className="font-medium text-gray-800 dark:text-white/90">{data.name}</div>
 
       <div>{data.packageCount ?? 0}</div>
       <div>{data.quantity}</div>
       <div>{data.pricePerUnit ? `${data.pricePerUnit} RSD` : "-"}</div>
       <div onClick={(e) => e.stopPropagation()}>
-        <button disabled={isPending} onClick={() => handleDelete()} className="text-white border-0 bg-red-900 rounded-md shadow-md px-3 py-1">
-          Izbrisi Lek
+        <button
+          disabled={isPending}
+          onClick={() => handleDelete()}
+          className="rounded-md bg-error-50 px-3 py-1.5 text-xs font-medium text-error-600 hover:bg-error-100 disabled:opacity-50 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
+        >
+          Obriši
         </button>
       </div>
-
     </div>
   );
 };

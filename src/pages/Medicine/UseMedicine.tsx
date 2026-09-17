@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@app/providers/AuthContext";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Input from "@shared/ui/form/input/InputField";
 import Select from "@shared/ui/form/Select";
@@ -25,7 +24,6 @@ interface MedicineProps {
 }
 
 export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps) {
-  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState("");
@@ -51,10 +49,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const { data: medicines = [] } = useQuery<Medicine[]>({
     queryKey: ["allMedicines"],
     queryFn: async () => {
-      const { data } = await axios.get(
-        "http://localhost:5000/api/medicine",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.get("/api/medicine");
       return data.medicines;
     },
   });
@@ -63,26 +58,19 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
   const { data: patientStock = [] } = useQuery<PatientStock[]>({
     queryKey: ["patientStock", patientId],
     queryFn: async () => {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/medicine/patient/${patientId}/stock`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.get(`/api/medicine/patient/${patientId}/stock`);
       return data.medicines;
-      
+
     },
-    
+
     enabled: !!patientId,
   });
-  
+
 
 
   const addMedicine = useMutation({
     mutationFn: async (payload: { medicineId: string; amount: number }) => {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/medicine/use",
-        { patientId, ...payload },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.post("/api/medicine/use", { patientId, ...payload });
       return data;
     },
     onSuccess: (data) => {
@@ -145,7 +133,7 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
           />
 
           {showDropdown && filteredMedicines.length > 0 && (
-            <div className="absolute left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50">
+            <div className="absolute left-0 right-0 z-50 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
               {filteredMedicines.map((m) => {
                 const family = patientStock.find(
                   (p: any) => p._id === m._id
@@ -160,10 +148,10 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
                       setSearch(m.name);
                       setShowDropdown(false);
                     }}
-                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b"
+                    className="cursor-pointer border-b border-gray-100 px-3 py-2 text-sm last:border-0 hover:bg-brand-50 dark:border-gray-800 dark:hover:bg-brand-500/10"
                   >
-                    <div className="font-medium">{m.name}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="font-medium text-gray-800 dark:text-white/90">{m.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       🏥 Dom: {m.quantity} | 👪 Porodica: {family?.familyQuantity || 0}
 
                     </div>
@@ -201,20 +189,20 @@ export default function UseMedicine({ patientId, onMedicineUsed }: MedicineProps
           defaultValue={portion}
         />
 
-        <p className="text-gray-600 text-sm">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Ukupno za upotrebu: {isNaN(totalAmount) ? 0 : totalAmount}
         </p>
 
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600"
         >
           Dodaj potrošnju
         </button>
       </form>
 
       {message && (
-        <p className="mt-3 text-center text-sm text-red-600">
+        <p className="mt-3 text-center text-sm text-error-500">
           {message}
         </p>
       )}
