@@ -8,30 +8,27 @@ export const CombinationGroup = ({ group }: any) => {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="p-4 border rounded-2xl shadow-sm  bg-white">
-      <div className="flex gap-3">
-      <button onClick={() => setOpen(true)} className="text-xl text-white border-b bg-zinc-800 hover:bg-zinc-900 hover:text-red-700 p-2 rounded-lg ">{group.name}</button>
-      <button onClick={() => setOpen(false)} className="text-xl text-white border-b bg-red-700 hover:bg-red-900 rounded-lg p-2 " >
-zatvori
-</button>
-</div>
-        <div className="flex justify-end mb-5">
-          <DeleteCombinationGroup id={group._id}/>
-        </div>
-{open && (
-   <div className="space-y-3">
-        {group.combinations.map((combination: any) => (
-          <CombinationItem
-            key={combination._id}
-            combination={combination}
-          />
-        ))}
-      
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="flex items-center justify-between gap-3">
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+        >
+          {group.name}
+        </button>
+        <DeleteCombinationGroup id={group._id}/>
       </div>
 
-)}
-
-     
+      {open && (
+        <div className="mt-4 space-y-3">
+          {group.combinations.map((combination: any) => (
+            <CombinationItem
+              key={combination._id}
+              combination={combination}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

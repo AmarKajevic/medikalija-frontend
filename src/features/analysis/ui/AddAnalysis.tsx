@@ -23,15 +23,18 @@ const AddAnalysisNew = () => {
     );
   };
 
+  const fieldInputClass =
+    "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl space-y-4 max-w-md">
-      <h2 className="text-xl font-bold">Dodavanje analize</h2>
+    <div className="max-w-md space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Dodavanje analize</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <input
           placeholder="Naziv analize"
           {...register("name", { required: true })}
-          className="border p-2 w-full"
+          className={fieldInputClass}
         />
 
         <input
@@ -39,12 +42,12 @@ const AddAnalysisNew = () => {
           step="0.01"
           placeholder="Cena"
           {...register("price", { required: true })}
-          className="border p-2 w-full"
+          className={fieldInputClass}
         />
 
         <button
           disabled={isPending}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
+          className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:bg-gray-400"
         >
           {isPending ? "Čuvanje..." : "Sačuvaj"}
         </button>
