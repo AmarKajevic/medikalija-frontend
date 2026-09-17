@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@shared/icons";
+import { useNavigate } from "react-router";
+import { EyeCloseIcon, EyeIcon } from "@shared/icons";
 import Label from "@shared/ui/form/Label";
 import Input from "@shared/ui/form/input/InputField";
 import Checkbox from "@shared/ui/form/input/Checkbox";
@@ -81,22 +81,15 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="w-full max-w-md pt-10 mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-        >
-          <ChevronLeftIcon className="size-5" />
-          Back to dashboard
-        </Link>
-      </div>
-
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm sm:text-title-md">
-              Sign In
+            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm sm:text-title-md dark:text-white/90">
+              Prijava
             </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Unesite svoje podatke da biste pristupili sistemu.
+            </p>
           </div>
 
           {/* forma */}
@@ -125,11 +118,11 @@ export default function SignInForm() {
               </div>
 
               <div>
-                <Label>Password *</Label>
+                <Label>Lozinka *</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder="Unesite lozinku"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -151,7 +144,7 @@ export default function SignInForm() {
 
               <div className="flex items-center gap-3">
                 <Checkbox checked={isChecked} onChange={setIsChecked} />
-                <span className="text-gray-700">Klikni da sacuvas svoje podatke</span>
+                <span className="text-gray-700 dark:text-gray-400">Zapamti me na ovom uređaju</span>
               </div>
 
               <Button className="w-full" size="sm" type="submit">
