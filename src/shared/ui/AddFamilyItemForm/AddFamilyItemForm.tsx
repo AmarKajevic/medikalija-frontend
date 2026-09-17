@@ -1,8 +1,13 @@
 import { useForm, Controller } from "react-hook-form";
 import { useCallback, useMemo } from "react";
+import { FaUsers } from "react-icons/fa";
 import { SearchableSelect } from "@shared/ui/SearchableSelect/SearchableSelect";
 import PatientSelect from "@features/patients/ui/PatientSelect"; // ili shared
+import Label from "@shared/ui/form/Label";
 import type { FamilyItemFormConfig, FamilyFormValues } from "@shared/ui/AddFamilyItemForm/types";
+
+const fieldInputClass =
+  "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30";
 
 export const AddFamilyItemForm = <TItem extends { name: string; quantity: number; familyQuantity?: number }>({
   config,
@@ -45,15 +50,24 @@ export const AddFamilyItemForm = <TItem extends { name: string; quantity: number
 );
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl space-y-4">
-      <h2 className="text-xl font-bold">{config.title}</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
+          <FaUsers />
+        </div>
+        <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
+          {config.title}
+        </h2>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <Controller
           name="name"
           control={control}
           rules={{ required: `Morate izabrati ${config.itemNameSingular}` }}
           render={({ field, fieldState }) => (
             <div>
+              <Label>Naziv {config.itemNameSingular}a *</Label>
               <SearchableSelect
                 value={field.value}
                 onChange={(val) => {
@@ -73,8 +87,8 @@ export const AddFamilyItemForm = <TItem extends { name: string; quantity: number
                   <>
                     <div className="font-medium">{opt.label}</div>
                     {opt.value !== "" && (
-                      <div className="text-xs text-gray-500">
-                        🏥 {opt.extra?.home} | 👪 {opt.extra?.family}
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        🏥 Dom: {opt.extra?.home} &nbsp;|&nbsp; 👪 Porodica: {opt.extra?.family}
                       </div>
                     )}
                   </>
@@ -82,7 +96,7 @@ export const AddFamilyItemForm = <TItem extends { name: string; quantity: number
                 placeholder={`Izaberi ${config.itemNameSingular}...`}
               />
               {fieldState.error && (
-                <p className="text-red-500 text-sm mt-1">{fieldState.error.message}</p>
+                <p className="mt-1 text-sm text-error-500">{fieldState.error.message}</p>
               )}
             </div>
           )}
@@ -94,6 +108,7 @@ export const AddFamilyItemForm = <TItem extends { name: string; quantity: number
           rules={{ required: "Morate izabrati pacijenta" }}
           render={({ field, fieldState }) => (
             <div>
+              <Label>Pacijent *</Label>
               <PatientSelect
                 value={field.value}
                 onChange={field.onChange}
@@ -104,30 +119,38 @@ export const AddFamilyItemForm = <TItem extends { name: string; quantity: number
                 }))}
               />
               {fieldState.error && (
-                <p className="text-red-500 text-sm mt-1">{fieldState.error.message}</p>
+                <p className="mt-1 text-sm text-error-500">{fieldState.error.message}</p>
               )}
             </div>
           )}
         />
 
-        <input
-          type="number"
-          placeholder={config.placeholderUnit}
-          {...register("unitsPerPackage")}
-          className="border p-2 w-full rounded"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>{config.placeholderUnit}</Label>
+            <input
+              type="number"
+              placeholder={config.placeholderUnit}
+              {...register("unitsPerPackage")}
+              className={fieldInputClass}
+            />
+          </div>
 
-        <input
-          type="number"
-          placeholder="Ukupna količina"
-          {...register("quantity", { required: "Količina je obavezna" })}
-          className="border p-2 w-full rounded"
-        />
+          <div>
+            <Label>Ukupna količina *</Label>
+            <input
+              type="number"
+              placeholder="Ukupna količina"
+              {...register("quantity", { required: "Količina je obavezna" })}
+              className={fieldInputClass}
+            />
+          </div>
+        </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-blue-300"
+          className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-brand-300"
         >
           {isPending ? "Čuvanje..." : "Sačuvaj"}
         </button>

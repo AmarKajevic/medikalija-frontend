@@ -165,20 +165,29 @@ export const SearchableSelect = <T extends Option>({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      <input
-        value={open ? search : (selected?.label ?? (allowFreeText && value ? value : ""))}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        className="w-full border px-3 py-2 rounded-md"
-      />
+      <div className="relative">
+        <input
+          value={open ? search : (selected?.label ?? (allowFreeText && value ? value : ""))}
+          onChange={handleInputChange}
+          onFocus={handleFocus}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-9 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+        />
+        <svg
+          className={`pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
 
       {open && (
-        <div className="absolute z-50 w-full bg-white border rounded-md shadow max-h-60 overflow-auto mt-1">
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
           {filtered.length === 0 && (
-            <div className="p-2 text-sm text-gray-500">
+            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
               {allowFreeText ? "Unesi novi naziv" : emptyMessage}
             </div>
           )}
@@ -189,8 +198,10 @@ export const SearchableSelect = <T extends Option>({
               ref={idx === highlightedIndex ? selectedOptionRef : null}
               onMouseDown={(e) => e.preventDefault()} // spreči blur pre klika
               onClick={() => handleOptionClick(opt)}
-              className={`p-2 hover:bg-gray-100 cursor-pointer ${
-                idx === highlightedIndex ? "bg-gray-100" : ""
+              className={`cursor-pointer px-3 py-2 text-sm text-gray-700 dark:text-gray-300 ${
+                idx === highlightedIndex
+                  ? "bg-brand-50 dark:bg-brand-500/10"
+                  : "hover:bg-gray-50 dark:hover:bg-white/5"
               } ${optionClassName}`}
             >
               {renderOptionFn(opt)}
