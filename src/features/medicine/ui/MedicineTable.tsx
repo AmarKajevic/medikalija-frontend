@@ -16,22 +16,27 @@ const MedicineTable = ({ medicines }: Props) => {
     overscan: 10,
   });
 
-  return (
-    <div className="border rounded-md">
-      
+  if (medicines.length === 0) {
+    return (
+      <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+        Nema lekova u zalihama.
+      </p>
+    );
+  }
 
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr] p-3 font-semibold border-b bg-gray-100">
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] border-b border-gray-200 bg-gray-50 p-3 text-xs font-medium uppercase text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
         <div>Naziv</div>
         <div>Pakovanja</div>
         <div>Količina</div>
         <div>Cena</div>
-
+        <div>Akcija</div>
       </div>
-
 
       <div
         ref={parentRef}
-        className="h-[500px] overflow-auto relative"
+        className="relative h-[500px] overflow-auto"
       >
         <div
           style={{

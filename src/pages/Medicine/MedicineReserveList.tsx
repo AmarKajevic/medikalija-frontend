@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 import ComponentCard from "@shared/ui/common/ComponentCard";
 import {
   Table,
@@ -12,7 +11,6 @@ import {
 import Input from "@shared/ui/form/input/InputField";
 
 export default function MedicineReserveList() {
-  const { token } = useAuth();
   const [reserve, setReserve] = useState<any[]>([]);
   const [returnAmounts, setReturnAmounts] = useState<Record<string, number>>(
     {}
@@ -25,10 +23,7 @@ export default function MedicineReserveList() {
     try {
       setLoading(true);
 
-      const res = await axios.get(
-        "http://localhost:5000/api/medicine-reserve",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get("/api/medicine-reserve");
 
       setReserve(res.data.reserve || []);
     } catch (err) {
@@ -46,10 +41,7 @@ export default function MedicineReserveList() {
   const deleteReserve = async (id: string) => {
     if (!confirm("Obrisati lek iz rezerve?")) return;
 
-    await axios.delete(
-      `http://localhost:5000/api/medicine-reserve/${id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.delete(`/api/medicine-reserve/${id}`);
 
     fetchReserve();
   };
@@ -60,11 +52,7 @@ export default function MedicineReserveList() {
     if (!amount || amount <= 0)
       return alert("Unesi količinu za vraćanje!");
 
-    await axios.post(
-      "http://localhost:5000/api/medicine-reserve/return",
-      { reserveId, amount },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post("/api/medicine-reserve/return", { reserveId, amount });
 
     setReturnAmounts((prev) => ({ ...prev, [reserveId]: 0 }));
     fetchReserve();
@@ -79,6 +67,7 @@ export default function MedicineReserveList() {
         ) : reserve.length === 0 ? (
           <p className="text-sm text-gray-500">Rezerva je prazna.</p>
         ) : (
+          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
           <Table>
             <TableHeader>
               <TableRow>
@@ -94,14 +83,14 @@ export default function MedicineReserveList() {
 
             <TableBody>
               {reserve.map((r) => (
-                <TableRow key={r._id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                <TableRow key={r._id}>
 
                   {/* NAZIV */}
-                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell className="font-medium text-gray-800 dark:text-white/90">{r.name}</TableCell>
 
                   {/* KOLIČINA */}
                   <TableCell>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-brand-500">
                       {r.amount}
                     </span>{" "}
                     kom
@@ -110,10 +99,10 @@ export default function MedicineReserveList() {
                   {/* IZVOR */}
                   <TableCell>
                     <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
                         r.source === "home"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-green-100 text-green-700"
+                          ? "bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400"
+                          : "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500"
                       }`}
                     >
                       {r.source === "home" ? "Dom" : "Porodica"}
@@ -126,7 +115,7 @@ export default function MedicineReserveList() {
                   </TableCell>
 
                   {/* DATUM */}
-                  <TableCell className="text-xs text-gray-500">
+                  <TableCell className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(r.createdAt).toLocaleDateString()}
                   </TableCell>
 
@@ -146,7 +135,7 @@ export default function MedicineReserveList() {
 
                     <button
                       onClick={() => returnFromReserve(r._id)}
-                      className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-1 rounded text-xs"
+                      className="mt-2 w-full rounded-md bg-success-500 py-1 text-xs font-medium text-white hover:bg-success-600"
                     >
                       Vrati nazad
                     </button>
@@ -156,7 +145,7 @@ export default function MedicineReserveList() {
                   <TableCell>
                     <button
                       onClick={() => deleteReserve(r._id)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                      className="rounded-md bg-error-50 px-3 py-1.5 text-xs font-medium text-error-600 hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
                     >
                       Obriši
                     </button>
@@ -166,6 +155,7 @@ export default function MedicineReserveList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
     </ComponentCard>

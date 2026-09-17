@@ -39,7 +39,6 @@ const DeletePatient = lazy(() => import("@pages/Patients/DeletePatient"));
 const PatientProfile = lazy(() => import("@pages/Patients/PatientProfile"));
 const AddDiagnosisTemplate = lazy(() => import("@pages/Diagnosis/AddDiagnosisTemplate"));
 const AddMedicine = lazy(() => import("@pages/Medicine/AddMedicine"));
-const MedicineList = lazy(() => import("@pages/Medicine/MedicineList"));
 
 const PatientsPage = lazy(() => import("@pages/Patients/PatientPage"));
 const ArticlesList = lazy(() => import("@features/articles/ui/ArticlesList"));
@@ -100,7 +99,6 @@ export default function App() {
 
               <Route path="/medicine/addMedicine" element={<AddMedicine />} />
               <Route path="/medicine/:id" element={<MedicineDetailesPage />} />
-              <Route path="/medicine" element={<MedicineList />} />
               <Route path="/medicine-new" element={<MedicineListWidget />} />
 
 

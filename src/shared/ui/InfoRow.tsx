@@ -7,9 +7,9 @@ type InfoRowProps = {
 
 const InfoRow = ({label, value} : InfoRowProps) => {
   return (
-     <div className="flex items-center justify-between border-0 shadow-md rounded-md p-5 gap-4">
-      <p className="font-semibold text-black">{label}</p>
-      <p className="font-semibold text-black">{value}</p>
+    <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-1 py-3 last:border-0 dark:border-gray-800">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="text-sm font-medium text-gray-800 dark:text-white/90">{value}</p>
     </div>
   )
 }

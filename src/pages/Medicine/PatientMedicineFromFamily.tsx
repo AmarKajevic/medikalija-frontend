@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@app/providers/AuthContext";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import EditMedicine from "@pages/Medicine/EditMedicine";
 import DeleteMedicine from "@pages/Medicine/DeleteMedicine";
 import {
@@ -28,8 +27,6 @@ interface PatientMedicine {
 }
 
 export default function PatientMedicineFromFamily() {
-  const { token } = useAuth();
-
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientMedicines, setPatientMedicines] = useState<
     Record<string, PatientMedicine[]>
@@ -43,14 +40,10 @@ export default function PatientMedicineFromFamily() {
   const [patientSearch, setPatientSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const API = "http://localhost:5000/api";
-
   /* ================= FETCH PATIENTS ================= */
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`${API}/patient`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/patient");
 
       if (response.data.success) {
         setPatients(response.data.patients);
@@ -63,12 +56,7 @@ export default function PatientMedicineFromFamily() {
   /* ================= FETCH MEDICINES FOR ONE PATIENT ================= */
   const fetchPatientMedicines = async (patientId: string) => {
     try {
-      const response = await axios.get(
-        `${API}/medicine/patient/${patientId}/medicines`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get(`/api/medicine/patient/${patientId}/medicines`);
 
       if (response.data.success) {
         setPatientMedicines((prev) => ({
@@ -105,18 +93,12 @@ const transferToReserve = async (
   }
 
   try {
-    await axios.post(
-      `${API}/medicine-reserve/move`,
-      {
-        medicineId: patientMedicineId, // 🔥 mora da se zove medicineId
-        amount,
-        source: "family",
-        patientId, // 🔥 OBAVEZNO
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    await api.post("/api/medicine-reserve/move", {
+      medicineId: patientMedicineId, // 🔥 mora da se zove medicineId
+      amount,
+      source: "family",
+      patientId, // 🔥 OBAVEZNO
+    });
 
     setTransferAmounts((prev) => ({
       ...prev,
@@ -141,7 +123,7 @@ const transferToReserve = async (
     };
 
     loadData();
-  }, [token]);
+  }, []);
 
   if (loading) return <p>Učitavanje...</p>;
 
@@ -175,7 +157,7 @@ const transferToReserve = async (
           value={patientSearch}
           onChange={(e) => setPatientSearch(e.target.value)}
           placeholder="Pretraži pacijenta..."
-          className="w-full border-2 rounded px-3 py-2 bg-white"
+          className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
         />
       </div>
 
@@ -184,12 +166,12 @@ const transferToReserve = async (
         {filteredPatients.map((patient) => (
           <div
             key={patient._id}
-            className="border rounded-lg overflow-hidden"
+            className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800"
           >
             {/* HEADER PACIJENTA */}
             <div
               onClick={() => togglePatient(patient._id)}
-              className="p-4 bg-gray-100 cursor-pointer hover:bg-gray-200 font-semibold flex justify-between"
+              className="flex cursor-pointer justify-between bg-gray-50 p-4 font-semibold text-gray-800 hover:bg-gray-100 dark:bg-white/[0.03] dark:text-white/90 dark:hover:bg-white/5"
             >
               <span>
                 {patient.name} {patient.lastName}
@@ -201,7 +183,7 @@ const transferToReserve = async (
 
             {/* LEKOVI ISPOD PACIJENTA */}
             {expandedPatientId === patient._id && (
-              <div className="p-4 bg-white">
+              <div className="bg-white p-4 dark:bg-white/[0.02]">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -254,14 +236,14 @@ const transferToReserve = async (
                                 [m._id]: Number(e.target.value),
                             })
                             }
-                            className="w-full border rounded px-2 py-1 text-sm"
+                            className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                         />
 
                         <button
                             onClick={() =>
                             transferToReserve(m._id, patient._id,m.quantity)
                             }
-                            className="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-1 rounded text-xs"
+                            className="mt-2 w-full rounded-md bg-warning-500 py-1 text-xs font-medium text-white hover:bg-warning-600"
                         >
                             Prebaci u rezervu
                         </button>
@@ -271,7 +253,7 @@ const transferToReserve = async (
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell >
+                        <TableCell className="text-gray-500 dark:text-gray-400">
                           Nema lekova za ovog pacijenta
                         </TableCell>
                       </TableRow>

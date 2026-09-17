@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { useAuth } from "@app/providers/AuthContext"
-import axios from "axios"
+import { api } from "@shared/api/api"
 
 interface MedicineProps {
   medicineId: string
@@ -17,7 +16,6 @@ export default function EditMedicine({
   mode = "home",
   onUpdated,
 }: MedicineProps) {
-  const { token } = useAuth()
   const [price, setPrice] = useState<number>(pricePerUnit)
   const [quantityValue, setQuantityValue] = useState<number>(quantity)
   const [addQuantity, setAddQuantity] = useState<number>(0)
@@ -27,11 +25,7 @@ export default function EditMedicine({
   const handlePriceUpdate = async () => {
     try {
       const data = { pricePerUnit: price }
-      const response = await axios.put(
-        `http://localhost:5000/api/medicine/${medicineId}`,
-        data,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const response = await api.put(`/api/medicine/${medicineId}`, data)
       if (response.data.success) {
         setMessage("Cena uspešno promenjena")
         onUpdated()
@@ -45,25 +39,13 @@ export default function EditMedicine({
   // Funkcija za update količine
 const handleQuantityUpdate = async (isAdd: boolean) => {
   try {
-    let data: any = {}
-
-    if (mode === "family") {
-      data = isAdd
-        ? { addQuantity }
-        : { quantity: quantityValue }
-    } else {
-      data = isAdd
-        ? { addQuantity }
-        : { quantity: quantityValue }
-    }
+    const data = isAdd ? { addQuantity } : { quantity: quantityValue }
 
     const endpoint =
       mode === "family"
-        ? `http://localhost:5000/api/medicine/patient-stock/${medicineId}`
-        : `http://localhost:5000/api/medicine/${medicineId}`
-    const response = await axios.put(endpoint, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+        ? `/api/medicine/patient-stock/${medicineId}`
+        : `/api/medicine/${medicineId}`
+    const response = await api.put(endpoint, data)
 
     if (response.data.success) {
       setMessage("Količina uspešno promenjena")
@@ -87,12 +69,12 @@ const handleQuantityUpdate = async (isAdd: boolean) => {
             type="number"
             value={price === 0 ? "" : price}
             onChange={(e) => setPrice(e.target.value === "" ? 0 : Number(e.target.value))}
-            className="border p-1 rounded w-20"
+            className="w-20 rounded-md border border-gray-300 p-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             placeholder="Cena"
           />
           <button
             onClick={handlePriceUpdate}
-            className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+            className="rounded-md bg-success-500 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-success-600"
           >
             Nova cena
           </button>
@@ -106,13 +88,13 @@ const handleQuantityUpdate = async (isAdd: boolean) => {
             onChange={(e) =>
               setQuantityValue(e.target.value === "" ? 0 : Number(e.target.value))
             }
-            className="border p-1 rounded w-20"
+            className="w-20 rounded-md border border-gray-300 p-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             placeholder="Nova količina"
           />
 
       <button
         onClick={() => handleQuantityUpdate(false)}
-        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+        className="rounded-md bg-brand-500 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
       >
         Nova količina
       </button>
@@ -123,19 +105,19 @@ const handleQuantityUpdate = async (isAdd: boolean) => {
           onChange={(e) =>
             setAddQuantity(e.target.value === "" ? 0 : Number(e.target.value))
           }
-          className="border p-1 rounded w-20"
+          className="w-20 rounded-md border border-gray-300 p-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           placeholder="Dodaj količinu"
         />
 
       <button
         onClick={() => handleQuantityUpdate(true)}
-        className="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600"
+        className="rounded-md bg-gray-700 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-gray-600"
       >
         Dodaj količinu
       </button>
 
       {/* Poruka */}
-      {message && <p className="text-green-600 text-sm ml-2">{message}</p>}
+      {message && <p className="ml-2 text-sm text-success-600 dark:text-success-500">{message}</p>}
     </div>
   )
 }
