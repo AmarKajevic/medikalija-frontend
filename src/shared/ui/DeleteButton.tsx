@@ -27,9 +27,9 @@ const DeleteButton = ({
       <button
         onClick={() => setOpen(true)}
         disabled={isLoading}
-        className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded disabled:opacity-50"
+        className="rounded-md bg-error-50 px-3 py-1.5 text-xs font-medium text-error-600 hover:bg-error-100 disabled:opacity-50 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
       >
-        ❌ Obriši
+        Obriši
       </button>
 
       <ConfirmModal

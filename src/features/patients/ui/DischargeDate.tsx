@@ -28,24 +28,35 @@ const DischargeDate = ({patient} : {patient: Patient}) => {
   };
 
   return (
-    <div className="flex items-center border-0 shadow-md gap-4 p-2 rounded-lg">
-      <p>{patient.dischargeDate ? "" : "Otpusti pacijenta"}</p>
-
+    <div className="flex flex-wrap items-center gap-3">
       {patient.dischargeDate ? (
-        new Date(patient.dischargeDate).toLocaleDateString("sr-RS")
+        <>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {new Date(patient.dischargeDate).toLocaleDateString("sr-RS")}
+          </span>
+          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-white/5 dark:text-gray-400">
+            Otpušten
+          </span>
+        </>
       ) : (
-        <DatePicker
-          id={`dp-${patient._id}`}
-          placeholder="Izaberi datum"
-          onChange={([date]: any) => {
-            if (!date) return;
-            setSelectedDate(date);
-            setOpen(true); // 🔥 OTVARA MODAL
-          }}
-        />
+        <>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Otpusti pacijenta:</span>
+          <div className="w-44">
+            <DatePicker
+              id={`dp-${patient._id}`}
+              placeholder="Izaberi datum"
+              onChange={([date]: any) => {
+                if (!date) return;
+                setSelectedDate(date);
+                setOpen(true); // 🔥 OTVARA MODAL
+              }}
+            />
+          </div>
+          <span className="rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
+            Čeka datum
+          </span>
+        </>
       )}
-
-      {patient.dischargeDate ? "Otpusten" : "Čeka datum"}
 
       <ConfirmModal
         open={open}

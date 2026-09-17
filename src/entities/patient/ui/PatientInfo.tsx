@@ -16,26 +16,26 @@ interface Patient {
 
 export default function PatientInfo({ patient }: { patient: Patient }) {
   return (
-        <div>
-      <h2 className=" flex justify-items-start space-y-1 py-4 text-2xl font-bold">
-        {patient.name} {patient.lastName} 
+    <div>
+      <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+        {patient.name} {patient.lastName}
       </h2>
-      <p>
-        <strong>Datum rođenja:</strong>{" "}
-        {new Date(patient.dateOfBirth).toLocaleDateString("sr-RS")}
-      </p>
-      <p>
-        <strong>Adresa:</strong> {patient.address}
-      </p>
-      <p>
-        <strong>Datum Prijema</strong>{" "}
-        {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
-      </p>
-      <div>
-        <DischargeDate patient={patient}/>
+      <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+        <p>
+          <span className="text-gray-400 dark:text-gray-500">Datum rođenja:</span>{" "}
+          {new Date(patient.dateOfBirth).toLocaleDateString("sr-RS")}
+        </p>
+        <p>
+          <span className="text-gray-400 dark:text-gray-500">Adresa:</span> {patient.address}
+        </p>
+        <p>
+          <span className="text-gray-400 dark:text-gray-500">Datum prijema:</span>{" "}
+          {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
+        </p>
       </div>
-
+      <div className="mt-3">
+        <DischargeDate patient={patient} />
+      </div>
     </div>
-
   )
 }

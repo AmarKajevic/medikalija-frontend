@@ -35,7 +35,6 @@ import SpecViewPage from "@features/specification/ui/SpecViewPage";
 const Calendar = lazy(() => import("@pages/Calendar"));
 const AdminDashboard = lazy(() => import("@pages/Dashboard/AdminDashboard"));
 const PatientList = lazy(() => import("@pages/Patients/PatientList"));
-const DeletePatient = lazy(() => import("@pages/Patients/DeletePatient"));
 const PatientProfile = lazy(() => import("@pages/Patients/PatientProfile"));
 const AddDiagnosisTemplate = lazy(() => import("@pages/Diagnosis/AddDiagnosisTemplate"));
 const AddMedicine = lazy(() => import("@pages/Medicine/AddMedicine"));
@@ -93,7 +92,6 @@ export default function App() {
               <Route path="patient-list" element={<PatientList />} />
 
               <Route path="/patient/:patientId" element={<PatientProfile />} />
-              <Route path="/patient/Delete/:patientId" element={<DeletePatient />} />
 
               <Route path="/add-diagnosisTemplate" element={<AddDiagnosisTemplate />} />
 

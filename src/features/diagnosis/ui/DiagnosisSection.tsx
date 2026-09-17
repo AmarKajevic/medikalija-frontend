@@ -33,9 +33,9 @@ export default function DiagnosisSection({ patientId }: Props) {
         <button
           onClick={handleAdd}
           disabled={!newDiagnosis.trim()}
-          className="bg-blue-500 w-fit self-end text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="w-fit self-end rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Dodaj Pacijentu
+          Dodaj pacijentu
         </button>
       </div>
     </ComponentCard>
