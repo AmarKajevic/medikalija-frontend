@@ -46,7 +46,7 @@ const SearchInput = () => {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => query && setOpen(true)}
-        className="bg-white text-gray-800 border border-gray-300 focus:ring-2 focus:ring-blue-500 w-full p-2"
+        className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
       />
 
       {open && (

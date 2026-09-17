@@ -63,15 +63,15 @@ export const PatientStockMedicines = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all"
           onClick={handleBackdropClick}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-fadeInUp">
+          <div className="mx-4 w-full max-w-lg animate-fadeInUp overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
             {/* Zaglavlje */}
-            <div className="flex justify-between items-center border-b px-6 py-4 bg-gray-50">
-              <h2 className="text-xl font-semibold text-gray-800">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                 Porodični lekovi pacijenta
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-2xl leading-none"
+                className="text-2xl leading-none text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
                 aria-label="Zatvori"
               >
                 &times;
@@ -79,32 +79,32 @@ export const PatientStockMedicines = ({
             </div>
 
             {/* Telo */}
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[70vh] overflow-y-auto p-6">
               {isLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-brand-500" />
                 </div>
               ) : stockMedicines.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
+                <p className="py-8 text-center text-gray-500 dark:text-gray-400">
                   Pacijent nema porodičnih lekova.
                 </p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-gray-100 dark:divide-gray-800">
                   {stockMedicines.map((med) => (
                     <li
                       key={med._id}
-                      className="py-3 flex justify-between items-center"
+                      className="flex items-center justify-between py-3"
                     >
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 dark:text-white/90">
                         {med.name}
                       </span>
                       <div className="text-right">
-                        <span className="bg-green-100 text-green-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">
+                        <span className="rounded-full bg-success-50 px-2.5 py-0.5 text-sm font-semibold text-success-600 dark:bg-success-500/15 dark:text-success-500">
                           {med.familyQuantity} kom.
                         </span>
                         {med.familyPackageCount !== undefined &&
                           med.unitsPerPackage && (
-                            <span className="ml-2 text-xs text-gray-500">
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                               ({med.familyPackageCount} pak.)
                             </span>
                           )}
@@ -116,10 +116,10 @@ export const PatientStockMedicines = ({
             </div>
 
             {/* Footer */}
-            <div className="border-t px-6 py-4 bg-gray-50 flex justify-end">
+            <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="rounded-lg bg-gray-200 px-4 py-2 text-gray-800 transition-colors hover:bg-gray-300 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
               >
                 Zatvori
               </button>

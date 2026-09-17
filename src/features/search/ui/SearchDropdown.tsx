@@ -27,30 +27,30 @@ const SearchDropdown = ({ results, isLoading ,onSelect}: Props) => {
 
   if (isLoading) {
     return (
-      <div className="absolute left-0 right-0 mt-2 bg-white shadow-xl rounded-lg p-3">
-        Loading...
+      <div className="absolute left-0 right-0 mt-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-500 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+        Učitavanje...
       </div>
     );
   }
 
   if (!results.length) {
     return (
-      <div className="absolute left-0 right-0 mt-2 bg-white shadow-xl rounded-lg p-3">
+      <div className="absolute left-0 right-0 mt-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-500 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
         Nema rezultata
       </div>
     );
   }
 
   return (
-    <div className="absolute left-0 right-0 mt-2 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto">
+    <div className="absolute left-0 right-0 mt-2 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
       {results.map((item) => (
         <div
           key={item._id}
           onClick={() => handleClick(item)}
-          className="p-3 border-b cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer border-b border-gray-100 p-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
         >
-          <div className="font-semibold">{item.name}</div>
-          <div className="text-sm text-gray-500">{item.type}</div>
+          <div className="font-semibold text-gray-800 dark:text-white/90">{item.name}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{item.type}</div>
         </div>
       ))}
     </div>
