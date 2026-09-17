@@ -7,8 +7,7 @@ import { EventInput, DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { Modal } from "@shared/ui/modal-kit/index";
 import { useModal } from "@shared/lib/useModal";
 import PageMeta from "@shared/ui/common/PageMeta";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 
 interface CalendarEvent extends EventInput {
   _id?: string;
@@ -28,7 +27,6 @@ const Calendar: React.FC = () => {
 
   const calendarRef = useRef<FullCalendar>(null);
   const { isOpen, openModal, closeModal } = useModal();
-  const { token } = useAuth();
 
   const calendarsEvents = {
     crvena: "Crvena",
@@ -43,9 +41,7 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     const fetchCalendarEvents = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/calendar", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/api/calendar");
 
         if (res.data.success) {
           const formattedEvents = res.data.events.map((ev: any) => ({
@@ -67,7 +63,7 @@ const Calendar: React.FC = () => {
     };
 
     fetchCalendarEvents();
-  }, [token]);
+  }, []);
 
   const resetModalFields = () => {
     setSelectedEvent(null);
@@ -116,16 +112,12 @@ const Calendar: React.FC = () => {
     try {
       if (selectedEvent?._id) {
         // UPDATE DOGAĐAJA
-        const res = await axios.put(
-          `http://localhost:5000/api/calendar/${selectedEvent._id}`,
-          {
-            title: eventTitle,
-            start: eventStartDate,
-            end: eventEndDate,
-            calendar: eventLevel,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.put(`/api/calendar/${selectedEvent._id}`, {
+          title: eventTitle,
+          start: eventStartDate,
+          end: eventEndDate,
+          calendar: eventLevel,
+        });
 
         const updated = res.data.event;
 
@@ -144,16 +136,12 @@ const Calendar: React.FC = () => {
         );
       } else {
         // DODAJ NOVI DOGAĐAJ
-        const res = await axios.post(
-          "http://localhost:5000/api/calendar",
-          {
-            title: eventTitle,
-            start: eventStartDate,
-            end: eventEndDate,
-            calendar: eventLevel,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.post("/api/calendar", {
+          title: eventTitle,
+          start: eventStartDate,
+          end: eventEndDate,
+          calendar: eventLevel,
+        });
 
         const newEvent = res.data.event;
 
@@ -181,10 +169,7 @@ const Calendar: React.FC = () => {
     if (!selectedEvent?._id) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/calendar/${selectedEvent._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/calendar/${selectedEvent._id}`);
 
       setEvents((prev) => prev.filter((ev) => ev.id !== selectedEvent._id));
     } catch (error) {
@@ -199,7 +184,7 @@ const Calendar: React.FC = () => {
   // 6. RENDER
   // =======================================
   if (loading) {
-    return <p className="p-4 text-lg">Učitavanje kalendara...</p>;
+    return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje kalendara...</p>;
   }
 
   return (
@@ -236,27 +221,27 @@ const Calendar: React.FC = () => {
 
         {/* MODAL */}
         <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] p-6 lg:p-10">
-          <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-            <h5 className="mb-2 font-semibold text-gray-800 text-xl">
+          <div className="custom-scrollbar flex flex-col overflow-y-auto px-2">
+            <h5 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white/90">
               {selectedEvent ? "Izmena događaja" : "Dodavanje događaja"}
             </h5>
 
-            <label className="mt-4 text-sm font-medium text-gray-700">
+            <label className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-400">
               Naziv događaja
             </label>
             <input
               type="text"
               value={eventTitle}
               onChange={(e) => setEventTitle(e.target.value)}
-              className="h-11 w-full rounded-lg border px-4"
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
             />
 
-            <label className="mt-6 text-sm font-medium text-gray-700">
+            <label className="mt-6 text-sm font-medium text-gray-700 dark:text-gray-400">
               Boja događaja
             </label>
-            <div className="flex gap-4 mt-2">
+            <div className="mt-2 flex gap-4">
               {Object.keys(calendarsEvents).map((key) => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer">
+                <label key={key} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="radio"
                     name="event-level"
@@ -268,31 +253,31 @@ const Calendar: React.FC = () => {
               ))}
             </div>
 
-            <label className="mt-6 text-sm font-medium text-gray-700">
+            <label className="mt-6 text-sm font-medium text-gray-700 dark:text-gray-400">
               Datum početka
             </label>
             <input
               type="date"
               value={eventStartDate}
               onChange={(e) => setEventStartDate(e.target.value)}
-              className="h-11 w-full rounded-lg border px-4"
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
             />
 
-            <label className="mt-6 text-sm font-medium text-gray-700">
+            <label className="mt-6 text-sm font-medium text-gray-700 dark:text-gray-400">
               Datum završetka
             </label>
             <input
               type="date"
               value={eventEndDate}
               onChange={(e) => setEventEndDate(e.target.value)}
-              className="h-11 w-full rounded-lg border px-4"
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
             />
 
-            <div className="flex justify-end gap-4 mt-8">
+            <div className="mt-8 flex justify-end gap-4">
               {selectedEvent && (
                 <button
                   onClick={handleDeleteEvent}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg"
+                  className="rounded-lg bg-error-500 px-4 py-2 text-sm font-medium text-white hover:bg-error-600"
                 >
                   Obriši
                 </button>
@@ -300,7 +285,7 @@ const Calendar: React.FC = () => {
 
               <button
                 onClick={handleAddOrUpdateEvent}
-                className="px-4 py-2 bg-brand-500 text-white rounded-lg"
+                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
               >
                 Sačuvaj
               </button>
