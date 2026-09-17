@@ -8,14 +8,10 @@ const ArticleRow = ({data}: Props) => {
     const navigate = useNavigate();
   return (
    <div
-
-      className="grid grid-cols-[2fr_1fr_1fr_1fr] p-5 items-center px-3 border-b cursor-pointer hover:bg-gray-50"
+      className="grid cursor-pointer grid-cols-[2fr_1fr_1fr_1fr] items-center border-b border-gray-100 px-3 py-4 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
       onClick={() => navigate(`/articles/${data._id}`)}
     >
-      <div
-        className="cursor-pointer font-medium "
-        
-      >
+      <div className="font-medium text-gray-800 dark:text-white/90">
         {data.name}
       </div>
 

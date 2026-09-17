@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@app/providers/AuthContext";
-import axios from "axios";
+import { api } from "@shared/api/api";
 
 
 
@@ -43,16 +42,12 @@ export interface Group {
 
 export const useCombinations = (patientId: string) => {
   const queryClient = useQueryClient();
-  const { token } = useAuth();
- 
 
   // --- Fetch svih analiza ---
   const getAnalyses = useQuery<Analysis[]>({
     queryKey: ["analyses"],
     queryFn: async () => {
-      const { data } = await axios.get("http://localhost:5000/api/analysis", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.get("/api/analysis");
       return data.success ? data.analyses : [];
     },
   });
@@ -61,10 +56,7 @@ export const useCombinations = (patientId: string) => {
   const combinationsQuery = useQuery<Combination[]>({
     queryKey: ["combinations"],
     queryFn: async () => {
-      const { data } = await axios.get(
-        "http://localhost:5000/api/analysis/combination",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.get("/api/analysis/combination");
       return data.success ? data.combinations : [];
     },
   });
@@ -72,9 +64,8 @@ export const useCombinations = (patientId: string) => {
   const usedCombination = useQuery<UsedCombination[]>({
   queryKey: ["combinations", patientId],
   queryFn: async () => {
-    const { data } = await axios.get(
-      `http://localhost:5000/api/analysis/combination/combinations/${patientId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
+    const { data } = await api.get(
+      `/api/analysis/combination/combinations/${patientId}`
     );
     return data.success ? data.combinations : [];
   },
@@ -84,30 +75,10 @@ export const useCombinations = (patientId: string) => {
 const getGroupsWithCombinations = useQuery<Group[]>({
   queryKey: ["groups"],
   queryFn: async () => {
-    const {data} = await axios.get("http://localhost:5000/api/combinationGroup",{
-      headers:
-      {Authorization: `Bearer ${token}`}
-    })
+    const {data} = await api.get("/api/combinationGroup")
     return data.success ? data.groups : [];
   }
 })
-
-  // const patientCombinationQuery = useQuery<UsedCombination[]>({
-    
-  //   queryKey: ["combinations", patientId],
-  //   queryFn: async () => {
-
-  //     const {data} = await axios.get(`http://localhost:5000/api/analysis/combination/combinations/${patientId}`,{
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       }
-  //     })
-      
-  //      return data.success && Array.isArray(data.combinations)
-  //       ? data.combinations
-  //       : [];
-  //   }
-  // })
 
   // --- Dodavanje nove kombinacije ---
   const addCombination = useMutation({
@@ -116,10 +87,9 @@ const getGroupsWithCombinations = useQuery<Group[]>({
       group: string;
       analysisIds: string[];
     }) => {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/analysis/combination/addCombination",
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const { data } = await api.post(
+        "/api/analysis/combination/addCombination",
+        payload
       );
       return data;
     },
@@ -134,11 +104,7 @@ const getGroupsWithCombinations = useQuery<Group[]>({
       combinationId: string,
     }) => {
       const{ patientId, combinationId} = combination
-      const {data} = await axios.post(`http://localhost:5000/api/analysis/combination/addToPatient/${patientId}`,{ combinationId},{
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      const {data} = await api.post(`/api/analysis/combination/addToPatient/${patientId}`,{ combinationId})
       return data;
     },
     onSuccess: () => {
@@ -149,11 +115,7 @@ const getGroupsWithCombinations = useQuery<Group[]>({
 
   const addCombinationToGroup = useMutation({
     mutationFn: async (group: {name: string, combinations: string[]}) => {
-      const {data} = await axios.post(`http://localhost:5000/api/combinationGroup`, {...group}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      const {data} = await api.post(`/api/combinationGroup`, {...group})
       return data;
     },
     onSuccess: () => {

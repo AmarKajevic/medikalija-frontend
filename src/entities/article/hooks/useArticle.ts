@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@app/providers/AuthContext";
 import { User } from "@shared/types/index";
-import axios from "axios";
+import { api } from "@shared/api/api";
 import { useParams } from "react-router";
 
 export type Articles = {
@@ -25,18 +24,13 @@ export type UsedArticle = {
 };
 
 export default function useArticles() {
-  const { token } = useAuth();
   const { patientId } = useParams();
   const queryClient = useQueryClient();
 
   const getArticles = useQuery({
     queryKey: ["articles"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:5000/api/articles", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get("/api/articles");
       return res.data.articles as Articles[];
     },
   });
@@ -50,15 +44,7 @@ export default function useArticles() {
       quantity?: number;
       fromFamily?: boolean;
     }) => {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/articles/add",
-        article,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const { data } = await api.post("/api/articles/add", article);
       return data;
     },
     onSuccess: () => {
@@ -68,9 +54,7 @@ export default function useArticles() {
 
   const deleteArticle = useMutation({
     mutationFn: async (articleId: string) => {
-      await axios.delete(`http://localhost:5000/api/articles/${articleId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/api/articles/${articleId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
@@ -90,13 +74,7 @@ export default function useArticles() {
       unitsPerPackage?: number;
       fromFamily?: boolean;
     }) => {
-      await axios.put(
-        `http://localhost:5000/api/articles/${article.articleId}`,
-        article,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.put(`/api/articles/${article.articleId}`, article);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
@@ -113,13 +91,7 @@ export default function useArticles() {
       amount: number;
     }) => {
       const { patientId, articleId, amount } = params;
-      await axios.post(`http://localhost:5000/api/articles/use`, { articleId, amount, patientId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`/api/articles/use`, { articleId, amount, patientId });
     },
     onSuccess: () => {
   queryClient.invalidateQueries({ queryKey: ["usedArticles", patientId] });
@@ -133,12 +105,7 @@ export default function useArticles() {
   queryKey: ["usedArticles", patientId],
   enabled: !!patientId, // ✅ osiguraj da se ne šalje kad je undefined
   queryFn: async () => {
-    const res = await axios.get(
-      `http://localhost:5000/api/articles/patientArticles/${patientId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const res = await api.get(`/api/articles/patientArticles/${patientId}`);
     return res.data.articles as UsedArticle[];
   },
 });

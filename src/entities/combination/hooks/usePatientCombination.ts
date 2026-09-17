@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useAuth } from "@app/providers/AuthContext";
+import { api } from "@shared/api/api";
 
 interface Analysis {
   _id: string;
@@ -19,14 +18,11 @@ export interface Combination {
 }
 
 export const usePatientCombination = (patientId: string) => {
-  const { token } = useAuth();
-
   return useQuery<Combination[]>({
     queryKey: ["combinations", patientId],
     queryFn: async () => {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/analysis/patient/${patientId}/assigned-combination`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const { data } = await api.get(
+        `/api/analysis/patient/${patientId}/assigned-combination`
       );
 
       if (!data.success) return [];
