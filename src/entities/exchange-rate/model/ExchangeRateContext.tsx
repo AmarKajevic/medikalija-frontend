@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from "@shared/api/api";
+import { useAuth } from "@app/providers/AuthContext";
 
 interface ExchangeRates {
   lower: number;
@@ -29,9 +30,13 @@ export const ExchangeRateProvider = ({ children }: { children: ReactNode }) => {
     await refreshRates();
   };
 
+  // Kursevi traže prijavu: učitavaju se tek kad korisnik postoji (i ponovo
+  // posle prijave), a ne pri prvom učitavanju stranice kada bi dobili 401.
+  const { user } = useAuth();
   useEffect(() => {
-    refreshRates();
-  }, []);
+    if (!user) return;
+    refreshRates().catch((err) => console.error("Kursna lista nije učitana:", err));
+  }, [user]);
 
   return (
     <ExchangeRateContext.Provider value={{ rates, setRates, refreshRates, updateRates }}>

@@ -4,6 +4,7 @@ import { getPatientStockArticles } from "@features/articles/api/getPatientStockA
 export const useGetPatientStockArticles = (patientId: string) => {
     return useQuery({
         queryKey:["patientStockArticles", patientId],
-        queryFn: () => getPatientStockArticles(patientId)
+        queryFn: () => getPatientStockArticles(patientId),
+        enabled: !!patientId,
     })
 }

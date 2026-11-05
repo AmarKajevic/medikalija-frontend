@@ -25,6 +25,8 @@ interface GeneratePDFParams {
   totalRSD: number;
   totalEUR: number;
   nextPeriodLabel: string;
+  /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
+  mode?: "download" | "print";
 }
 
 export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
@@ -42,6 +44,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     totalRSD,
     totalEUR,
     nextPeriodLabel,
+    mode = "download",
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
@@ -202,7 +205,10 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     },
   };
 
-  pdfMake.createPdf(docDefinition).download(
-    `specifikacija-${patientName}-${periodText.replace(/[^a-z0-9]/gi, "_")}.pdf`
-  );
+  const pdf = pdfMake.createPdf(docDefinition);
+  if (mode === "print") {
+    pdf.print();
+  } else {
+    pdf.download(`specifikacija-${patientName}-${periodText.replace(/[^a-z0-9]/gi, "_")}.pdf`);
+  }
 };

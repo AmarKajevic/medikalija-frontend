@@ -163,7 +163,7 @@ export default function SignUpForm() {
           {error && <p className="text-red-500 text-sm">{error}</p>}
           {success && <p className="text-green-500 text-sm">{success}</p>}
 
-          <Button className="w-full" size="sm">
+          <Button className="w-full" size="sm" type="submit">
             Register
           </Button>
         </form>
