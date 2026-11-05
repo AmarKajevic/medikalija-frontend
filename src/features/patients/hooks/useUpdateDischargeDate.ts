@@ -11,6 +11,7 @@ export const useUpdateDischargeDate = () => {
       queryClient.invalidateQueries({queryKey:["patient"]})
       queryClient.invalidateQueries({queryKey:["patients"]})
       queryClient.invalidateQueries({queryKey:["patientSpecification"]})
+      queryClient.invalidateQueries({queryKey:["specificationHistory"]})
     }
   });
 };

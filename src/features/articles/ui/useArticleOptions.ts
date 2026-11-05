@@ -1,30 +1,21 @@
+import { useGetArticles } from "@features/articles/hooks/useGetArticles";
+import { useGetPatientStockArticles } from "@features/articles/hooks/useGetPatientStockArticles";
+import { StockOption } from "@shared/ui/combobox/StockCombobox";
 
-import { useGetArticles } from "@features/articles/hooks/useGetArticles"
-import { useGetPatientStockArticles } from "@features/articles/hooks/useGetPatientStockArticles"
-
-type Option = {
-  value: string;
-  label: string;
-  home: number;
-  family: number;
-};
+type ArticleDto = { _id: string; name: string; quantity: number; price?: number };
+type FamilyStockDto = { _id: string; familyQuantity: number };
 
 export const useArticleOptions = (patientId: string) => {
-    const {data: articles = []} = useGetArticles()
-    const {data: stock = []} = useGetPatientStockArticles(patientId)
+  const articles = useGetArticles();
+  const stock = useGetPatientStockArticles(patientId);
 
-    console.log(stock)
+  const options: StockOption[] = ((articles.data ?? []) as ArticleDto[]).map((a) => ({
+    value: a._id,
+    label: a.name,
+    home: a.quantity ?? 0,
+    family: ((stock.data ?? []) as FamilyStockDto[]).find((s) => s._id === a._id)?.familyQuantity ?? 0,
+    price: a.price ?? 0,
+  }));
 
-    const options: Option[] = articles.map((a: any) => {
-        const found = stock.find((s:any) => s._id === a._id)
-
-        return {
-            value: a._id,
-            label: a.name,
-            home: a.quantity,
-            family: found?.familyQuantity ?? 0
-        }
-    })
-
-    return options
-}
+  return { options, isLoading: articles.isLoading || stock.isLoading };
+};

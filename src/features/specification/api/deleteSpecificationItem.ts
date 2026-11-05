@@ -1,4 +1,5 @@
-import { api } from "@shared/api/api"
+import { api } from "@shared/api/api";
+import { Specification } from "@features/specification/types/types";
 
 export const deleteSpecificationItem = async ({
   specId,
@@ -6,7 +7,7 @@ export const deleteSpecificationItem = async ({
 }: {
   specId: string;
   itemId: string;
-}) => {
-    const res = await api.delete( `/api/specification/${specId}/item/${itemId}`)
-    return res.data
-}
+}): Promise<{ message: string; fullyReverted: boolean; specification: Specification }> => {
+  const res = await api.delete(`/api/specification/${specId}/item/${itemId}`);
+  return res.data;
+};

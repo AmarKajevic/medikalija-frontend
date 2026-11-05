@@ -34,3 +34,13 @@ export interface Group {
     analyses: Analysis[];
   }[];
 }
+
+// Zapis iz /api/analysis/combination/combinations/:patientId
+export interface PatientCombinationRecord {
+  _id: string;
+  combinationName: string;
+  totalPriceAtTheTime: number;
+  analyses: Array<{ _id: string; name: string; price: number }>;
+  createdBy?: { _id: string; name: string; role: string };
+  createdAt: string;
+}

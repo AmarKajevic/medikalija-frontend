@@ -1,90 +1,65 @@
-import { useParams, Link } from "react-router";
+import { useState } from "react";
+import { Link, useParams } from "react-router";
+import { LuChevronRight } from "react-icons/lu";
 import usePatient from "@entities/patient/hooks/usePatient";
-import PatientInfo from "@entities/patient/ui/PatientInfo";
-import { useDiagnoses } from "@entities/diagnosis/hooks/useDiagnosis";
-import PatientDataTable from "@pages/Tables/PatientDataTable";
-import { useMedicine } from "@entities/medicine/hooks/useMedicine";
+import { PageLoader } from "@shared/ui/feedback/Spinner";
+import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
+import { usePatientSpecification } from "@features/specification/hooks/usePatientSpecification";
+import SpecificationWorkspaceDialog from "@features/specification/ui/workspace/SpecificationWorkspaceDialog";
+import PatientHeader from "@features/patients/ui/profile/PatientHeader";
+import SpecificationSummaryCard from "@features/patients/ui/profile/SpecificationSummaryCard";
+import PatientActivity from "@features/patients/ui/profile/PatientActivity";
+import FamilyStockDialog from "@features/patients/ui/profile/FamilyStockDialog";
+import DischargeDialog from "@features/patients/ui/profile/DischargeDialog";
 
-import useArticles from "@entities/article/hooks/useArticle";
-
-
-import PatientSpecification from "@features/specification/ui/PatientSpecification";
-import { PatientStockMedicines } from "@features/medicine/ui/PatientStockMedicines";
-import { useUsedCombination } from "@features/combinations/hooks/useUsedCombination";
-
-
-
-
+type OpenDialog = "specification" | "family" | "discharge" | null;
 
 export default function PatientProfile() {
-  const { patientId } = useParams<{ patientId: string }>();
+  const { patientId = "" } = useParams<{ patientId: string }>();
+  const { data: patient, isLoading, isError, refetch } = usePatient(patientId);
+  const specification = usePatientSpecification(patientId);
+  const [dialog, setDialog] = useState<OpenDialog>(null);
 
-  const { data: patient, isLoading, error } = usePatient(patientId!);
+  if (isLoading) return <PageLoader label="Učitavanje pacijenta..." />;
+  if (isError) return <ErrorState message="Pacijent nije učitan." onRetry={() => refetch()} />;
+  if (!patient) return <EmptyState title="Pacijent nije pronađen" />;
 
-  const { data: diagnoses = [] } = useDiagnoses(patientId!);
-
-  const { data: usedMedicine = [], refetch: refetchMedicines } = useMedicine(patientId!);
-
-  const { getPatientArticles } = useArticles();
-  const { data: usedArticles = [] } = getPatientArticles;
-
-  const { data: usedCombination } = useUsedCombination(patientId!);
-
-  if (isLoading) return <p>Učitavanje...</p>;
-  if (error) return <p>Greška pri učitavanju</p>;
-  if (!patient) return <p>Pacijent nije pronađen</p>;
-
-
+  const patientName = `${patient.name} ${patient.lastName}`;
+  const close = () => setDialog(null);
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Patient Info + Buttons */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <PatientInfo patient={patient} />
+    <div className="mx-auto max-w-6xl space-y-5">
+      <nav aria-label="Putanja" className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+        <Link to="/patient-list" className="hover:text-gray-800 dark:hover:text-white">
+          Pacijenti
+        </Link>
+        <LuChevronRight className="h-4 w-4" />
+        <span className="text-gray-800 dark:text-white/90">{patientName}</span>
+      </nav>
 
-        {patient && patient._id && (
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to={`/patient/${patientId}/specification-history`}
-              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
-            >
-              Istorija specifikacija
-            </Link>
-
-            <Link
-              to={`/patient/${patient._id}/future-specifications`}
-              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
-            >
-              Specifikacije za naredne godine
-            </Link>
-            <Link
-              to={`/patient-profile-nurse/${patient._id}`}
-              className="rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-white/10 dark:hover:bg-white/20 transition"
-            >
-              Šta su sestre dodale
-            </Link>
-            <PatientStockMedicines patientId={patient._id} />
-          </div>
-        )}
-      </div>
-
-
-      <div className="flex">
-        <PatientSpecification patientId={patient._id} />
-      </div>
-
-      {/* TABLE */}
-      <PatientDataTable
-        diagnoses={diagnoses}
-        medicines={usedMedicine}
-        usedCombinations={usedCombination || []}
-        usedArticles={usedArticles}
-        patientId={patient._id}      // 🔥 NOVO
-        refetch={() => {
-          refetchMedicines();        // 🔥 obavezno
-          // Ako želiš — dodaj i druge refetch-e za članke, kombinacije itd.
-        }}
+      <PatientHeader
+        patient={patient}
+        onOpenSpecification={() => setDialog("specification")}
+        onOpenFamilyStock={() => setDialog("family")}
+        onDischarge={() => setDialog("discharge")}
       />
+
+      <SpecificationSummaryCard
+        specification={specification.data}
+        isLoading={specification.isLoading}
+        onOpen={() => setDialog("specification")}
+      />
+
+      <PatientActivity patientId={patient._id} />
+
+      <SpecificationWorkspaceDialog
+        open={dialog === "specification"}
+        onClose={close}
+        patientId={patient._id}
+        patientName={patientName}
+      />
+      <FamilyStockDialog open={dialog === "family"} onClose={close} patientId={patient._id} />
+      <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />
     </div>
   );
 }

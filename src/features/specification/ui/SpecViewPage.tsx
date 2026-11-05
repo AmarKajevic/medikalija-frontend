@@ -1,38 +1,31 @@
 import { useParams } from "react-router";
+import { LuArrowLeft } from "react-icons/lu";
 import { useSpecification } from "@features/specification/hooks/useSpecification";
-import { useDeleteSpecificationItem } from "@features/specification/hooks/useDeleteSpecificationItem";
 import { usePatient } from "@features/patients/hooks/usePatient";
-import { SpecificationEditor } from "@features/specification/ui/SpecificationEditor";
+import SpecificationWorkspace from "@features/specification/ui/workspace/SpecificationWorkspace";
+import { PageLoader } from "@shared/ui/feedback/Spinner";
+import { ErrorState } from "@shared/ui/feedback/EmptyState";
+import Button from "@shared/ui/button/Button";
 
 export default function SpecificationViewPage() {
-  const { specificationId } = useParams();
-  const { data: spec, isLoading, isError } = useSpecification(specificationId || "");
+  const { specificationId = "" } = useParams();
+  const { data: spec, isLoading, isError, refetch } = useSpecification(specificationId);
   const { data: patient } = usePatient(spec?.patientId || "");
-  const deleteItem = useDeleteSpecificationItem(spec?.patientId || "");
 
-  if (isLoading) return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Učitavanje...</p>;
-  if (isError || !spec) return <p className="p-6 text-sm text-error-500">Greška pri učitavanju specifikacije.</p>;
+  if (isLoading) return <PageLoader label="Učitavanje specifikacije..." />;
+  if (isError || !spec) return <ErrorState message="Specifikacija nije učitana." onRetry={() => refetch()} />;
 
   const patientName = patient ? `${patient.name} ${patient.lastName}` : "";
 
   return (
-    <div className="p-5">
-      <button onClick={() => window.history.back()} className="mb-4 text-brand-500 hover:underline print:hidden">
-        ← Nazad
-      </button>
-
-      <SpecificationEditor
-        specification={spec}
-        patientName={patientName}
-        onDeleteItem={(itemId) => deleteItem.mutate({ specId: spec._id, itemId })}
-      />
-
-      {!spec.isActive && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 print:hidden">
-          Ovo nije aktivan period — nove stavke (lekovi, artikli, kombinacije) dodaju se na stranici
-          pacijenta u trenutno aktivan period.
-        </p>
-      )}
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" startIcon={<LuArrowLeft className="h-4 w-4" />} onClick={() => window.history.back()}>
+          Nazad
+        </Button>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-white/90">Specifikacija · {patientName}</h1>
+      </div>
+      <SpecificationWorkspace specification={spec} patientId={spec.patientId ?? ""} patientName={patientName} />
     </div>
   );
 }

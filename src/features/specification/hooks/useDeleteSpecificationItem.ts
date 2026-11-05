@@ -1,25 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteSpecificationItem } from "@features/specification/api/deleteSpecificationItem"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteSpecificationItem } from "@features/specification/api/deleteSpecificationItem";
+import { refreshAfterSpecChange } from "@features/specification/lib/queries";
 
 export const useDeleteSpecificationItem = (patientId: string) => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: deleteSpecificationItem,
-
-        onSuccess:(_, variables) => {
-            queryClient.setQueryData(["patientSpecification", patientId],
-                (oldData: any) => {
-                    if(!oldData) return oldData;
-
-                     return {
-                        ...oldData,
-                        items: oldData.items.filter(
-                        (i: any) => i._id !== variables.itemId
-                        ),
-                    };
-                }
-            )
-        }
-    })
-}
+  return useMutation({
+    mutationFn: deleteSpecificationItem,
+    onSuccess: (res) => refreshAfterSpecChange(queryClient, patientId, res.specification),
+  });
+};

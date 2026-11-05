@@ -1,39 +1,14 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useArticle } from "@features/articles/api/useArticle";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { consumeArticle } from "@features/articles/api/useArticle";
+import { refreshAfterSpecChange } from "@features/specification/lib/queries";
+import { ConsumeResponse } from "@features/specification/types/types";
 
 export const useUseArticle = (patientId: string) => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: (data: {articleId: string; amount: number}) => 
-            useArticle({...data, patientId}),
-
-        onSuccess: (res) => {
-            queryClient.setQueryData(
-                ["patientSpecification", patientId],
-                res.specification
-            );
-             queryClient.setQueryData(
-                ["patientStockArticles", patientId],
-                (old: any) => {
-                if (!old) return old;
-
-                return old.map((item: any) => {
-                    if (item._id === res.usedRecord.article) {
-                    const used = res.usedRecord.amount;
-
-                    return {
-                        ...item,
-                        familyQuantity: Math.max(0, item.familyQuantity - used),
-                    };
-                    }
-                    return item;
-                });
-                }
-            );
-            queryClient.invalidateQueries({
-                queryKey:["articles"]
-            })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: (data: { articleId: string; amount: number }): Promise<ConsumeResponse> =>
+      consumeArticle({ ...data, patientId }),
+    onSuccess: (res) => refreshAfterSpecChange(queryClient, patientId, res.specification),
+  });
+};
