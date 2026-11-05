@@ -31,7 +31,7 @@
     "jspdf-autotable": "^5.0.2",
     "pdfmake": "^0.3.9",
     "react": "^19.0.0",
-    "react-apexcharts": "^1.7.0",
+    "react-apexcharts": "^2.2.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.0.0",
