@@ -1,6 +1,8 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@shared/types/index";
 import { api, setAccessToken, setOnAuthFailure } from "@shared/api/api";
+import { SplashScreen } from "@widgets/shell/BrandMark";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +22,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Pri učitavanju aplikacije, pokušaj da dobiješ novi access token
   // koristeći httpOnly refresh cookie (radi i posle reload-a stranice).
@@ -70,12 +73,14 @@ function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setToken(null);
       setAccessToken(null);
+      // Podaci prethodnog korisnika ne smeju ostati u kešu (deljeni računari na odeljenju)
+      queryClient.clear();
     }
   };
 
   return (
     <AuthContext.Provider value={{ user, login, logout: logoutRequest, token, loading }}>
-      {loading ? <div>Loading...</div> : children}
+      {loading ? <SplashScreen /> : children}
     </AuthContext.Provider>
   );
 }

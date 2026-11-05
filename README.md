@@ -2,7 +2,7 @@
 
 Admin dashboard for **Medikalija** — a resident and staff management system for elder-care facilities (starački dom). Admins and nursing staff use it to manage patients, medicine/article inventory, diagnoses and analyses, billing periods, and facility-wide scheduling. Talks to the [Medikalija API](../medikalija-api) backend.
 
-UI is built on top of the [TailAdmin](https://tailadmin.com) React + Tailwind template (MIT licensed), customized for this domain.
+UI uses Medikalija's own design system (`src/shared/ui`, tokens in `src/index.css`) built on Tailwind CSS 4 and React 19.
 
 ## Tech stack
 

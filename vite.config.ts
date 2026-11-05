@@ -1,21 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import svgr from "vite-plugin-svgr";
 import { fileURLToPath, URL } from "node:url";
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
 export default defineConfig({
-  plugins: [
-    react(),
-    svgr({
-      svgrOptions: {
-        icon: true,
-        exportType: "named",
-        namedExport: "ReactComponent",
-      },
-    }),
-  ],
+  plugins: [react()],
 
   resolve: {
     alias: {
@@ -29,7 +19,7 @@ export default defineConfig({
   },
 
   build: {
-    chunkSizeWarningLimit: 900, // uklanja nepotrebna upozorenja
+    chunkSizeWarningLimit: 1500, // pdfmake sa ugrađenim fontovima je sam po sebi velik
 
     rollupOptions: {
       output: {
@@ -45,8 +35,8 @@ export default defineConfig({
             "@fullcalendar/interaction",
           ],
 
-          // 🟧 Chartovi (apexcharts)
-          apexcharts: ["react-apexcharts", "apexcharts"],
+          // PDF (pdfmake sa fontovima) učitava se samo kad se pravi PDF
+          pdf: ["pdfmake"],
 
           // 🟩 DOCX i FileSaver – teški moduli
           docs: ["docx", "file-saver"],

@@ -1,12 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr-Latn">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2c712e" />
+    <meta name="description" content="Medikalija — upravljanje pacijentima, specifikacijama i zalihama doma za stara lica." />
     <title>Medikalija</title>
+    <script>
+      // Tema se postavlja pre prvog iscrtavanja, da tamna tema ne "trepne" belo
+      (function () {
+        try {
+          var p = localStorage.getItem("theme") || "system";
+          var dark = p === "dark" || (p === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="dark:bg-gray-900">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>

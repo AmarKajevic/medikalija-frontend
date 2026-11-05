@@ -21,7 +21,7 @@ export default function SpecificationSummaryCard({ specification: spec, isLoadin
 
   if (!spec) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
         <EmptyState
           icon={<LuReceipt />}
           title="Nema aktivne specifikacije"
@@ -40,7 +40,7 @@ export default function SpecificationSummaryCard({ specification: spec, isLoadin
     .filter((c) => c.count > 0);
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
       <div className="flex flex-wrap items-start justify-between gap-4 p-5">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">Tekući period</p>

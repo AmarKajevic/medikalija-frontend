@@ -10,6 +10,7 @@ export const useDeleteAnalysis = () => {
     onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ["analyses"] });
         queryClient.invalidateQueries({ queryKey: ["analysis"] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
   });
 };

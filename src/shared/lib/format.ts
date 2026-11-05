@@ -1,5 +1,5 @@
-const rsd = new Intl.NumberFormat("sr-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const qty = new Intl.NumberFormat("sr-RS", { maximumFractionDigits: 2 });
+const rsd = new Intl.NumberFormat("sr-Latn-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qty = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 2 });
 
 export const formatRSD = (value: number | null | undefined) => `${rsd.format(Number(value) || 0)} RSD`;
 export const formatEUR = (value: number | null | undefined) => `${rsd.format(Number(value) || 0)} €`;

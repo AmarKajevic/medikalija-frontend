@@ -2,7 +2,7 @@ import { api } from "@shared/api/api"
 
 
 export const addCombination = async (payload :{name: string, analysisIds: string[]}) => {
-    const res = await api.post("/api/analysis/combination/addCombination", payload)
+    const res = await api.post("/api/analysis/combination/add", payload)
     return res.data
 }
 

@@ -1,159 +1,111 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { EyeCloseIcon, EyeIcon } from "@shared/icons";
-import Label from "@shared/ui/form/Label";
-import Input from "@shared/ui/form/input/InputField";
-import Checkbox from "@shared/ui/form/input/Checkbox";
-import Button from "@shared/ui/button/Button";
+import { FormEvent, useEffect, useId, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { LuCircleAlert, LuEye, LuEyeOff } from "react-icons/lu";
 import { api } from "@shared/api/api";
 import { useAuth } from "@app/providers/AuthContext";
+import { paths } from "@app/paths";
+import Field from "@shared/ui/form/Field";
+import { Checkbox, Input } from "@shared/ui/form/controls";
+import Button from "@shared/ui/button/Button";
+
+const REMEMBER_KEY = "rememberMe";
 
 export default function SignInForm() {
-  const { login } = useAuth();
+  const id = useId();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
-  const [isChecked, setIsChecked] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // ------------------------------------------------------
-  // 1️⃣ UČITAVANJE SAČUVANOG IMENA PRI ULASKU NA STRANU
-  // ------------------------------------------------------
+  // Pamti se samo ime i prezime (nikad lozinka)
   useEffect(() => {
-    const saved = localStorage.getItem("rememberMe");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setName(parsed.name);
-      setLastName(parsed.lastName);
-      setIsChecked(true);
+    try {
+      const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) ?? "null");
+      if (saved) {
+        setName(saved.name ?? "");
+        setLastName(saved.lastName ?? "");
+        setRemember(true);
+      }
+    } catch {
+      localStorage.removeItem(REMEMBER_KEY);
     }
   }, []);
 
-  // ------------------------------------------------------
-  // 2️⃣ SUBMIT
-  // ------------------------------------------------------
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  try {
-    const response = await api.post("/api/auth/login", { name, lastName, password });
-
-    if (response.data.success) {
-      const accessToken = response.data.accessToken;
-      const user = response.data.user;
-
-      // sačuvaj samo ime/prezime (NIKAD lozinku) ako je "zapamti me" čekirano
-      if (isChecked) {
-        localStorage.setItem("rememberMe", JSON.stringify({ name, lastName }));
-      } else {
-        localStorage.removeItem("rememberMe");
-      }
-
-      login(user, accessToken);
-
-      // ----------------------------
-      // ROLE-BASED NAVIGATION
-      // ----------------------------
-
-      if (user.role === "admin" || user.role === "main-nurse") {
-        navigate("/");
-        return;
-      }
-
-      // doktor ide kao sestra
-      if (user.role === "doctor" || user.role === "nurse") {
-        navigate("/nurseDashboard");
-        return;
-      }
-
-      // fallback zaštita
-      navigate("/unauthorized");
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const { data } = await api.post("/api/auth/login", { name: name.trim(), lastName: lastName.trim(), password });
+      if (!data.success) throw new Error();
+      if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ name: name.trim(), lastName: lastName.trim() }));
+      else localStorage.removeItem(REMEMBER_KEY);
+      login(data.user, data.accessToken);
+      const from = (location.state as { from?: string } | null)?.from;
+      navigate(from && from !== paths.signIn ? from : paths.home, { replace: true });
+    } catch (err) {
+      const res = (err as { response?: { status?: number; data?: { error?: string; message?: string } } }).response;
+      setError(
+        res?.status === 403
+          ? "Vaša uloga nema pristup aplikaciji."
+          : res?.status === 400 || res?.status === 404
+            ? "Pogrešno ime, prezime ili lozinka."
+            : res?.data?.error || res?.data?.message || "Prijava trenutno nije moguća. Pokušajte ponovo."
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.log(error);
-    setError(error.response?.data?.error || "Server error");
-  }
-};
-
+  };
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-        <div>
-          <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm sm:text-title-md dark:text-white/90">
-              Prijava
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Unesite svoje podatke da biste pristupili sistemu.
-            </p>
-          </div>
-
-          {/* forma */}
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <div>
-                <Label>Ime *</Label>
-                <Input
-                  type="text"
-                  placeholder="Ime"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Prezime *</Label>
-                <Input
-                  type="text"
-                  placeholder="Prezime"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Lozinka *</Label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Unesite lozinku"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-                  >
-                    {showPassword ? (
-                      <EyeIcon className="size-5 text-gray-500" />
-                    ) : (
-                      <EyeCloseIcon className="size-5 text-gray-500" />
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {error && <div className="text-sm text-red-500">{error}</div>}
-
-              <div className="flex items-center gap-3">
-                <Checkbox checked={isChecked} onChange={setIsChecked} />
-                <span className="text-gray-700 dark:text-gray-400">Zapamti me na ovom uređaju</span>
-              </div>
-
-              <Button className="w-full" size="sm" type="submit">
-                Uloguj se
-              </Button>
-            </div>
-          </form>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      {error && (
+        <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-error-200 bg-error-50 px-3 py-2.5 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">
+          <LuCircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          {error}
         </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Ime" htmlFor={`${id}-n`}>
+          <Input id={`${id}-n`} autoComplete="given-name" autoFocus={!name} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ime" required />
+        </Field>
+        <Field label="Prezime" htmlFor={`${id}-l`}>
+          <Input id={`${id}-l`} autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Prezime" required />
+        </Field>
       </div>
-    </div>
+      <Field label="Lozinka" htmlFor={`${id}-p`}>
+        <div className="relative">
+          <Input
+            id={`${id}-p`}
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            autoFocus={!!name}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Unesite lozinku"
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Sakrij lozinku" : "Prikaži lozinku"}
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          >
+            {showPassword ? <LuEyeOff className="h-4 w-4" /> : <LuEye className="h-4 w-4" />}
+          </button>
+        </div>
+      </Field>
+      <Checkbox id={`${id}-r`} label="Zapamti me na ovom uređaju" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+      <Button type="submit" className="w-full" loading={loading} disabled={!name || !lastName || !password}>
+        Prijavi se
+      </Button>
+    </form>
   );
 }
