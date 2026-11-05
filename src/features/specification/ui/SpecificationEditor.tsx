@@ -8,6 +8,8 @@ import { BillingForm } from "@features/specification/ui/BillingForm";
 import { ExtraCostForm } from "@features/specification/ui/ExtraCostForm";
 import { SpecificationTable } from "@features/specification/ui/SpecificationTable";
 import { Specification } from "@features/specification/types/types";
+import { getNextPeriodLabel } from "@features/specification/lib/helpers";
+import { formatDay } from "@shared/lib/calendarDay";
 
 const RELATED_QUERY_KEYS = ["specification", "patientSpecification", "specificationHistory"];
 
@@ -71,12 +73,7 @@ export function SpecificationEditor({
 
   const specTotalRSD = spec.totalPrice ?? 0;
 
-  const currentEndDate = new Date(spec.endDate);
-  const nextStartDate = new Date(currentEndDate);
-  nextStartDate.setDate(nextStartDate.getDate() + 1);
-  const nextEndDate = new Date(nextStartDate);
-  nextEndDate.setDate(nextEndDate.getDate() + 29);
-  const nextPeriodLabel = `${nextStartDate.toLocaleDateString("sr-RS")} — ${nextEndDate.toLocaleDateString("sr-RS")}`;
+  const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
 
   const debtEUR = previousDebtEUR === "" ? 0 : Number(previousDebtEUR);
   const lodgingEUR = nextLodgingEUR === "" ? 0 : Number(nextLodgingEUR);
@@ -140,8 +137,8 @@ export function SpecificationEditor({
             Specifikacija — {patientName}
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Period: {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
-            {new Date(spec.endDate).toLocaleDateString("sr-RS")}
+            Period: {formatDay(spec.startDate)} —{" "}
+            {formatDay(spec.endDate)}
             {spec.isActive && (
               <span className="ml-2 inline-flex items-center rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
                 Aktivan period
@@ -167,8 +164,8 @@ export function SpecificationEditor({
 
       {/* Vidljivo samo pri štampi/PDF-u — kompaktan naslov perioda */}
       <p className="hidden print:block mb-4 text-sm text-gray-600">
-        {patientName} — period {new Date(spec.startDate).toLocaleDateString("sr-RS")} —{" "}
-        {new Date(spec.endDate).toLocaleDateString("sr-RS")}
+        {patientName} — period {formatDay(spec.startDate)} —{" "}
+        {formatDay(spec.endDate)}
       </p>
 
       <BillingForm

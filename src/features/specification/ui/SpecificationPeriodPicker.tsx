@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useActivateSpecificationPeriod } from "@features/specification/hooks/useActivateSpecificationPeriod";
+import { useActivateNextSpecificationPeriod } from "@features/specification/hooks/useActivateNextSpecificationPeriod";
 import { useActivateExistingSpecification } from "@features/specification/hooks/useActivateExistingSpecification";
 import { useSpecificationHistory } from "@features/specification/hooks/useSpecificationHistory";
 import { Specification } from "@features/specification/types/types";
-
-const toDateInputValue = (d: Date) => d.toISOString().slice(0, 10);
+import { formatDay } from "@shared/lib/calendarDay";
 
 interface SpecificationPeriodPickerProps {
   patientId: string;
@@ -17,6 +17,8 @@ export function SpecificationPeriodPicker({
 }: SpecificationPeriodPickerProps) {
   const { mutate: activatePeriod, isPending: isActivatingPeriod } =
     useActivateSpecificationPeriod(patientId);
+  const { mutate: activateNext, isPending: isActivatingNext } =
+    useActivateNextSpecificationPeriod(patientId);
   const { mutate: activateExisting, isPending: isActivatingExisting } =
     useActivateExistingSpecification(patientId);
   const { data: history } = useSpecificationHistory(patientId);
@@ -26,19 +28,9 @@ export function SpecificationPeriodPicker({
   const [showManualPicker, setShowManualPicker] = useState(false);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
 
-  const isPending = isActivatingPeriod || isActivatingExisting;
+  const isPending = isActivatingPeriod || isActivatingNext || isActivatingExisting;
 
-  const handleActivateNextPeriod = () => {
-    const currentEnd = new Date(activeSpecification.endDate);
-    const nextStart = new Date(currentEnd);
-    nextStart.setDate(nextStart.getDate() + 1);
-    const nextEnd = new Date(nextStart);
-    nextEnd.setDate(nextEnd.getDate() + 29);
-    activatePeriod({
-      startDate: toDateInputValue(nextStart),
-      endDate: toDateInputValue(nextEnd),
-    });
-  };
+  const handleActivateNextPeriod = () => activateNext();
 
   const handleActivateManual = () => {
     if (!manualStart || !manualEnd) return;
@@ -56,8 +48,8 @@ export function SpecificationPeriodPicker({
         <div className="text-sm text-gray-600 dark:text-gray-400">
           Trenutno aktivan period:{" "}
           <strong className="text-gray-800 dark:text-white/90">
-            {new Date(activeSpecification.startDate).toLocaleDateString("sr-RS")} —{" "}
-            {new Date(activeSpecification.endDate).toLocaleDateString("sr-RS")}
+            {formatDay(activeSpecification.startDate)} —{" "}
+            {formatDay(activeSpecification.endDate)}
           </strong>
         </div>
 
@@ -126,8 +118,8 @@ export function SpecificationPeriodPicker({
             {pastPeriods.map((s) => (
               <li key={s._id} className="flex items-center justify-between text-sm">
                 <span className="text-gray-700 dark:text-gray-300">
-                  {new Date(s.startDate).toLocaleDateString("sr-RS")} —{" "}
-                  {new Date(s.endDate).toLocaleDateString("sr-RS")} ({(s.totalPrice ?? 0).toFixed(2)} RSD)
+                  {formatDay(s.startDate)} —{" "}
+                  {formatDay(s.endDate)} ({(s.totalPrice ?? 0).toFixed(2)} RSD)
                 </span>
                 <button
                   onClick={() => activateExisting(s._id)}

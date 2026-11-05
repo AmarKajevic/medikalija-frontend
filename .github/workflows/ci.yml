@@ -1,36 +1,67 @@
 name: CI
 
+# Deploy (CD) radi Vercel Git integracija: preview za svaki PR, produkcija za
+# push na main. Ovaj workflow je kapija pre merge-a — branch protection na main
+# treba da zahteva proveru "CI OK".
+
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
+    # Postojeće lint greške (uglavnom `no-explicit-any`) još nisu očišćene, pa
+    # lint ne blokira PR. Kad se očisti, ukloniti `continue-on-error`.
+    continue-on-error: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      # There are pre-existing lint issues in the codebase (mostly `no-explicit-any`).
-      # Kept non-blocking for now so CI stays a useful signal; make this blocking
-      # once the backlog is cleaned up by dropping `continue-on-error`.
-      - name: Lint
-        run: npm run lint
-        continue-on-error: true
+      - run: npm run lint
 
-      - name: Type-check & build
-        run: npm run build
+  build:
+    name: Type-check & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
         env:
           VITE_API_URL: https://medikalija-api.vercel.app
+
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Svi blokirajući poslovi moraju da prođu
+        run: |
+          echo '${{ toJSON(needs) }}'
+          [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" == "false" ]]

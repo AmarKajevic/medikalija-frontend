@@ -1,3 +1,4 @@
+import { formatDay } from "@shared/lib/calendarDay";
 // features/specification/lib/generateSpecificationPDF.ts
 import pdfMake from "pdfmake/build/pdfmake";
 import vfsFonts from "pdfmake/build/vfs_fonts";
@@ -43,7 +44,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     nextPeriodLabel,
   } = params;
 
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("sr-RS");
+  const formatDate = (dateStr: string) => formatDay(dateStr);
   const periodText = `${formatDate(startDate)} – ${formatDate(endDate)}`;
 
   // Učitaj logo

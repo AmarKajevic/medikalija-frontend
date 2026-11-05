@@ -1,3 +1,4 @@
+import { formatDay } from "@shared/lib/calendarDay";
 import DischargeDate from "@features/patients/ui/DischargeDate";
 import { User } from "@shared/types/index";
 
@@ -23,14 +24,14 @@ export default function PatientInfo({ patient }: { patient: Patient }) {
       <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
         <p>
           <span className="text-gray-400 dark:text-gray-500">Datum rođenja:</span>{" "}
-          {new Date(patient.dateOfBirth).toLocaleDateString("sr-RS")}
+          {formatDay(patient.dateOfBirth)}
         </p>
         <p>
           <span className="text-gray-400 dark:text-gray-500">Adresa:</span> {patient.address}
         </p>
         <p>
           <span className="text-gray-400 dark:text-gray-500">Datum prijema:</span>{" "}
-          {new Date(patient.admissionDate).toLocaleDateString("sr-RS")}
+          {formatDay(patient.admissionDate)}
         </p>
       </div>
       <div className="mt-3">

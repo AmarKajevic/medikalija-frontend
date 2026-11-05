@@ -1,3 +1,4 @@
+import { formatDay } from "@shared/lib/calendarDay";
 import { Link } from "react-router";
 import { useSpecificationHistory } from "@features/specification/hooks/useSpecificationHistory";
 
@@ -32,11 +33,11 @@ const { activeSpec, history } = data;
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 <tr className="text-gray-700 dark:text-gray-300">
                   <td className="p-3">
-                    {new Date(activeSpec.startDate).toLocaleDateString("sr-RS")} —{" "}
+                    {formatDay(activeSpec.startDate)} —{" "}
                     {activeSpec.dischargeDate
-                      ? new Date(activeSpec.dischargeDate).toLocaleDateString("sr-RS")
+                      ? formatDay(activeSpec.dischargeDate)
                       : activeSpec.endDate
-                      ? new Date(activeSpec.endDate).toLocaleDateString("sr-RS")
+                      ? formatDay(activeSpec.endDate)
                       : "Otvorena"}
                   </td>
                   <td className="p-3">{(activeSpec.totalPrice ?? 0).toFixed(2)} RSD</td>
@@ -75,11 +76,11 @@ const { activeSpec, history } = data;
                 {history.map((s: any) => (
                   <tr key={s._id} className="text-gray-700 dark:text-gray-300">
                     <td className="p-3">
-                      {new Date(s.startDate).toLocaleDateString("sr-RS")} —{" "}
+                      {formatDay(s.startDate)} —{" "}
                       {s.dischargeDate
-                        ? new Date(s.dischargeDate).toLocaleDateString("sr-RS")
+                        ? formatDay(s.dischargeDate)
                         : s.endDate
-                        ? new Date(s.endDate).toLocaleDateString("sr-RS")
+                        ? formatDay(s.endDate)
                         : "—"}
                     </td>
                     <td className="p-3">{(s.totalPrice ?? 0).toFixed(2)} RSD</td>

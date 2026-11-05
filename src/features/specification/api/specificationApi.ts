@@ -60,3 +60,9 @@ export const activateExistingSpecification = async (patientId: string, specId: s
   const { data } = await api.post(`/api/specification/${patientId}/activate/${specId}`);
   return data.specification;
 };
+
+// Aktivira period koji se nadovezuje na trenutno aktivan (računa backend).
+export const activateNextSpecificationPeriod = async (patientId: string) => {
+  const { data } = await api.post(`/api/specification/${patientId}/activate-next`);
+  return data.specification;
+};
