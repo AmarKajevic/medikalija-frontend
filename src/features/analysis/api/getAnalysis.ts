@@ -1,7 +1,0 @@
-import { api } from "@shared/api/api"
-
-export const getAnalysis = async (analysisId: string) => {
-    console.log(analysisId)
-    const res = await api.get(`/api/analysis/${analysisId}`)
-    return res.data;
-}

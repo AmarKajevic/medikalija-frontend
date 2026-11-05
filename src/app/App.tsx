@@ -1,165 +1,119 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router";
+import AppShell from "@widgets/shell/AppShell";
+import { PageLoader } from "@shared/ui/feedback/Spinner";
+import { MANAGER_ROLES, paths, STAFF_ROLES } from "@app/paths";
+import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
+import SignInPage from "@pages/auth/SignInPage";
+import { NotFoundPage } from "@pages/system/StatusPage";
 
-import SignIn from "@pages/AuthPages/SignIn";
-import SignUp from "@pages/AuthPages/SignUp";
-import NotFound from "@pages/OtherPage/NotFound";
-import { ScrollToTop } from "@shared/ui/common/ScrollToTop";
-import RoleBaseRoutes from "@app/routing/RoleBasedRoutes";
-import PrivateRoutes from "@app/routing/PrivateRoutes";
+// Stranice se učitavaju po potrebi (manji početni paket)
+const HomePage = lazy(() => import("@pages/HomePage"));
+const PatientsPage = lazy(() => import("@pages/Patients/PatientsPage"));
+const PatientPage = lazy(() => import("@pages/Patients/PatientPage"));
+const PatientSpecificationsPage = lazy(() => import("@pages/Patients/PatientSpecificationsPage"));
+const PatientSchedulePage = lazy(() => import("@pages/Patients/PatientSchedulePage"));
+const SpecificationPage = lazy(() => import("@features/specification/ui/SpecViewPage"));
+const InventoryListPage = lazy(() => import("@pages/inventory/InventoryListPage"));
+const InventoryItemPage = lazy(() => import("@pages/inventory/InventoryItemPage"));
+const FamilyStockPage = lazy(() => import("@pages/inventory/FamilyStockPage"));
+const ReservePage = lazy(() => import("@pages/inventory/ReservePage"));
+const AnalysesPage = lazy(() => import("@pages/medical/AnalysesPage"));
+const CombinationsPage = lazy(() => import("@pages/medical/CombinationsPage"));
+const DiagnosisTemplatesPage = lazy(() => import("@pages/medical/DiagnosisTemplatesPage"));
+const UsersPage = lazy(() => import("@pages/team/UsersPage"));
+const NurseActivityPage = lazy(() => import("@pages/team/NurseActivityPage"));
+const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"));
+const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
 
-import AppLayout from "@widgets/layout/AppLayout";
+const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
+const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
 
-
-import AddArticleFromFamily from "@features/articles/ui/AddArticleFromFamily";
-import UserList from "@pages/Users/UserList";
-import MedicineReserveManager from "@pages/Medicine/MedicineReserveManager";
-import MedicineReserveList from "@pages/Medicine/MedicineReserveList";
-import PatientMedicineFromFamily from "@pages/Medicine/PatientMedicineFromFamily";
-import MedicineDetailesPage from "@pages/Medicine/MedicineDetailesPage";
-import ArticlesListNew from "@features/articles/ui/ArticlesListNew";
-import ArticleDetails from "@features/articles/ui/ArticleDetails";
-import MedicineListWidget from "@widgets/medicine-list/MedicineListWidget";
-import AnalysesList from "@features/analysis/ui/AnalysesList";
-import AnalysisDetailPage from "@features/analysis/ui/AnalysisDetailPage";
-import AddAnalysisNew from "@features/analysis/ui/AddAnalysis";
-import { CombinationsWidget } from "@widgets/combinations-list/CombinationsWidget";
-import SpecViewPage from "@features/specification/ui/SpecViewPage";
-
-
-
-
-// -------------------------------------------------------
-// LAZY IMPORTS – OVO JE OPTIMIZACIJA
-// -------------------------------------------------------
-const Calendar = lazy(() => import("@pages/Calendar"));
-const AdminDashboard = lazy(() => import("@pages/Dashboard/AdminDashboard"));
-const PatientList = lazy(() => import("@pages/Patients/PatientList"));
-const PatientProfile = lazy(() => import("@pages/Patients/PatientProfile"));
-const AddDiagnosisTemplate = lazy(() => import("@pages/Diagnosis/AddDiagnosisTemplate"));
-const AddMedicine = lazy(() => import("@pages/Medicine/AddMedicine"));
-
-const PatientsPage = lazy(() => import("@pages/Patients/PatientPage"));
-const NurseDashboard = lazy(() => import("@pages/Dashboard/NurseDashboard"));
-const ProfileSpecification = lazy(() => import("@pages/Patients/ProfileSpecification"));
-const SpecificationHistoryPage = lazy(() => import("@pages/Patients/SpecificationHistoryPage"));
-
-const FutureSpecificationsPage = lazy(() => import("@pages/Patients/FutureSpecificationsPage"));
-const NurseActionsList = lazy(() => import("@pages/Nurses/NurseActionsList"));
-const AddMedicineFromFamily = lazy(() => import("@pages/Medicine/AddMedicineFromFamily"));
-
-const AllNotificationsPage = lazy(() => import("@pages/Notifications/AllNotificationsPage"));
-const PatientProfileForNurse = lazy(() => import("@pages/Patients/PatientProfileForNurse"));
-
-
-// Loader (fallback)
-const Loader = () => (
-  <div className="w-full h-full flex items-center justify-center p-10">
-    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div>
-  </div>
-);
-
-
-
-
+const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
+  ["/nurseDashboard", paths.home],
+  ["/patient-list", paths.patients],
+  ["/patient-page", paths.patients],
+  ["/patient/:patientId", (p) => paths.patient(p.patientId!)],
+  ["/patient-profile-nurse/:patientId", (p) => paths.patient(p.patientId!)],
+  ["/patient/:patientId/specification", (p) => paths.patient(p.patientId!)],
+  ["/patient/:patientId/specification-history", (p) => paths.patientSpecifications(p.patientId!)],
+  ["/patient/:patientId/future-specifications", (p) => paths.patientSchedule(p.patientId!)],
+  ["/specification-view/:id", (p) => paths.specification(p.id!)],
+  ["/medicine-new", paths.medicines],
+  ["/medicine/addMedicine", paths.medicines],
+  ["/medicine/:id", (p) => paths.medicine(p.id!)],
+  ["/articlesNew", paths.articles],
+  ["/analyses-list", paths.analyses],
+  ["/add-Analysis", paths.analyses],
+  ["/analysisDetail/:id", paths.analyses],
+  ["/add-diagnosisTemplate", paths.diagnosisTemplates],
+  ["/users-list", paths.users],
+  ["/signup", paths.users],
+  ["/nurse-actions", paths.nurseActivity],
+  ["/adding-to-reserve-list", paths.reserve],
+  ["/reserve-list", paths.reserve],
+  ["/patient-medicines", paths.familyStock],
+  ["/familyMedicine", paths.familyStock],
+  ["/family-articles", paths.familyStock],
+];
 
 export default function App() {
   return (
+    <BrowserRouter>
+      <Routes>
+        <Route path={paths.signIn} element={<SignInPage />} />
 
-      <Router>
-        <ScrollToTop />
+        <Route
+          element={
+            <RequireAuth>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <OutletBoundary />
+              </Suspense>
+            }
+          >
+            <Route index element={staff(<HomePage />)} />
 
-        <Suspense fallback={<Loader />}>
-          <Routes>
+            <Route path="/patients" element={staff(<PatientsPage />)} />
+            <Route path="/patients/:patientId" element={staff(<PatientPage />)} />
+            <Route path="/patients/:patientId/specifications" element={managers(<PatientSpecificationsPage />)} />
+            <Route path="/patients/:patientId/schedule" element={managers(<PatientSchedulePage />)} />
+            <Route path="/specifications/:specificationId" element={managers(<SpecificationPage />)} />
 
-            {/* PUBLIC */}
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/medicines" element={managers(<InventoryListPage kind="medicine" />)} />
+            <Route path="/medicines/:id" element={managers(<InventoryItemPage kind="medicine" />)} />
+            <Route path="/articles" element={staff(<InventoryListPage kind="article" />)} />
+            <Route path="/articles/:id" element={staff(<InventoryItemPage kind="article" />)} />
+            <Route path="/family-stock" element={staff(<FamilyStockPage />)} />
+            <Route path="/reserve" element={managers(<ReservePage />)} />
 
-            {/* ADMIN + MAIN-NURSE */}
-            <Route
-              element={
-                <PrivateRoutes>
-                  <RoleBaseRoutes requiredRole={["admin", "main-nurse"]}>
-                    <AppLayout />
-                  </RoleBaseRoutes>
-                </PrivateRoutes>
-              }
-            >
-              <Route index path="/" element={<AdminDashboard />} />
+            <Route path="/analyses" element={managers(<AnalysesPage />)} />
+            <Route path="/combinations" element={managers(<CombinationsPage />)} />
+            <Route path="/diagnosis-templates" element={managers(<DiagnosisTemplatesPage />)} />
 
-              <Route path="patient-list" element={<PatientList />} />
+            <Route path="/users" element={managers(<UsersPage />)} />
+            <Route path="/nurse-activity" element={managers(<NurseActivityPage />)} />
+            <Route path="/notifications" element={managers(<NotificationsPage />)} />
+            <Route path="/calendar" element={managers(<CalendarPage />)} />
 
-              <Route path="/patient/:patientId" element={<PatientProfile />} />
+            {LEGACY.map(([from, to]) => (
+              <Route key={from} path={from} element={<LegacyRedirect to={to} />} />
+            ))}
 
-              <Route path="/add-diagnosisTemplate" element={<AddDiagnosisTemplate />} />
-
-              <Route path="/medicine/addMedicine" element={<AddMedicine />} />
-              <Route path="/medicine/:id" element={<MedicineDetailesPage />} />
-              <Route path="/medicine-new" element={<MedicineListWidget />} />
-
-
-              <Route path="/analyses-list" element={<AnalysesList />} />
-              <Route path="/analysisDetail/:analysisId" element={<AnalysisDetailPage />} />
-              <Route path="/add-Analysis" element={<AddAnalysisNew />} />
-
-
-
-
-              <Route path="/patient/:patientId/specification" element={<ProfileSpecification />} />
-              <Route path="/patient/:patientId/specification-history" element={<SpecificationHistoryPage />} />
-              <Route path="/specification-view/:specificationId" element={<SpecViewPage />} />
-              <Route path="/patient/:patientId/future-specifications" element={<FutureSpecificationsPage />} />
-
-              <Route path="/notifications" element={<AllNotificationsPage />} />
-              <Route path="/nurse-actions" element={<NurseActionsList />} />
-
-              <Route path="/combinations" element={<CombinationsWidget />} />
-              <Route path="/users-list" element={<UserList />} />
-              <Route path="/adding-to-reserve-list" element={<MedicineReserveManager />} />
-              <Route path="/reserve-list" element={<MedicineReserveList />} />
-
-              <Route path="/calendar" element={<Calendar />} />
-            </Route>
-
-            {/* NURSE + ADMIN shared */}
-            <Route
-              element={
-                <PrivateRoutes>
-                  <RoleBaseRoutes requiredRole={["nurse", "admin"]}>
-                    <AppLayout />
-                  </RoleBaseRoutes>
-                </PrivateRoutes>
-              }
-            >
-              <Route path="/nurseDashboard" element={<NurseDashboard />} />
-              <Route path="/familyMedicine" element={<AddMedicineFromFamily />} />
-              <Route path="/family-articles" element={<AddArticleFromFamily />} />
-              <Route path="/patient-medicines" element={<PatientMedicineFromFamily />} />
-            </Route>
-
-            {/* ALL STAFF */}
-            <Route
-              element={
-                <PrivateRoutes>
-                  <RoleBaseRoutes requiredRole={["admin", "main-nurse", "nurse"]}>
-                    <AppLayout />
-                  </RoleBaseRoutes>
-                </PrivateRoutes>
-              }
-            >
-              <Route path="/articlesNew" element={<ArticlesListNew />} />
-              <Route path="/articles/:id" element={<ArticleDetails />} />
-              <Route path="/patient-page" element={<PatientsPage />} />
-              <Route path="/patient-profile-nurse/:patientId" element={<PatientProfileForNurse />} />
-            </Route>
-
-            {/* NOT FOUND */}
-            <Route path="*" element={<NotFound />} />
-
-          </Routes>
-        </Suspense>
-      </Router>
-
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
+}
+
+// Suspense granica unutar okvira: meni i gornja traka ostaju dok se stranica učitava
+function OutletBoundary() {
+  return <Outlet />;
 }

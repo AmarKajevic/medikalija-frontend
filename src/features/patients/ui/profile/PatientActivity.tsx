@@ -10,20 +10,25 @@ import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD, roleLabel } from "@shared/lib/format";
 import { useDiagnoses } from "@entities/diagnosis/hooks/useDiagnosis";
 import { useMedicine } from "@entities/medicine/hooks/useMedicine";
-import useArticles from "@entities/article/hooks/useArticle";
+import { usePatientArticles } from "@entities/article/hooks/useArticle";
 import { useUsedCombination } from "@features/combinations/hooks/useUsedCombination";
 
 type TabKey = "diagnoses" | "medicines" | "combinations" | "articles";
 
-// Na profilu se prikazuje ono što su uneli admin i glavna sestra; unosi sestara
-// su na posebnoj stranici "Šta su sestre dodale".
+// Unosi uprave (admin, glavna sestra) menjaju stanje i specifikaciju; unosi
+// sestara se samo beleže. Filter "Autor" razdvaja jedne od drugih.
 const MANAGER_ROLES = ["admin", "main-nurse"];
 type WithAuthor = { createdBy?: { name?: string; role?: string } };
-const byManagers = <T extends WithAuthor>(rows: T[] | undefined) =>
-  (Array.isArray(rows) ? rows : []).filter((r) => MANAGER_ROLES.includes(r?.createdBy?.role ?? ""));
+export type AuthorFilter = "all" | "managers" | "nurses";
+const byAuthor = <T extends WithAuthor>(rows: T[] | undefined, filter: AuthorFilter) =>
+  (Array.isArray(rows) ? rows : []).filter((r) => {
+    if (filter === "all") return true;
+    const manager = MANAGER_ROLES.includes(r?.createdBy?.role ?? "");
+    return filter === "managers" ? manager : !manager;
+  });
 
 const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("sr-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  new Date(iso).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 const CLEAR = {
   diagnoses: { url: (id: string) => `/api/diagnosis/patient/${id}/diagnoses/delete-all`, key: "diagnosis", label: "dijagnoze" },
@@ -69,16 +74,24 @@ function ActivityList({ rows, empty }: { rows: Row[]; empty: string }) {
   );
 }
 
-export default function PatientActivity({ patientId }: { patientId: string }) {
+interface PatientActivityProps {
+  patientId: string;
+  defaultAuthor?: AuthorFilter;
+  /** Uprava može da briše istoriju unosa */
+  canClear?: boolean;
+}
+
+export default function PatientActivity({ patientId, defaultAuthor = "all", canClear = false }: PatientActivityProps) {
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabKey>("diagnoses");
+  const [author, setAuthor] = useState<AuthorFilter>(defaultAuthor);
   const [confirmClear, setConfirmClear] = useState(false);
   const [clearing, setClearing] = useState(false);
 
-  const diagnoses = byManagers(useDiagnoses(patientId).data as DiagnosisRecord[] | undefined);
-  const medicines = byManagers(useMedicine(patientId).data);
-  const articles = byManagers(useArticles().getPatientArticles.data);
-  const combinations = byManagers(useUsedCombination(patientId).data);
+  const diagnoses = byAuthor(useDiagnoses(patientId).data as DiagnosisRecord[] | undefined, author);
+  const medicines = byAuthor(useMedicine(patientId).data, author);
+  const articles = byAuthor(usePatientArticles(patientId).data, author);
+  const combinations = byAuthor(useUsedCombination(patientId).data, author);
 
   const rows: Record<TabKey, Row[]> = {
     diagnoses: diagnoses.map((d) => ({
@@ -138,8 +151,8 @@ export default function PatientActivity({ patientId }: { patientId: string }) {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="flex flex-wrap items-end justify-between gap-3 px-5 pt-4">
+    <div className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+      <div className="px-5 pt-4">
         <Tabs
           value={tab}
           onChange={setTab}
@@ -149,13 +162,29 @@ export default function PatientActivity({ patientId }: { patientId: string }) {
             { value: "combinations", label: "Analize", icon: <LuFlaskConical className="h-4 w-4" />, count: rows.combinations.length },
             { value: "articles", label: "Artikli", icon: <LuPackage className="h-4 w-4" />, count: rows.articles.length },
           ]}
-          className="flex-1"
         />
-        {rows[tab].length > 0 && (
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-2.5 dark:border-gray-800">
+        <div className="flex items-center gap-2">
+          <label htmlFor={`author-${patientId}`} className="text-xs text-gray-500 dark:text-gray-400">
+            Autor
+          </label>
+          <select
+            id={`author-${patientId}`}
+            value={author}
+            onChange={(e) => setAuthor(e.target.value as AuthorFilter)}
+            className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+          >
+            <option value="all">Svi</option>
+            <option value="managers">Uprava (utiče na stanje)</option>
+            <option value="nurses">Sestre (samo beleženje)</option>
+          </select>
+        </div>
+        {canClear && rows[tab].length > 0 && (
           <Button
             variant="ghost"
             size="xs"
-            className="mb-2 text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10"
             startIcon={<LuTrash2 className="h-3.5 w-3.5" />}
             onClick={() => setConfirmClear(true)}
           >

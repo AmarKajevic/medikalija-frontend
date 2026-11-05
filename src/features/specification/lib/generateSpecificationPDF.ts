@@ -1,11 +1,12 @@
-import { formatDay } from "@shared/lib/calendarDay";
 // features/specification/lib/generateSpecificationPDF.ts
 import pdfMake from "pdfmake/build/pdfmake";
 import vfsFonts from "pdfmake/build/vfs_fonts";
 import { loadImageAsBase64 } from "@shared/lib/loadImageAsBase64";
 import logoUrl from "../../../../public/images/logo/logo-medikalija.webp"
+import type { TDocumentDefinitions } from "pdfmake/interfaces";
+import { formatDay } from "@shared/lib/calendarDay";
 
-(pdfMake as any).vfs = vfsFonts;
+(pdfMake as unknown as { vfs: unknown }).vfs = vfsFonts;
 
 interface GeneratePDFParams {
   patientName: string;
@@ -54,7 +55,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   let logoBase64 = "";
   try {
     logoBase64 = await loadImageAsBase64(logoUrl);
-  } catch (err) {
+  } catch {
     console.warn("Logo nije učitan");
   }
 
@@ -62,7 +63,9 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
   const colWidths = ["*", 70, 70];
 
-  const docDefinition: any = {
+  // pdfmake tipovi zahtevaju literalne tipove (npr. alignment: "right") za svaku ćeliju;
+  // struktura je proverena ručno, pa se tip dodeljuje jednom na kraju.
+  const docDefinition = {
     pageSize: "A4",
     pageMargins: [40, 50, 40, 50],
     content: [
@@ -203,7 +206,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       patientName: { fontSize: 14, bold: true },
       subheader: { fontSize: 12, bold: true },
     },
-  };
+  } as unknown as TDocumentDefinitions;
 
   const pdf = pdfMake.createPdf(docDefinition);
   if (mode === "print") {

@@ -1,11 +1,12 @@
 import { useParams } from "react-router";
-import { LuArrowLeft } from "react-icons/lu";
+import { paths } from "@app/paths";
 import { useSpecification } from "@features/specification/hooks/useSpecification";
 import { usePatient } from "@features/patients/hooks/usePatient";
 import SpecificationWorkspace from "@features/specification/ui/workspace/SpecificationWorkspace";
+import PageHeader from "@shared/ui/page/PageHeader";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
-import Button from "@shared/ui/button/Button";
+import { formatDay } from "@shared/lib/calendarDay";
 
 export default function SpecificationViewPage() {
   const { specificationId = "" } = useParams();
@@ -16,16 +17,21 @@ export default function SpecificationViewPage() {
   if (isError || !spec) return <ErrorState message="Specifikacija nije učitana." onRetry={() => refetch()} />;
 
   const patientName = patient ? `${patient.name} ${patient.lastName}` : "";
+  const patientId = spec.patientId ?? "";
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" startIcon={<LuArrowLeft className="h-4 w-4" />} onClick={() => window.history.back()}>
-          Nazad
-        </Button>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white/90">Specifikacija · {patientName}</h1>
-      </div>
-      <SpecificationWorkspace specification={spec} patientId={spec.patientId ?? ""} patientName={patientName} />
-    </div>
+    <>
+      <PageHeader
+        title={`Specifikacija ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)}`}
+        description={patientName}
+        breadcrumbs={[
+          { label: "Pacijenti", to: paths.patients },
+          { label: patientName || "Pacijent", to: paths.patient(patientId) },
+          { label: "Specifikacije", to: paths.patientSpecifications(patientId) },
+          { label: formatDay(spec.startDate) },
+        ]}
+      />
+      <SpecificationWorkspace specification={spec} patientId={patientId} patientName={patientName} />
+    </>
   );
 }

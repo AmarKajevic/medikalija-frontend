@@ -1,6 +1,6 @@
 import { api } from "@shared/api/api"
 
-export const updateAnalysis = async (id: string, data: any) => {
+export const updateAnalysis = async (id: string, data: { name?: string; price?: number }) => {
   const res = await api.put(`/api/analysis/${id}`, data);
   return res.data;
 };

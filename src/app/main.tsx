@@ -1,43 +1,39 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
 import "../index.css";
-import "swiper/swiper-bundle.css";
-import "flatpickr/dist/flatpickr.css";
 import App from "@app/App";
-import { AppWrapper } from "@shared/ui/common/PageMeta";
 import { ThemeProvider } from "@app/providers/ThemeContext";
 import AuthProvider from "@app/providers/AuthContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ExchangeRateProvider } from "@entities/exchange-rate/model/ExchangeRateContext";
-import { Toaster } from "react-hot-toast";
 
-
-const queryClient = new QueryClient()
-
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
-  
-  
   <StrictMode>
-    <AuthProvider>
-      
-      <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AppWrapper>
-        <ExchangeRateProvider>
-        <App />
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ExchangeRateProvider>
+            <App />
+          </ExchangeRateProvider>
+        </AuthProvider>
         <Toaster
           position="top-right"
+          gutter={8}
           toastOptions={{
             duration: 4000,
-            className: "!text-sm !rounded-xl !shadow-theme-lg dark:!bg-gray-800 dark:!text-white",
+            className:
+              "!rounded-xl !border !border-gray-200 !bg-white !px-3.5 !py-2.5 !text-sm !text-gray-900 !shadow-theme-lg dark:!border-gray-800 dark:!bg-gray-900 dark:!text-white",
+            success: { iconTheme: { primary: "#2c712e", secondary: "#fff" } },
           }}
         />
-        </ExchangeRateProvider>
-      </AppWrapper>
-    </ThemeProvider>
+      </ThemeProvider>
     </QueryClientProvider>
-    </AuthProvider>
   </StrictMode>
-  ,
 );

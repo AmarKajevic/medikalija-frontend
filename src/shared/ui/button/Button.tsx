@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from "react";
+import { Link, LinkProps } from "react-router";
 import Spinner from "@shared/ui/feedback/Spinner";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -30,6 +31,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   danger: "bg-error-500 text-white shadow-theme-xs hover:bg-error-600 focus-visible:ring-error-500/30",
 };
 
+export const buttonClasses = (variant: ButtonVariant = "primary", size: ButtonSize = "md", className = "") =>
+  `inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg font-medium transition focus:outline-hidden focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
+
 const Button: React.FC<ButtonProps> = ({
   children,
   size = "md",
@@ -45,7 +49,7 @@ const Button: React.FC<ButtonProps> = ({
   <button
     type={type}
     disabled={disabled || loading}
-    className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg font-medium transition focus:outline-hidden focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+    className={buttonClasses(variant, size, className)}
     {...rest}
   >
     {loading ? <Spinner size="sm" /> : startIcon && <span className="flex items-center">{startIcon}</span>}
@@ -53,5 +57,22 @@ const Button: React.FC<ButtonProps> = ({
     {endIcon && <span className="flex items-center">{endIcon}</span>}
   </button>
 );
+
+// Link koji izgleda kao dugme (navigacija ne sme biti <button> unutar <a>)
+export function ButtonLink({
+  variant = "primary",
+  size = "md",
+  startIcon,
+  className = "",
+  children,
+  ...rest
+}: LinkProps & { variant?: ButtonVariant; size?: ButtonSize; startIcon?: ReactNode }) {
+  return (
+    <Link className={buttonClasses(variant, size, className)} {...rest}>
+      {startIcon && <span className="flex items-center">{startIcon}</span>}
+      {children}
+    </Link>
+  );
+}
 
 export default Button;

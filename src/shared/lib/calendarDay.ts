@@ -21,7 +21,7 @@ export const formatDay = (value: string | Date | null | undefined): string => {
   if (!value) return "";
   const day = toCalendarDay(value);
   if (isNaN(day.getTime())) return "";
-  return day.toLocaleDateString("sr-RS", { timeZone: "UTC" });
+  return day.toLocaleDateString("sr-Latn-RS", { timeZone: "UTC" });
 };
 
 export const calendarYear = (value: string | Date): number =>

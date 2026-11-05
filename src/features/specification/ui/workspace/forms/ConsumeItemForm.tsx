@@ -26,9 +26,11 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 interface Props {
   kind: "medicine" | "article";
   patientId: string;
+  /** Sestre: unos se samo beleži; stanje i specifikaciju ažurira glavna sestra */
+  recordOnly?: boolean;
 }
 
-export default function ConsumeItemForm({ kind, patientId }: Props) {
+export default function ConsumeItemForm({ kind, patientId, recordOnly = false }: Props) {
   const isMedicine = kind === "medicine";
   const ids = { item: useId(), amount: useId(), days: useId(), times: useId(), portion: useId() };
 
@@ -54,7 +56,7 @@ export default function ConsumeItemForm({ kind, patientId }: Props) {
   const fromFamily = selected ? Math.min(selected.family, qty) : 0;
   const fromHome = round2(qty - fromFamily);
   const charge = fromHome * (selected?.price ?? 0);
-  const notEnough = !!selected && fromHome > selected.home + 1e-6;
+  const notEnough = !recordOnly && !!selected && fromHome > selected.home + 1e-6;
 
   const applyCalculator = (d: string, t: string, p: number) => {
     const total = round2((Number(d) || 0) * (Number(t) || 0) * p);
@@ -180,7 +182,14 @@ export default function ConsumeItemForm({ kind, patientId }: Props) {
         />
       </Field>
 
-      {selected && qty > 0 && (
+      {recordOnly && (
+        <p className="flex gap-2 rounded-xl bg-gray-50 p-3 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
+          <LuInfo className="mt-0.5 h-4 w-4 shrink-0" />
+          Unos se beleži u istoriji pacijenta. Stanje na lageru i specifikaciju ažurira glavna sestra.
+        </p>
+      )}
+
+      {!recordOnly && selected && qty > 0 && (
         <div
           className={`rounded-xl border p-3 text-sm ${
             notEnough
@@ -215,7 +224,7 @@ export default function ConsumeItemForm({ kind, patientId }: Props) {
       )}
 
       <Button type="submit" className="w-full" loading={mutation.isPending} disabled={notEnough || !itemId || qty <= 0}>
-        Dodaj {noun}
+        {recordOnly ? `Zabeleži ${noun}` : `Dodaj ${noun}`}
       </Button>
     </form>
   );

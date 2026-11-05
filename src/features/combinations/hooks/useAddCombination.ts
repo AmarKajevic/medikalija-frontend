@@ -5,7 +5,7 @@ export const useAddCombination = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { name: string; groupName: string; analysisIds: string[] }) => {
       const combo = await addCombination({
         name: data.name,
         analysisIds: data.analysisIds,

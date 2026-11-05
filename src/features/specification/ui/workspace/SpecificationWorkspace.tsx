@@ -5,7 +5,6 @@ import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
 import { notify } from "@shared/lib/notify";
 import { formatDay } from "@shared/lib/calendarDay";
-import { generateSpecificationPDF } from "@features/specification/lib/generateSpecificationPDF";
 import { getNextPeriodLabel } from "@features/specification/lib/helpers";
 import { Specification } from "@features/specification/types/types";
 import ConsumeItemForm from "./forms/ConsumeItemForm";
@@ -34,7 +33,7 @@ interface Props {
 }
 
 const Card = ({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) => (
-  <section className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.02]">
+  <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
     <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-3.5 dark:border-gray-800">
       <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">{title}</h3>
       {actions}
@@ -49,8 +48,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
   const canAdd = !!spec.isActive;
 
-  const exportPdf = (mode: "download" | "print") =>
-    generateSpecificationPDF({
+  // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
+  const exportPdf = async (mode: "download" | "print") => {
+    const { generateSpecificationPDF } = await import("@features/specification/lib/generateSpecificationPDF");
+    return generateSpecificationPDF({
       mode,
       patientName,
       startDate: spec.startDate,
@@ -62,7 +63,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       })),
       ...billing.result,
       nextPeriodLabel,
-    }).catch((err) => notify.error(err, "PDF nije napravljen."));
+    });
+  };
+
+  const runExport = (mode: "download" | "print") => exportPdf(mode).catch((err) => notify.error(err, "PDF nije napravljen."));
 
   return (
     <div className="space-y-5">
@@ -83,10 +87,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" startIcon={<LuPrinter className="h-4 w-4" />} onClick={() => exportPdf("print")}>
+          <Button variant="outline" size="sm" startIcon={<LuPrinter className="h-4 w-4" />} onClick={() => runExport("print")}>
             Štampaj
           </Button>
-          <Button variant="outline" size="sm" startIcon={<LuDownload className="h-4 w-4" />} onClick={() => exportPdf("download")}>
+          <Button variant="outline" size="sm" startIcon={<LuDownload className="h-4 w-4" />} onClick={() => runExport("download")}>
             PDF
           </Button>
         </div>
