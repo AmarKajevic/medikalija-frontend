@@ -1,3 +1,4 @@
+import { formatDay } from "@shared/lib/calendarDay";
 import { useState } from 'react'
 import DatePicker from "@shared/ui/form/date-picker";
 import { useUpdateDischargeDate } from "@features/patients/hooks/useUpdateDischargeDate";
@@ -32,7 +33,7 @@ const DischargeDate = ({patient} : {patient: Patient}) => {
       {patient.dischargeDate ? (
         <>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {new Date(patient.dischargeDate).toLocaleDateString("sr-RS")}
+            {formatDay(patient.dischargeDate)}
           </span>
           <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-white/5 dark:text-gray-400">
             Otpušten

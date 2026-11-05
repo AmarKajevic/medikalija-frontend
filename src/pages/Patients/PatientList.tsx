@@ -1,3 +1,4 @@
+import { formatDay } from "@shared/lib/calendarDay";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -80,7 +81,7 @@ function PatientList() {
                       <div className="font-medium text-gray-800 dark:text-white/90">{patient?.name}</div>
                       <div>{patient?.lastName}</div>
                       <div>
-                        {new Date(patient?.admissionDate).toLocaleDateString("sr-RS")}
+                        {formatDay(patient?.admissionDate)}
                       </div>
                       <div>
                         {patient?.dischargeDate ? (

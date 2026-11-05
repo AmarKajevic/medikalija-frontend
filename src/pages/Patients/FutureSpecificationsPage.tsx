@@ -1,3 +1,4 @@
+import { calendarYear, formatDay } from "@shared/lib/calendarDay";
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/api/api";
@@ -35,7 +36,7 @@ export default function FutureSpecificationsPage() {
   const groupedByYear: Record<number, any[]> = {};
 
   data.forEach((period: any) => {
-    const year = new Date(period.startDate).getFullYear();
+    const year = calendarYear(period.startDate);
     if (!groupedByYear[year]) groupedByYear[year] = [];
     groupedByYear[year].push(period);
   });
@@ -84,14 +85,14 @@ export default function FutureSpecificationsPage() {
               new TableCell({
                 children: [
                   new Paragraph(
-                    new Date(p.startDate).toLocaleDateString("sr-RS")
+                    formatDay(p.startDate)
                   ),
                 ],
               }),
               new TableCell({
                 children: [
                   new Paragraph(
-                    new Date(p.endDate).toLocaleDateString("sr-RS")
+                    formatDay(p.endDate)
                   ),
                 ],
               }),
@@ -116,7 +117,7 @@ export default function FutureSpecificationsPage() {
 
     const doc = new Document({ sections });
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, "specifikacije_narednih_5_godina.docx");
+    saveAs(blob, "specifikacije_narednih_10_godina.docx");
   };
 
   return (
@@ -158,13 +159,18 @@ export default function FutureSpecificationsPage() {
 
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {groupedByYear[Number(year)].map((p: any, index: number) => (
-                  <tr key={index} className="text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                  <tr
+                    key={p.index ?? index}
+                    className={`text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03] ${
+                      p.isCurrent ? "bg-brand-50 font-medium dark:bg-brand-500/15" : ""
+                    }`}
+                  >
                     <td className="p-3">{index + 1}</td>
                     <td className="p-3">
-                      {new Date(p.startDate).toLocaleDateString("sr-RS")}
+                      {formatDay(p.startDate)}
                     </td>
                     <td className="p-3">
-                      {new Date(p.endDate).toLocaleDateString("sr-RS")}
+                      {formatDay(p.endDate)}
                     </td>
                   </tr>
                 ))}
