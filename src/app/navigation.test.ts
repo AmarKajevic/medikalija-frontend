@@ -8,7 +8,7 @@ const labels = (role: string) => navigationFor(role).flatMap((g) => g.items.map(
 
 describe("navigacija po ulogama", () => {
   it("sestra vidi samo stranice kojima ima pristup", () => {
-    expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Unos nege", "Artikli", "Porodične zalihe"]);
+    expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Unos nege", "Kalendar", "Artikli", "Porodične zalihe"]);
   });
 
   it("doktor ima isti pristup kao sestra (ranije nije mogao ni da uđe)", () => {

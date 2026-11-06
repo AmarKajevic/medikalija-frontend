@@ -13,6 +13,7 @@ import { usePatientSpecification } from "@features/specification/hooks/usePatien
 import SpecificationWorkspaceDialog from "@features/specification/ui/workspace/SpecificationWorkspaceDialog";
 import NurseEntryPanel from "@features/nurse-entries/ui/NurseEntryPanel";
 import EntryList from "@features/nurse-entries/ui/EntryList";
+import PatientAppointments from "@features/calendar/ui/PatientAppointments";
 import { usePendingSummary } from "@features/nurse-entries/model";
 import PatientHeader from "@features/patients/ui/profile/PatientHeader";
 import SpecificationSummaryCard from "@features/patients/ui/profile/SpecificationSummaryCard";
@@ -65,11 +66,14 @@ export default function PatientPage() {
               </Button>
             </div>
           )}
-          <SpecificationSummaryCard
-            specification={specification.data}
-            isLoading={specification.isLoading}
-            onOpen={() => setDialog("specification")}
-          />
+          <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
+            <SpecificationSummaryCard
+              specification={specification.data}
+              isLoading={specification.isLoading}
+              onOpen={() => setDialog("specification")}
+            />
+            <PatientAppointments patientId={patient._id} canEdit={!discharged} />
+          </div>
           <Card>
             <CardHeader title="Nega i unosi sestara" description="Šta je urađeno pacijentu i šta je ušlo u specifikaciju." />
             <CardBody>
@@ -96,6 +100,7 @@ export default function PatientPage() {
                 <EntryList patientId={patient._id} />
               </CardBody>
             </Card>
+            <PatientAppointments patientId={patient._id} canEdit={false} />
             <PatientActivity patientId={patient._id} defaultAuthor="all" />
           </div>
         </div>

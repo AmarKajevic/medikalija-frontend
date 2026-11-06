@@ -43,7 +43,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Pacijenti", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true },
       { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: STAFF_ROLES },
       { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals" },
-      { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: MANAGER_ROLES },
+      { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: STAFF_ROLES },
       { label: "Obaveštenja", to: paths.notifications, icon: <LuBell />, roles: MANAGER_ROLES },
     ],
   },

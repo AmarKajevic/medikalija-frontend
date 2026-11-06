@@ -106,7 +106,7 @@ export default function App() {
             <Route path="/users" element={managers(<UsersPage />)} />
             <Route path="/nurse-activity" element={managers(<NurseActivityPage />)} />
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
-            <Route path="/calendar" element={managers(<CalendarPage />)} />
+            <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
             <Route path="/care" element={staff(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />

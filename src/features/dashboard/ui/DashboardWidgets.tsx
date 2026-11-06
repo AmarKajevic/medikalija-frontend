@@ -8,6 +8,7 @@ import { formatQty, roleLabel } from "@shared/lib/format";
 import { paths } from "@app/paths";
 import { ActivityItem, LowStockMedicine, UpcomingEvent } from "@features/dashboard/types";
 import { eventColorClass } from "@features/calendar/colors";
+import { parseKey, timeKey } from "@features/calendar/model";
 import { relativeTime } from "@features/notifications/hooks";
 
 const ACTIVITY_ICON: Record<string, React.ReactNode> = {
@@ -18,8 +19,12 @@ const ACTIVITY_ICON: Record<string, React.ReactNode> = {
 };
 
 // Događaji su celodnevni i čuvaju se kao UTC ponoć — prikazuje se samo datum, u UTC-u
-const formatEventDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("sr-Latn-RS", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+// "uto 10. nov · 09:30"; celodnevni nemaju vreme (datum je "YYYY-MM-DD", bez zone)
+const formatEventDate = (e: UpcomingEvent) => {
+  const d = e.allDay ? parseKey(e.start) : new Date(e.start);
+  const day = d.toLocaleDateString("sr-Latn-RS", { weekday: "short", day: "numeric", month: "short" });
+  return e.allDay ? `${day} · ceo dan` : `${day} · ${timeKey(d)}`;
+};
 
 export function ActivityFeed({ activity, title = "Nedavne aktivnosti" }: { activity: ActivityItem[]; title?: string }) {
   return (
@@ -72,10 +77,10 @@ export function UpcomingEvents({ events }: { events: UpcomingEvent[] }) {
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
           {events.map((e) => (
-            <li key={e._id} className="flex items-center gap-3 px-5 py-3">
+            <li key={e.id} className="flex items-center gap-3 px-5 py-3">
               <span className={`h-2 w-2 shrink-0 rounded-full ${eventColorClass(e.calendar)}`} />
               <span className="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-200">{e.title}</span>
-              <time className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{formatEventDate(e.start)}</time>
+              <time className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{formatEventDate(e)}</time>
             </li>
           ))}
         </ul>
