@@ -26,6 +26,9 @@ export const paths = {
   notifications: "/notifications",
   calendar: "/calendar",
   settings: "/settings",
+  care: "/care",
+  approvals: "/approvals",
+  careTasks: "/care-tasks",
 } as const;
 
 export type Role = "admin" | "main-nurse" | "nurse" | "doctor";

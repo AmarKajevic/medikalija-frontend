@@ -10,6 +10,8 @@ import { Specification } from "@features/specification/types/types";
 import { itemDisplayName } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
+import { usePendingSummary } from "@features/nurse-entries/model";
+import EntryReview from "@features/nurse-entries/ui/EntryReview";
 import SpecificationItems from "./SpecificationItems";
 import BillingPanel from "./BillingPanel";
 import PeriodSwitcher from "./PeriodSwitcher";
@@ -90,6 +92,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const [step, setStep] = useState<Step>(1);
   const billing = useBillingState(spec, patientId);
   const { facility } = useFacility();
+  const pendingCount = usePendingSummary().data?.byPatient.find((p) => p.patientId === patientId)?.count ?? 0;
   const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
   const canAdd = !!spec.isActive;
   const current = STEPS[step - 1]!;
@@ -142,6 +145,20 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       </div>
 
       <div className="flex-1">
+        {step === 1 && canAdd && pendingCount > 0 && (
+          <div className="mb-5 rounded-xl border border-warning-200 bg-white shadow-theme-xs dark:border-warning-500/30 dark:bg-gray-900">
+            <header className="border-b border-warning-100 bg-warning-50 px-5 py-3.5 dark:border-warning-500/20 dark:bg-warning-500/10">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi sestara čekaju odobrenje ({pendingCount})</h3>
+              <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
+                Prihvaćeno ulazi u specifikaciju i skida se sa stanja (prvo porodično). Odbijeno se ne naplaćuje.
+              </p>
+            </header>
+            <div className="p-5">
+              <EntryReview patientId={patientId} />
+            </div>
+          </div>
+        )}
+
         {step === 1 && (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,400px)_1fr]">
             <div className="lg:sticky lg:top-0">
@@ -183,6 +200,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             billing={billing}
             nextPeriodLabel={nextPeriodLabel}
             onEditStep={setStep}
+            pendingCount={canAdd ? pendingCount : 0}
           />
         )}
       </div>

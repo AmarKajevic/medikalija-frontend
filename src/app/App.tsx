@@ -27,6 +27,9 @@ const NurseActivityPage = lazy(() => import("@pages/team/NurseActivityPage"));
 const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"));
 const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
 const FacilitySettingsPage = lazy(() => import("@pages/settings/FacilitySettingsPage"));
+const CarePage = lazy(() => import("@pages/care/CarePage"));
+const ApprovalsPage = lazy(() => import("@pages/care/ApprovalsPage"));
+const CareTasksPage = lazy(() => import("@pages/care/CareTasksPage"));
 
 const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
 const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
@@ -105,6 +108,9 @@ export default function App() {
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={managers(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
+            <Route path="/care" element={staff(<CarePage />)} />
+            <Route path="/approvals" element={managers(<ApprovalsPage />)} />
+            <Route path="/care-tasks" element={managers(<CareTasksPage />)} />
 
             {LEGACY.map(([from, to]) => (
               <Route key={from} path={from} element={<LegacyRedirect to={to} />} />

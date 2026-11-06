@@ -8,7 +8,7 @@ const labels = (role: string) => navigationFor(role).flatMap((g) => g.items.map(
 
 describe("navigacija po ulogama", () => {
   it("sestra vidi samo stranice kojima ima pristup", () => {
-    expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Artikli", "Porodične zalihe"]);
+    expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Unos nege", "Artikli", "Porodične zalihe"]);
   });
 
   it("doktor ima isti pristup kao sestra (ranije nije mogao ni da uđe)", () => {
@@ -19,6 +19,12 @@ describe("navigacija po ulogama", () => {
     for (const role of ["admin", "main-nurse"]) {
       expect(labels(role)).toEqual(expect.arrayContaining(["Lekovi", "Rezerva lekova", "Korisnici", "Analize", "Kalendar"]));
     }
+  });
+
+  it("odobravanje unosa i katalog usluga vidi samo uprava", () => {
+    expect(labels("nurse")).not.toContain("Za odobrenje");
+    expect(labels("nurse")).not.toContain("Usluge nege");
+    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Usluge nege", "Unos nege"]));
   });
 
   it("podešavanja ustanove vidi samo direktor", () => {

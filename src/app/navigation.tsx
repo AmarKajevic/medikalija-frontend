@@ -3,6 +3,9 @@ import {
   LuArchive,
   LuBell,
   LuCalendarDays,
+  LuClipboardCheck,
+  LuHeartHandshake,
+  LuListChecks,
   LuClipboardList,
   LuFlaskConical,
   LuHouse,
@@ -24,6 +27,8 @@ export interface NavItem {
   roles: Role[];
   /** Aktivno i za podputanje (npr. /patients/123) */
   matchPrefix?: boolean;
+  /** Brojač pored stavke (npr. unosi koji čekaju odobrenje) */
+  badge?: "approvals";
 }
 
 export interface NavGroup {
@@ -36,6 +41,8 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { label: "Početna", to: paths.home, icon: <LuHouse />, roles: STAFF_ROLES },
       { label: "Pacijenti", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true },
+      { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: STAFF_ROLES },
+      { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals" },
       { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: MANAGER_ROLES },
       { label: "Obaveštenja", to: paths.notifications, icon: <LuBell />, roles: MANAGER_ROLES },
     ],
@@ -55,6 +62,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Analize", to: paths.analyses, icon: <LuFlaskConical />, roles: MANAGER_ROLES },
       { label: "Kombinacije analiza", to: paths.combinations, icon: <LuLayers />, roles: MANAGER_ROLES },
       { label: "Šabloni dijagnoza", to: paths.diagnosisTemplates, icon: <LuClipboardList />, roles: MANAGER_ROLES },
+      { label: "Usluge nege", to: paths.careTasks, icon: <LuListChecks />, roles: MANAGER_ROLES },
     ],
   },
   {
