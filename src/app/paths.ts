@@ -30,11 +30,28 @@ export const paths = {
   approvals: "/approvals",
   careTasks: "/care-tasks",
   careLog: "/care-log",
+
+  reports: "/reports",
+  newReport: (patientId?: string) => `/reports/new${patientId ? `?patient=${patientId}` : ""}`,
+  report: (id: string) => `/reports/${id}`,
+  social: "/social",
 } as const;
 
-export type Role = "admin" | "main-nurse" | "nurse" | "doctor";
+export type Role = "admin" | "main-nurse" | "nurse" | "doctor" | "social-worker";
 
 export const MANAGER_ROLES: Role[] = ["admin", "main-nurse"];
-export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
+/** Sve uloge sa prijavom */
+export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker"];
+/** Nega i zalihe na odeljenju */
+export const CARE_ROLES: Role[] = ["admin", "main-nurse", "nurse"];
+/** Vide medicinsku dokumentaciju (svi osim socijalnog radnika) */
+export const CLINICAL_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
+/** Zakazuju u kalendaru (doktor i socijalni radnik samo svoje termine) */
+export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
+/** Socijalni karton: čitaju */
+export const SOCIAL_READ_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
+/** Socijalni karton: pišu */
+export const SOCIAL_WRITE_ROLES: Role[] = ["admin", "main-nurse", "social-worker"];
 
 export const isManager = (role?: string) => MANAGER_ROLES.includes(role as Role);
+export const hasRole = (role: string | undefined, roles: Role[]) => roles.includes(role as Role);

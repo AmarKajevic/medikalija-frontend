@@ -10,7 +10,7 @@ import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import srLocale from "@fullcalendar/core/locales/sr";
 import { LuChevronLeft, LuChevronRight, LuPlus, LuRepeat } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { isManager } from "@app/paths";
+import { hasRole, isManager, SCHEDULER_ROLES } from "@app/paths";
 import { Card } from "@shared/ui/card/Card";
 import Button from "@shared/ui/button/Button";
 import { notify } from "@shared/lib/notify";
@@ -47,7 +47,8 @@ const HIDDEN_KEY = "calendar.hidden";
 const isMobile = () => typeof window !== "undefined" && window.matchMedia?.("(max-width: 639px)").matches;
 
 // FullCalendar kraj celodnevnog događaja čuva kao ekskluzivan (dan posle poslednjeg)
-const toFcEvent = (o: CalendarOccurrence): EventInput => ({
+const toFcEvent = (o: CalendarOccurrence, editable: boolean): EventInput => ({
+  editable,
   id: o.id,
   title: o.title,
   start: o.start,
@@ -73,7 +74,12 @@ const occOf = (e: { extendedProps: Record<string, unknown> }) => e.extendedProps
 
 export default function CalendarPage() {
   const { user } = useAuth();
-  const canEdit = isManager(user?.role);
+  // Zakazuju uprava, doktor i socijalni radnik; tuđe termine menja samo uprava
+  const canEdit = hasRole(user?.role, SCHEDULER_ROLES);
+  const canModify = useCallback(
+    (o: CalendarOccurrence) => isManager(user?.role) || (!!o.createdBy && String(o.createdBy._id) === String(user?._id)),
+    [user]
+  );
   const calRef = useRef<FullCalendar>(null);
   const [params, setParams] = useSearchParams();
   const initialView = (params.get("view") as ViewKey) || (isMobile() ? "list" : "week");
@@ -108,7 +114,7 @@ export default function CalendarPage() {
   useEffect(() => localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden)), [hidden]);
 
   const visible = useMemo(() => events.filter((e) => !hidden.includes(e.calendar)), [events, hidden]);
-  const fcEvents = useMemo(() => visible.map(toFcEvent), [visible]);
+  const fcEvents = useMemo(() => visible.map((o) => toFcEvent(o, canModify(o))), [visible, canModify]);
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const e of events) c[e.calendar] = (c[e.calendar] ?? 0) + 1;
@@ -422,7 +428,7 @@ export default function CalendarPage() {
       {draft && <EventDialog draft={draft} onClose={() => setDraft(null)} />}
       <EventDetails
         occurrence={details}
-        canEdit={canEdit}
+        canEdit={!!details && canModify(details)}
         onClose={() => setDetails(null)}
         onEdit={(o) => {
           setDetails(null);

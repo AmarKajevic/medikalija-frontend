@@ -39,15 +39,18 @@ interface Props {
   /** Uprava: specifikacija, otpust, istorija */
   canManage: boolean;
   onOpenSpecification: () => void;
-  onOpenFamilyStock: () => void;
+  /** Porodično stanje (nega); bez njega se stavka ne prikazuje */
+  onOpenFamilyStock?: () => void;
   onDischarge: () => void;
+  /** Glavne akcije za ulogu (npr. "Nov izveštaj" za doktora) */
+  actions?: ReactNode;
 }
 
-export default function PatientHeader({ patient, canManage, onOpenSpecification, onOpenFamilyStock, onDischarge }: Props) {
+export default function PatientHeader({ patient, canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, actions }: Props) {
   const discharged = !!patient.dischargeDate;
 
   const menu: ActionMenuItem[] = [
-    { label: "Porodično stanje", icon: <LuPackageOpen />, onClick: onOpenFamilyStock },
+    ...(onOpenFamilyStock ? [{ label: "Porodično stanje", icon: <LuPackageOpen />, onClick: onOpenFamilyStock }] : []),
     ...(canManage
       ? [
           { label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) },
@@ -85,14 +88,17 @@ export default function PatientHeader({ patient, canManage, onOpenSpecification,
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
-          <ActionMenu
-            trigger={({ toggle }) => (
-              <Button variant="outline" size="sm" onClick={toggle} endIcon={<LuChevronDown className="h-4 w-4" />}>
-                Više
-              </Button>
-            )}
-            items={menu}
-          />
+          {menu.length > 0 && (
+            <ActionMenu
+              trigger={({ toggle }) => (
+                <Button variant="outline" size="sm" onClick={toggle} endIcon={<LuChevronDown className="h-4 w-4" />}>
+                  Više
+                </Button>
+              )}
+              items={menu}
+            />
+          )}
+          {actions}
           {canManage && !discharged && (
             <Button size="sm" onClick={onOpenSpecification} startIcon={<LuPlus className="h-4 w-4" />}>
               Napravi specifikaciju

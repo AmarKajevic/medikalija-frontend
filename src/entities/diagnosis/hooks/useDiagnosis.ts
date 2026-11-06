@@ -29,3 +29,22 @@ export const useAddDiagnosis = (patientId: string) => {
     },
   });
 };
+
+export interface WorkNote {
+  _id: string;
+  description: string;
+  createdAt: string;
+  createdBy: { _id: string; name: string; lastName?: string; role: string } | null;
+}
+
+/** Učinak rada u periodu [from, to) — npr. period specifikacije */
+export const useWorkNotes = (patientId: string, from: string, to: string, enabled = true) =>
+  useQuery({
+    queryKey: ["diagnosis", patientId, from, to],
+    queryFn: async () => {
+      const p = new URLSearchParams({ from, to });
+      const { data } = await api.get(`${API_URL}/${patientId}?${p}`);
+      return (data.diagnosis ?? []) as WorkNote[];
+    },
+    enabled: enabled && !!patientId,
+  });

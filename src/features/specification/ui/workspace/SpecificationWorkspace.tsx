@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuCheck, LuDownload, LuLock, LuPrinter } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
@@ -15,7 +15,8 @@ import EntryReview from "@features/nurse-entries/ui/EntryReview";
 import SpecificationItems from "./SpecificationItems";
 import BillingPanel from "./BillingPanel";
 import PeriodSwitcher from "./PeriodSwitcher";
-import AddItemPanel from "./AddItemPanel";
+import AddItemPanel, { type AddPreset } from "./AddItemPanel";
+import PeriodNotes from "./PeriodNotes";
 import ReviewStep from "./ReviewStep";
 
 export type Step = 1 | 2 | 3;
@@ -90,6 +91,14 @@ function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }
 
 export default function SpecificationWorkspace({ specification: spec, patientId, patientName }: Props) {
   const [step, setStep] = useState<Step>(1);
+  const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
+  const addPanelRef = useRef<HTMLDivElement>(null);
+
+  // Iz učinka sestre: otvori "Drugi trošak" sa opisom iz beleške, fokus na iznos
+  const addAsCost = (label: string) => {
+    setAddPreset({ kind: "extra", label, nonce: Date.now() });
+    addPanelRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  };
   const billing = useBillingState(spec, patientId);
   const { facility } = useFacility();
   const pendingCount = usePendingSummary().data?.byPatient.find((p) => p.patientId === patientId)?.count ?? 0;
@@ -161,10 +170,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
 
         {step === 1 && (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,400px)_1fr]">
-            <div className="lg:sticky lg:top-0">
+            <div ref={addPanelRef} className="lg:sticky lg:top-0">
               {canAdd ? (
                 <Section title="Dodaj u specifikaciju" description="Izaberite šta dodajete, pa popunite polja ispod.">
-                  <AddItemPanel specId={spec._id} patientId={patientId} />
+                  <AddItemPanel specId={spec._id} patientId={patientId} preset={addPreset} />
                 </Section>
               ) : (
                 <Section title="Zatvoren period">
@@ -178,10 +187,11 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 </Section>
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-5">
               <Section title={`Dodato u ovom periodu (${spec.items.length})`} description="Pogrešno uneto? Uklonite stavku ikonicom korpe.">
                 <SpecificationItems specification={spec} patientId={patientId} />
               </Section>
+              <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={canAdd ? addAsCost : undefined} />
             </div>
           </div>
         )}

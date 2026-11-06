@@ -5,7 +5,8 @@ import { loadImageAsBase64 } from "@shared/lib/loadImageAsBase64";
 import logoUrl from "../../../../public/images/logo/logo-medikalija.webp"
 import type { TDocumentDefinitions } from "pdfmake/interfaces";
 import { formatDay } from "@shared/lib/calendarDay";
-import { getScript, transliterate, type Script } from "@shared/lib/script";
+import { getScript } from "@shared/lib/script";
+import { inScript } from "@shared/lib/pdfScript";
 
 // Iznosi kao u aplikaciji: 5.860,00 (sr-Latn-RS)
 const money = new Intl.NumberFormat("sr-Latn-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -236,15 +237,3 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     pdf.download(`specifikacija-${patientName}-${periodText.replace(/[^a-z0-9]/gi, "_")}.pdf`);
   }
 };
-
-// PDF u izabranom pismu: preslovljavaju se samo vrednosti `text` (ne stilovi, boje, slike)
-function inScript<T>(node: T, script: Script, isText = false): T {
-  if (typeof node === "string") return (isText ? transliterate(node, script) : node) as T;
-  if (Array.isArray(node)) return node.map((n) => inScript(n, script, isText)) as T;
-  if (node && typeof node === "object") {
-    return Object.fromEntries(
-      Object.entries(node).map(([k, v]) => [k, typeof v === "function" ? v : inScript(v, script, k === "text")])
-    ) as T;
-  }
-  return node;
-}

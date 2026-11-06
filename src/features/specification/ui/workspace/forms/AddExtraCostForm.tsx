@@ -4,10 +4,17 @@ import Button from "@shared/ui/button/Button";
 import { notify } from "@shared/lib/notify";
 import { useAddExtraCost } from "@features/specification/hooks/useAddExtraCost";
 
-export default function AddExtraCostForm({ specId, patientId }: { specId: string; patientId: string }) {
+interface Props {
+  specId: string;
+  patientId: string;
+  /** Opis unapred popunjen (npr. iz učinka sestre); fokus ide na iznos */
+  initialLabel?: string;
+}
+
+export default function AddExtraCostForm({ specId, patientId, initialLabel = "" }: Props) {
   const ids = { label: useId(), amount: useId() };
   const { mutate, isPending } = useAddExtraCost(specId, patientId);
-  const [label, setLabel] = useState("");
+  const [label, setLabel] = useState(initialLabel);
   const [amount, setAmount] = useState("");
 
   const value = Number(amount.replace(",", "."));
@@ -38,6 +45,7 @@ export default function AddExtraCostForm({ specId, patientId }: { specId: string
       <Field label="Iznos (RSD)" htmlFor={ids.amount}>
         <input
           id={ids.amount}
+          autoFocus={!!initialLabel}
           inputMode="decimal"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
