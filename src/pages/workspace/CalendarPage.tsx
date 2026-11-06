@@ -14,6 +14,7 @@ import { isManager } from "@app/paths";
 import { Card } from "@shared/ui/card/Card";
 import Button from "@shared/ui/button/Button";
 import { notify } from "@shared/lib/notify";
+import { toLatin } from "@shared/lib/script";
 import { EVENT_COLORS } from "@features/calendar/colors";
 import {
   CalendarOccurrence,
@@ -209,7 +210,8 @@ export default function CalendarPage() {
       const t = ev.target as HTMLElement;
       if (ev.ctrlKey || ev.metaKey || ev.altKey || /INPUT|TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable) return;
       if (document.querySelector("[data-dialog-panel]")) return;
-      const k = ev.key.toLowerCase();
+      // I sa ćiriličnim rasporedom tastature (taster M daje "м")
+      const k = toLatin(ev.key).toLowerCase();
       const v = VIEWS.find(([, , key]) => key === k);
       if (v) changeView(v[0]);
       else if (k === "t") api()?.today();

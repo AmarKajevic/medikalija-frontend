@@ -2,6 +2,9 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { LuChevronsUpDown, LuSearch } from "react-icons/lu";
 import { inputClass } from "@shared/ui/form/Field";
 import { formatQty } from "@shared/lib/format";
+import { normalizeSearch } from "@shared/lib/search";
+import { transliterate } from "@shared/lib/script";
+import { useScript } from "@shared/lib/scriptContext";
 
 export type StockOption = {
   value: string;
@@ -22,9 +25,7 @@ interface StockComboboxProps {
   loading?: boolean;
 }
 
-// Pretraga ignoriše velika/mala slova i dijakritike (č, ć, š, ž, đ).
-const normalize = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "dj");
+const normalize = normalizeSearch;
 
 export default function StockCombobox({
   id,
@@ -42,6 +43,8 @@ export default function StockCombobox({
   const listRef = useRef<HTMLUListElement>(null);
 
   const selected = options.find((o) => o.value === value);
+  const { script } = useScript();
+  const selectedLabel = selected ? transliterate(selected.label, script) : undefined;
 
   const filtered = useMemo(() => {
     const q = normalize(query.trim());
@@ -102,14 +105,14 @@ export default function StockCombobox({
           aria-expanded={open}
           aria-controls={listId}
           autoComplete="off"
-          value={open ? query : selected?.label ?? ""}
+          value={open ? query : selectedLabel ?? ""}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder={loading ? "Učitavanje..." : selected?.label ?? placeholder}
+          placeholder={loading ? "Učitavanje..." : selectedLabel ?? placeholder}
           className={`${inputClass} pl-9 pr-9`}
         />
         <LuChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />

@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import "../index.css";
 import App from "@app/App";
 import { ThemeProvider } from "@app/providers/ThemeContext";
+import ScriptProvider from "@app/providers/ScriptProvider";
 import AuthProvider from "@app/providers/AuthContext";
 import { ExchangeRateProvider } from "@entities/exchange-rate/model/ExchangeRateContext";
 
@@ -18,11 +19,13 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <ScriptProvider>
         <AuthProvider>
           <ExchangeRateProvider>
             <App />
           </ExchangeRateProvider>
         </AuthProvider>
+        </ScriptProvider>
         <Toaster
           position="top-right"
           gutter={8}

@@ -54,6 +54,10 @@ export interface EntryQuery {
   status?: EntryStatus[];
   mine?: boolean;
   from?: string;
+  to?: string;
+  /** Samo unosi ovog korisnika (uprava) */
+  createdBy?: string;
+  type?: EntryType[];
   limit?: number;
 }
 
@@ -124,6 +128,9 @@ const toParams = (q: EntryQuery) => {
   if (q.status?.length) p.set("status", q.status.join(","));
   if (q.mine) p.set("mine", "1");
   if (q.from) p.set("from", q.from);
+  if (q.to) p.set("to", q.to);
+  if (q.createdBy) p.set("createdBy", q.createdBy);
+  if (q.type?.length) p.set("type", q.type.join(","));
   if (q.limit) p.set("limit", String(q.limit));
   return p.toString();
 };

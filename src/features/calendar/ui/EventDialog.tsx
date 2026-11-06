@@ -5,6 +5,8 @@ import Button from "@shared/ui/button/Button";
 import Field from "@shared/ui/form/Field";
 import { Input, Select, Textarea } from "@shared/ui/form/controls";
 import DateInput from "@shared/ui/form/DateInput";
+import SearchSelect, { SearchOption } from "@shared/ui/combobox/SearchSelect";
+import Avatar from "@shared/ui/avatar/Avatar";
 import TimeInput from "@shared/ui/form/TimeInput";
 import { durationLabel } from "@shared/lib/timeText";
 import { notify } from "@shared/lib/notify";
@@ -44,6 +46,7 @@ interface PatientRow {
   _id: string;
   name: string;
   lastName: string;
+  dateOfBirth?: string;
   dischargeDate?: string | null;
 }
 
@@ -65,6 +68,13 @@ export default function EventDialog({ draft: initial, onClose, lockPatient }: Pr
         .sort((a, b) => `${a.lastName} ${a.name}`.localeCompare(`${b.lastName} ${b.name}`, "sr")),
     [patientsData, d?.patientId]
   );
+
+  const patientOptions: SearchOption[] = patients.map((p) => ({
+    value: p._id,
+    label: `${p.lastName} ${p.name}`,
+    description: [p.dateOfBirth && `rođ. ${new Date(p.dateOfBirth).getUTCFullYear()}.`, p.dischargeDate && "otpušten"].filter(Boolean).join(" · ") || undefined,
+    icon: <Avatar name={p.name} lastName={p.lastName} size="xs" />,
+  }));
 
   if (!d) return null;
 
@@ -301,14 +311,15 @@ export default function EventDialog({ draft: initial, onClose, lockPatient }: Pr
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Pacijent (nije obavezno)" htmlFor={ids.patient}>
-              <Select id={ids.patient} value={d.patientId} disabled={lockPatient} onChange={(e) => set({ patientId: e.target.value })}>
-                <option value="">— bez pacijenta —</option>
-                {patients.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.lastName} {p.name}
-                  </option>
-                ))}
-              </Select>
+              <SearchSelect
+                id={ids.patient}
+                value={d.patientId}
+                disabled={lockPatient}
+                onChange={(v) => set({ patientId: v })}
+                options={patientOptions}
+                emptyLabel="Bez pacijenta — kucajte ime"
+                placeholder="Kucajte ime ili prezime..."
+              />
             </Field>
             <Field label="Mesto (nije obavezno)" htmlFor={ids.location}>
               <Input id={ids.location} leading={<LuMapPin className="h-4 w-4" />} value={d.location} onChange={(e) => set({ location: e.target.value })} placeholder="npr. Dom zdravlja, ordinacija 12" maxLength={200} />
