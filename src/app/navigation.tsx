@@ -6,6 +6,7 @@ import {
   LuClipboardCheck,
   LuHeartHandshake,
   LuListChecks,
+  LuNotebookPen,
   LuClipboardList,
   LuFlaskConical,
   LuHouse,
@@ -68,6 +69,7 @@ export const NAVIGATION: NavGroup[] = [
   {
     label: "Tim",
     items: [
+      { label: "Dnevnik nege", to: paths.careLog, icon: <LuNotebookPen />, roles: MANAGER_ROLES },
       { label: "Aktivnosti sestara", to: paths.nurseActivity, icon: <LuUserCheck />, roles: MANAGER_ROLES },
       { label: "Korisnici", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES },
       { label: "Podešavanja", to: paths.settings, icon: <LuSettings />, roles: ["admin"] },

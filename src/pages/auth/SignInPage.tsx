@@ -5,6 +5,7 @@ import { paths } from "@app/paths";
 import SignInForm from "@features/auth/ui/SignInForm";
 import BrandMark, { BrandIcon } from "@widgets/shell/BrandMark";
 import { useFacility } from "@entities/facility/facility";
+import ScriptSwitch from "@shared/ui/ScriptSwitch";
 
 const FEATURES = [
   { icon: <LuClipboardCheck />, text: "Specifikacije po 30-dnevnim periodima, sa obračunom u RSD i EUR" },
@@ -27,7 +28,10 @@ export default function SignInPage() {
           <SignInForm />
           <p className="mt-6 text-center text-xs text-gray-400">Nemate nalog? Obratite se upravi doma.</p>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-gray-400">© {new Date().getFullYear()} {[facility.name, facility.subtitle].filter(Boolean).join(" · ")}</p>
+          <ScriptSwitch className="w-48" />
+        </div>
       </div>
 
       <div className="relative hidden overflow-hidden bg-brand-700 lg:block">

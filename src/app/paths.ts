@@ -29,6 +29,7 @@ export const paths = {
   care: "/care",
   approvals: "/approvals",
   careTasks: "/care-tasks",
+  careLog: "/care-log",
 } as const;
 
 export type Role = "admin" | "main-nurse" | "nurse" | "doctor";

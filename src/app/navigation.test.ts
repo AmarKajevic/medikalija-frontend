@@ -24,7 +24,8 @@ describe("navigacija po ulogama", () => {
   it("odobravanje unosa i katalog usluga vidi samo uprava", () => {
     expect(labels("nurse")).not.toContain("Za odobrenje");
     expect(labels("nurse")).not.toContain("Usluge nege");
-    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Usluge nege", "Unos nege"]));
+    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Usluge nege", "Unos nege", "Dnevnik nege"]));
+    expect(labels("nurse")).not.toContain("Dnevnik nege");
   });
 
   it("podešavanja ustanove vidi samo direktor", () => {

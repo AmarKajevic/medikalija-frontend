@@ -5,6 +5,7 @@ import { useAuth } from "@app/providers/AuthContext";
 import { ThemePreference, useTheme } from "@app/providers/ThemeContext";
 import { isManager, paths } from "@app/paths";
 import Avatar from "@shared/ui/avatar/Avatar";
+import ScriptSwitch from "@shared/ui/ScriptSwitch";
 import { roleLabel } from "@shared/lib/format";
 import { relativeTime, useMarkAllNotificationsRead, useNotifications } from "@features/notifications/hooks";
 
@@ -151,6 +152,8 @@ export function UserMenu() {
               </button>
             ))}
           </div>
+          <p className="px-3 pb-1 pt-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Pismo</p>
+          <ScriptSwitch className="mx-1.5 mb-1.5" />
           <div className="my-1 h-px bg-gray-100 dark:bg-gray-800" />
           <button
             type="button"

@@ -7,8 +7,9 @@ import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { formatRSD } from "@shared/lib/format";
+import { normalizeSearch } from "@shared/lib/search";
 
-const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const normalize = normalizeSearch;
 
 export default function AddCombinationForm({ patientId }: { patientId: string }) {
   const { data: groups = [], isLoading } = useGetCombinations();
