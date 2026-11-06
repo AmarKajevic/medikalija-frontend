@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
@@ -8,6 +8,7 @@ import { Input } from "@shared/ui/form/controls";
 import { notify } from "@shared/lib/notify";
 import { paths } from "@app/paths";
 import { useAddPatient } from "@features/patients/hooks/useAddPatient";
+import DateInput from "@shared/ui/form/DateInput";
 
 type FormValues = {
   name: string;
@@ -29,6 +30,7 @@ export default function AddPatientDialog({ open, onClose }: { open: boolean; onC
   const { mutate, isPending } = useAddPatient();
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -83,20 +85,23 @@ export default function AddPatientDialog({ open, onClose }: { open: boolean; onC
           <Input id={id("lastName")} invalid={!!errors.lastName} {...register("lastName", { required: "Unesite prezime." })} />
         </Field>
         <Field label="Datum rođenja" htmlFor={id("dob")} error={errors.dateOfBirth?.message}>
-          <Input
-            id={id("dob")}
-            type="date"
-            max={todayKey()}
-            invalid={!!errors.dateOfBirth}
-            {...register("dateOfBirth", { required: "Unesite datum rođenja." })}
+          <Controller
+            name="dateOfBirth"
+            control={control}
+            rules={{ required: "Unesite datum rođenja." }}
+            render={({ field }) => (
+              <DateInput id={id("dob")} value={field.value} onChange={field.onChange} max={todayKey()} fromYear={1900} invalid={!!errors.dateOfBirth} />
+            )}
           />
         </Field>
         <Field label="Datum prijema" htmlFor={id("admission")} error={errors.admissionDate?.message}>
-          <Input
-            id={id("admission")}
-            type="date"
-            invalid={!!errors.admissionDate}
-            {...register("admissionDate", { required: "Unesite datum prijema." })}
+          <Controller
+            name="admissionDate"
+            control={control}
+            rules={{ required: "Unesite datum prijema." }}
+            render={({ field }) => (
+              <DateInput id={id("admission")} value={field.value} onChange={field.onChange} fromYear={2000} invalid={!!errors.admissionDate} />
+            )}
           />
         </Field>
         <Field label="Adresa" htmlFor={id("address")} error={errors.address?.message} className="sm:col-span-2">

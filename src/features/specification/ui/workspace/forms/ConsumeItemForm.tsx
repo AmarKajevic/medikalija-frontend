@@ -104,16 +104,25 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false }:
         />
       </Field>
 
+      {selected && (
+        <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Na stanju: dom {formatQty(selected.home)} · porodica {formatQty(selected.family)}
+        </p>
+      )}
+
       {isMedicine && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-800">
           <button
             type="button"
             onClick={() => setShowCalc((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             <span className="flex items-center gap-2">
               <LuCalculator className="h-4 w-4 text-gray-400" />
-              Kalkulator doze
+              <span>
+                Kalkulator doze
+                <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">Ne znate ukupnu količinu? Izračunajte je iz doze.</span>
+              </span>
             </span>
             <LuChevronDown className={`h-4 w-4 text-gray-400 transition ${showCalc ? "rotate-180" : ""}`} />
           </button>
@@ -170,7 +179,11 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false }:
         </div>
       )}
 
-      <Field label="Količina" htmlFor={ids.amount} hint={isMedicine ? "Broj tableta/doza. Može i decimalno (npr. 0,5)." : undefined}>
+      <Field label="Količina" htmlFor={ids.amount} hint={
+          isMedicine
+            ? "Ukupan broj tableta ili doza. Za pola tablete upišite 0,5."
+            : "Broj komada. Prvo se troši ono što je donela porodica."
+        }>
         <input
           id={ids.amount}
           type="text"

@@ -4,6 +4,7 @@ import { useAuth } from "@app/providers/AuthContext";
 import { paths } from "@app/paths";
 import SignInForm from "@features/auth/ui/SignInForm";
 import BrandMark, { BrandIcon } from "@widgets/shell/BrandMark";
+import { useFacility } from "@entities/facility/facility";
 
 const FEATURES = [
   { icon: <LuClipboardCheck />, text: "Specifikacije po 30-dnevnim periodima, sa obračunom u RSD i EUR" },
@@ -13,6 +14,7 @@ const FEATURES = [
 
 export default function SignInPage() {
   const { user } = useAuth();
+  const { facility } = useFacility();
   if (user) return <Navigate to={paths.home} replace />;
 
   return (
@@ -25,7 +27,7 @@ export default function SignInPage() {
           <SignInForm />
           <p className="mt-6 text-center text-xs text-gray-400">Nemate nalog? Obratite se upravi doma.</p>
         </div>
-        <p className="text-xs text-gray-400">© {new Date().getFullYear()} Medikalija · Dom za stara lica</p>
+        <p className="text-xs text-gray-400">© {new Date().getFullYear()} {[facility.name, facility.subtitle].filter(Boolean).join(" · ")}</p>
       </div>
 
       <div className="relative hidden overflow-hidden bg-brand-700 lg:block">
@@ -43,7 +45,7 @@ export default function SignInPage() {
               ))}
             </ul>
           </div>
-          <p className="text-sm text-brand-100/80">Ustanova socijalne zaštite</p>
+          <p className="text-sm text-brand-100/80">{facility.name}</p>
         </div>
       </div>
     </div>

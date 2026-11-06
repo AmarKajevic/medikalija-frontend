@@ -21,7 +21,10 @@ export const formatDay = (value: string | Date | null | undefined): string => {
   if (!value) return "";
   const day = toCalendarDay(value);
   if (isNaN(day.getTime())) return "";
-  return day.toLocaleDateString("sr-Latn-RS", { timeZone: "UTC" });
+  // Uvek dan.mesec.godina (06.11.2026.), nezavisno od jezika browsera
+  const dd = String(day.getUTCDate()).padStart(2, "0");
+  const mm = String(day.getUTCMonth() + 1).padStart(2, "0");
+  return `${dd}.${mm}.${day.getUTCFullYear()}.`;
 };
 
 export const calendarYear = (value: string | Date): number =>

@@ -25,6 +25,7 @@ export const paths = {
   nurseActivity: "/nurse-activity",
   notifications: "/notifications",
   calendar: "/calendar",
+  settings: "/settings",
 } as const;
 
 export type Role = "admin" | "main-nurse" | "nurse" | "doctor";

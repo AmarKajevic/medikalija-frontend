@@ -1,11 +1,12 @@
 import { useId, useState } from "react";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
-import Field, { inputClass } from "@shared/ui/form/Field";
+import Field from "@shared/ui/form/Field";
 import { notify } from "@shared/lib/notify";
 import { toCalendarDay } from "@shared/lib/calendarDay";
 import { useUpdateDischargeDate } from "@features/patients/hooks/useUpdateDischargeDate";
 import { Patient } from "@entities/patient/hooks/usePatient";
+import DateInput from "@shared/ui/form/DateInput";
 
 const todayKey = () => {
   const d = new Date();
@@ -55,7 +56,7 @@ export default function DischargeDialog({ open, onClose, patient }: { open: bool
           Aktivna specifikacija se zatvara na dan otpusta. Posle otpusta se više ne mogu dodavati stavke.
         </p>
         <Field label="Datum otpusta" htmlFor={id} error={date && date < admission ? "Datum otpusta je pre datuma prijema." : undefined}>
-          <input id={id} type="date" min={admission} value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+          <DateInput id={id} min={admission} value={date} onChange={setDate} />
         </Field>
       </div>
     </Dialog>

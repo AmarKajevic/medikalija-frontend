@@ -10,6 +10,7 @@ import {
   LuPackage,
   LuPackageOpen,
   LuPill,
+  LuSettings,
   LuUserCheck,
   LuUsers,
   LuUserCog,
@@ -61,6 +62,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { label: "Aktivnosti sestara", to: paths.nurseActivity, icon: <LuUserCheck />, roles: MANAGER_ROLES },
       { label: "Korisnici", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES },
+      { label: "Podešavanja", to: paths.settings, icon: <LuSettings />, roles: ["admin"] },
     ],
   },
 ];
