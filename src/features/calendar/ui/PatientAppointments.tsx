@@ -5,11 +5,12 @@ import { Card, CardHeader } from "@shared/ui/card/Card";
 import Button from "@shared/ui/button/Button";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
-import { paths } from "@app/paths";
+import { isManager, paths } from "@app/paths";
 import { CalendarOccurrence, Draft, draftFrom, describeWhen, newDraft, useCalendarEvents } from "@features/calendar/model";
 import { eventColorClass } from "@features/calendar/colors";
 import EventDialog from "./EventDialog";
 import EventDetails from "./EventDetails";
+import { useAuth } from "@app/providers/AuthContext";
 
 const DAYS_AHEAD = 90;
 
@@ -22,6 +23,9 @@ export default function PatientAppointments({ patientId, canEdit }: { patientId:
   const { data = [], isLoading } = useCalendarEvents(range.from, range.to, { patientId });
   const [draft, setDraft] = useState<Draft | null>(null);
   const [details, setDetails] = useState<CalendarOccurrence | null>(null);
+  const { user } = useAuth();
+  // Zakazivanje (canEdit) ne znači i menjanje tuđih termina
+  const canModify = (o: CalendarOccurrence) => canEdit && (isManager(user?.role) || String(o.createdBy?._id) === String(user?._id));
 
   return (
     <Card>
@@ -76,7 +80,7 @@ export default function PatientAppointments({ patientId, canEdit }: { patientId:
       {draft && <EventDialog draft={draft} lockPatient onClose={() => setDraft(null)} />}
       <EventDetails
         occurrence={details}
-        canEdit={canEdit}
+        canEdit={!!details && canModify(details)}
         onClose={() => setDetails(null)}
         onEdit={(o) => {
           setDetails(null);

@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
-import { MANAGER_ROLES, paths, STAFF_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, SOCIAL_READ_ROLES, STAFF_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
 import { NotFoundPage } from "@pages/system/StatusPage";
@@ -31,9 +31,14 @@ const CarePage = lazy(() => import("@pages/care/CarePage"));
 const ApprovalsPage = lazy(() => import("@pages/care/ApprovalsPage"));
 const CareTasksPage = lazy(() => import("@pages/care/CareTasksPage"));
 const CareLogPage = lazy(() => import("@pages/care/CareLogPage"));
+const ReportsPage = lazy(() => import("@pages/reports/ReportsPage"));
+const ReportPage = lazy(() => import("@pages/reports/ReportPage"));
+const SocialPage = lazy(() => import("@pages/social/SocialPage"));
 
 const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
 const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
+const care = (el: React.ReactNode) => <RequireRole roles={CARE_ROLES}>{el}</RequireRole>;
+const clinical = (el: React.ReactNode) => <RequireRole roles={CLINICAL_ROLES}>{el}</RequireRole>;
 const admins = (el: React.ReactNode) => <RequireRole roles={["admin"]}>{el}</RequireRole>;
 
 const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
@@ -95,9 +100,9 @@ export default function App() {
 
             <Route path="/medicines" element={managers(<InventoryListPage kind="medicine" />)} />
             <Route path="/medicines/:id" element={managers(<InventoryItemPage kind="medicine" />)} />
-            <Route path="/articles" element={staff(<InventoryListPage kind="article" />)} />
-            <Route path="/articles/:id" element={staff(<InventoryItemPage kind="article" />)} />
-            <Route path="/family-stock" element={staff(<FamilyStockPage />)} />
+            <Route path="/articles" element={care(<InventoryListPage kind="article" />)} />
+            <Route path="/articles/:id" element={care(<InventoryItemPage kind="article" />)} />
+            <Route path="/family-stock" element={care(<FamilyStockPage />)} />
             <Route path="/reserve" element={managers(<ReservePage />)} />
 
             <Route path="/analyses" element={managers(<AnalysesPage />)} />
@@ -109,10 +114,13 @@ export default function App() {
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
-            <Route path="/care" element={staff(<CarePage />)} />
+            <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
             <Route path="/care-tasks" element={managers(<CareTasksPage />)} />
             <Route path="/care-log" element={managers(<CareLogPage />)} />
+            <Route path="/reports" element={<RequireRole roles={["admin", "main-nurse", "doctor"]}><ReportsPage /></RequireRole>} />
+            <Route path="/reports/:reportId" element={clinical(<ReportPage />)} />
+            <Route path="/social" element={<RequireRole roles={SOCIAL_READ_ROLES}><SocialPage /></RequireRole>} />
 
             {LEGACY.map(([from, to]) => (
               <Route key={from} path={from} element={<LegacyRedirect to={to} />} />

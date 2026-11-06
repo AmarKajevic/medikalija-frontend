@@ -30,10 +30,12 @@ const ROLES: Array<{ value: string; label: string; login: boolean }> = [
   { value: "nurse", label: "Medicinska sestra", login: true },
   { value: "doctor", label: "Doktor", login: true },
   { value: "admin", label: "Direktor", login: true },
+  { value: "social-worker", label: "Socijalni radnik", login: true },
   { value: "Caregiver", label: "Negovatelj", login: false },
   { value: "Physiotherapist", label: "Fizioterapeut", login: false },
   { value: "Occupational Therapist", label: "Radni terapeut", login: false },
-  { value: "Social Worker", label: "Socijalni radnik", login: false },
+  // Stari zapis osoblja bez prijave; za pristup aplikaciji napravite nalog "Socijalni radnik"
+  { value: "Social Worker", label: "Socijalni radnik (bez prijave)", login: false },
   { value: "Kitchen", label: "Kuhinja", login: false },
   { value: "Cleaner", label: "Higijena", login: false },
   { value: "Janitor", label: "Domar", login: false },

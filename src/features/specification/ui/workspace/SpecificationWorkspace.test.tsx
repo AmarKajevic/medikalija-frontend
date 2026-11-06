@@ -22,8 +22,9 @@ vi.mock("@entities/facility/facility", async (orig) => ({
 const pending = vi.hoisted(() => ({ byPatient: [] as Array<{ patientId: string; count: number }> }));
 vi.mock("@features/nurse-entries/model", () => ({ usePendingSummary: () => ({ data: { total: 0, byPatient: pending.byPatient } }) }));
 vi.mock("@features/nurse-entries/ui/EntryReview", () => ({ default: () => <p>pregled unosa sestara</p> }));
+vi.mock("./PeriodNotes", () => ({ default: ({ onAddAsCost }: { onAddAsCost?: (l: string) => void }) => <button type="button" onClick={() => onAddAsCost?.("Prevoz do stomatologa")}>dodaj iz beleške</button> }));
 vi.mock("./PeriodSwitcher", () => ({ default: () => <span>period</span> }));
-vi.mock("./AddItemPanel", () => ({ default: () => <p>forma za dodavanje</p> }));
+vi.mock("./AddItemPanel", () => ({ default: ({ preset }: { preset?: { kind: string; label?: string } | null }) => <p>forma za dodavanje{preset ? `: ${preset.kind} ${preset.label}` : ""}</p> }));
 
 import SpecificationWorkspace from "./SpecificationWorkspace";
 
@@ -52,6 +53,12 @@ describe("SpecificationWorkspace", () => {
     expect(screen.getByText("forma za dodavanje")).toBeInTheDocument();
     expect(screen.getByText("Andol")).toBeInTheDocument();
     expect(within(footer()).getByText(/1\.000,00 RSD/)).toBeInTheDocument();
+  });
+
+  it("učinak sestre: 'Dodaj kao trošak' otvara trošak sa opisom", async () => {
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    await user.click(screen.getByRole("button", { name: "dodaj iz beleške" }));
+    expect(screen.getByText("forma za dodavanje: extra Prevoz do stomatologa")).toBeInTheDocument();
   });
 
   it("obračun se čuva pri prelasku na pregled, a ukupno uključuje dug", async () => {

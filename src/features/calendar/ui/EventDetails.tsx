@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { LuClock, LuMapPin, LuPencil, LuRepeat, LuText, LuTrash2, LuUser } from "react-icons/lu";
+import { LuClock, LuFilePlus, LuMapPin, LuPencil, LuRepeat, LuText, LuTrash2, LuUser } from "react-icons/lu";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
 import { notify } from "@shared/lib/notify";
 import { paths } from "@app/paths";
+import { useAuth } from "@app/providers/AuthContext";
+import { ButtonLink } from "@shared/ui/button/Button";
+import { reportUrlForAppointment } from "@features/medical-reports/model";
 import { eventColorClass, EVENT_COLORS } from "@features/calendar/colors";
 import { CalendarOccurrence, describeRecurrence, describeWhen, Scope, useDeleteEvent } from "@features/calendar/model";
 import ScopeDialog from "./ScopeDialog";
@@ -26,7 +29,14 @@ const Row = ({ icon, children }: { icon: React.ReactNode; children: React.ReactN
 export default function EventDetails({ occurrence: o, canEdit, onClose, onEdit }: Props) {
   const remove = useDeleteEvent();
   const [askScope, setAskScope] = useState(false);
+  const { user } = useAuth();
   if (!o) return null;
+  // Doktor piše izveštaj direktno iz termina sa pacijentom
+  const writeReport = user?.role === "doctor" && o.patient && (
+    <ButtonLink to={reportUrlForAppointment(o)} size="sm" variant={canEdit ? "outline" : "primary"} startIcon={<LuFilePlus className="h-4 w-4" />} onClick={onClose}>
+      Napiši izveštaj
+    </ButtonLink>
+  );
 
   const category = EVENT_COLORS.find((c) => c.value === o.calendar)?.label;
   const doDelete = (scope: Scope) =>
@@ -68,14 +78,18 @@ export default function EventDetails({ occurrence: o, canEdit, onClose, onEdit }
               >
                 Obriši
               </Button>
+              {writeReport}
               <Button size="sm" startIcon={<LuPencil className="h-4 w-4" />} onClick={() => onEdit(o)}>
                 Izmeni
               </Button>
             </>
           ) : (
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Zatvori
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Zatvori
+              </Button>
+              {writeReport}
+            </>
           )
         }
       >

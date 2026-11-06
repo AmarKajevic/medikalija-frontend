@@ -16,6 +16,8 @@ export const ROLE_LABELS: Record<string, string> = {
   admin: "Administrator",
   "main-nurse": "Glavna sestra",
   nurse: "Sestra",
+  doctor: "Doktor",
+  "social-worker": "Socijalni radnik",
 };
 
 export const roleLabel = (role?: string) => (role ? ROLE_LABELS[role] ?? role : "");

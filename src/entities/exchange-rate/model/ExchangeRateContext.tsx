@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from "@shared/api/api";
 import { useAuth } from "@app/providers/AuthContext";
+import { isManager } from "@app/paths";
 
 interface ExchangeRates {
   lower: number;
@@ -30,11 +31,12 @@ export const ExchangeRateProvider = ({ children }: { children: ReactNode }) => {
     await refreshRates();
   };
 
-  // Kursevi traže prijavu: učitavaju se tek kad korisnik postoji (i ponovo
-  // posle prijave), a ne pri prvom učitavanju stranice kada bi dobili 401.
+  // Kursevi traže prijavu: učitavaju se tek posle prijave (ne pri prvom
+  // učitavanju stranice, kada bi dobili 401).
   const { user } = useAuth();
   useEffect(() => {
-    if (!user) return;
+    // Kurs koristi samo uprava (obračun specifikacije); ostalim ulogama server ga ne daje
+    if (!user || !isManager(user.role)) return;
     refreshRates().catch((err) => console.error("Kursna lista nije učitana:", err));
   }, [user]);
 

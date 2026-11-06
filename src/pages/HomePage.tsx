@@ -10,6 +10,8 @@ import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { useDashboardStats } from "@features/dashboard/hooks/useDashboardStats";
 import { FacilityDashboardStats, PersonalDashboardStats } from "@features/dashboard/types";
 import { ActivityFeed, LowStockList, StaffOverview, UpcomingEvents } from "@features/dashboard/ui/DashboardWidgets";
+import DoctorHome from "@pages/home/DoctorHome";
+import SocialHome from "@pages/home/SocialHome";
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -26,6 +28,14 @@ const QUICK_ACTIONS = [
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
+  // Doktor i socijalni radnik imaju svoje radne početne strane
+  if (user?.role === "doctor") return <DoctorHome greeting={greeting()} today={today()} />;
+  if (user?.role === "social-worker") return <SocialHome greeting={greeting()} today={today()} />;
+  return <StaffHome />;
+}
+
+function StaffHome() {
   const { user } = useAuth();
   const manager = isManager(user?.role);
   const { data, isLoading, isError, refetch } = useDashboardStats();

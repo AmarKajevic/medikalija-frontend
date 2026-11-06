@@ -1,10 +1,17 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { LuFlaskConical, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
 import ConsumeItemForm from "./forms/ConsumeItemForm";
 import AddCombinationForm from "./forms/AddCombinationForm";
 import AddExtraCostForm from "./forms/AddExtraCostForm";
 
-type Kind = "medicine" | "article" | "combination" | "extra";
+export type Kind = "medicine" | "article" | "combination" | "extra";
+
+/** Spolja zadat izbor (npr. "Dodaj kao trošak" iz učinka sestre); nonce ponavlja isti izbor */
+export interface AddPreset {
+  kind: Kind;
+  label?: string;
+  nonce: number;
+}
 
 const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode }> = [
   { value: "medicine", label: "Lek", hint: "Tablete, kapi, ampule", icon: <LuPill /> },
@@ -14,8 +21,11 @@ const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode }
 ];
 
 // Izbor vrste stavke kao velika dugmad sa objašnjenjem umesto sitnih tabova.
-export default function AddItemPanel({ specId, patientId }: { specId: string; patientId: string }) {
+export default function AddItemPanel({ specId, patientId, preset }: { specId: string; patientId: string; preset?: AddPreset | null }) {
   const [kind, setKind] = useState<Kind>("medicine");
+  useEffect(() => {
+    if (preset) setKind(preset.kind);
+  }, [preset]);
 
   return (
     <div className="space-y-5">
@@ -53,7 +63,9 @@ export default function AddItemPanel({ specId, patientId }: { specId: string; pa
       {kind === "medicine" && <ConsumeItemForm key="medicine" kind="medicine" patientId={patientId} />}
       {kind === "article" && <ConsumeItemForm key="article" kind="article" patientId={patientId} />}
       {kind === "combination" && <AddCombinationForm patientId={patientId} />}
-      {kind === "extra" && <AddExtraCostForm specId={specId} patientId={patientId} />}
+      {kind === "extra" && (
+        <AddExtraCostForm key={preset?.kind === "extra" ? preset.nonce : "extra"} specId={specId} patientId={patientId} initialLabel={preset?.kind === "extra" ? preset.label : undefined} />
+      )}
     </div>
   );
 }

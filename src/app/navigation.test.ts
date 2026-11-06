@@ -11,8 +11,12 @@ describe("navigacija po ulogama", () => {
     expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Unos nege", "Kalendar", "Artikli", "Porodične zalihe"]);
   });
 
-  it("doktor ima isti pristup kao sestra (ranije nije mogao ni da uđe)", () => {
-    expect(labels("doctor")).toEqual(labels("nurse"));
+  it("doktor: pacijenti, kalendar i lekarski izveštaji, bez zaliha i nege", () => {
+    expect(labels("doctor")).toEqual(["Početna", "Pacijenti", "Kalendar", "Lekarski izveštaji", "Socijalni karton"]);
+  });
+
+  it("socijalni radnik: pacijenti, kalendar i socijalni karton", () => {
+    expect(labels("social-worker")).toEqual(["Početna", "Pacijenti", "Kalendar", "Socijalni karton"]);
   });
 
   it("uprava vidi sve, uključujući lekove, rezervu i korisnike", () => {
