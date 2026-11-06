@@ -28,6 +28,8 @@ export function refreshAfterSpecChange(qc: QueryClient, patientId: string, spec?
     ["allMedicines"],
     ["articles"],
     ["dashboard-stats"],
+    // Brisanje stavke vraća unos sestre na odobrenje; sestrin unos leka pravi novi
+    ["nurseEntries"],
   ];
   keys.forEach((queryKey) => qc.invalidateQueries({ queryKey }));
 }

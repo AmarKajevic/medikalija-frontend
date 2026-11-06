@@ -198,7 +198,7 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false }:
       {recordOnly && (
         <p className="flex gap-2 rounded-xl bg-gray-50 p-3 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
           <LuInfo className="mt-0.5 h-4 w-4 shrink-0" />
-          Unos se beleži u istoriji pacijenta. Stanje na lageru i specifikaciju ažurira glavna sestra.
+          Unos ide upravi na odobrenje. Kad ga prihvati, ulazi u specifikaciju i skida se sa stanja.
         </p>
       )}
 

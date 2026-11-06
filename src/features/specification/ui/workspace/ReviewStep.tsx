@@ -13,6 +13,8 @@ interface Props {
   billing: BillingState;
   nextPeriodLabel: string;
   onEditStep: (step: Step) => void;
+  /** Unosi sestara koji još nisu pregledani (neće biti u PDF-u) */
+  pendingCount?: number;
 }
 
 function Warning({ children, action }: { children: ReactNode; action?: ReactNode }) {
@@ -45,7 +47,7 @@ const Row = ({ label, value, sub, onEdit }: { label: string; value: string; sub?
 );
 
 // Poslednji korak: sve što ide na papir, sa upozorenjima pre štampe.
-export default function ReviewStep({ specification: spec, billing, nextPeriodLabel, onEditStep }: Props) {
+export default function ReviewStep({ specification: spec, billing, nextPeriodLabel, onEditStep, pendingCount = 0 }: Props) {
   const { result, rates, dirty, saving, saveBilling } = billing;
   const ratesMissing = !(rates.lower > 0 && rates.middle > 0);
 
@@ -61,6 +63,17 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
+      {pendingCount > 0 && (
+        <Warning
+          action={
+            <Button size="sm" variant="outline" onClick={() => onEditStep(1)}>
+              Pregledaj
+            </Button>
+          }
+        >
+          {pendingCount === 1 ? "1 unos sestre još čeka" : `${pendingCount} unosa sestara još čeka`} odobrenje i nije u specifikaciji.
+        </Warning>
+      )}
       {dirty && (
         <Warning
           action={

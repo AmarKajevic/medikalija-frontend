@@ -2,7 +2,8 @@ import { Link, NavLink, useLocation } from "react-router";
 import { LuPanelLeftClose, LuPanelLeftOpen, LuX } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { navigationFor, NavItem } from "@app/navigation";
-import { paths } from "@app/paths";
+import { isManager, paths } from "@app/paths";
+import { usePendingSummary } from "@features/nurse-entries/model";
 import { useFacility } from "@entities/facility/facility";
 import BrandMark from "./BrandMark";
 
@@ -22,6 +23,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
   const { user } = useAuth();
   const { pathname } = useLocation();
   const groups = navigationFor(user?.role);
+  const pending = usePendingSummary(isManager(user?.role)).data?.total ?? 0;
 
   return (
     <nav aria-label="Glavna navigacija" className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
@@ -38,12 +40,13 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
           <ul className="space-y-0.5">
             {group.items.map((item) => {
               const active = isActive(item, pathname);
+              const count = item.badge === "approvals" ? pending : 0;
               return (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
                     onClick={onNavigate}
-                    title={collapsed ? item.label : undefined}
+                    title={collapsed ? (count ? `${item.label} (${count})` : item.label) : undefined}
                     aria-current={active ? "page" : undefined}
                     className={`group flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${
                       collapsed ? "justify-center px-0" : ""
@@ -54,13 +57,19 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                     }`}
                   >
                     <span
-                      className={`text-[18px] ${
+                      className={`relative text-[18px] ${
                         active ? "text-brand-600 dark:text-brand-400" : "text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300"
                       }`}
                     >
                       {item.icon}
+                      {collapsed && count > 0 && <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-warning-500" aria-hidden="true" />}
                     </span>
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    {!collapsed && count > 0 && (
+                      <span className="rounded-full bg-warning-100 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-warning-700 dark:bg-warning-500/20 dark:text-warning-300" aria-label={`${count} čeka`}>
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    )}
                   </NavLink>
                 </li>
               );

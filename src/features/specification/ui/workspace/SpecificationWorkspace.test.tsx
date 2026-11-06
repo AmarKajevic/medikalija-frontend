@@ -19,6 +19,9 @@ vi.mock("@entities/facility/facility", async (orig) => ({
   ...(await orig<typeof import("@entities/facility/facility")>()),
   useFacility: () => ({ facility: { name: "Dom Sunce" } }),
 }));
+const pending = vi.hoisted(() => ({ byPatient: [] as Array<{ patientId: string; count: number }> }));
+vi.mock("@features/nurse-entries/model", () => ({ usePendingSummary: () => ({ data: { total: 0, byPatient: pending.byPatient } }) }));
+vi.mock("@features/nurse-entries/ui/EntryReview", () => ({ default: () => <p>pregled unosa sestara</p> }));
 vi.mock("./PeriodSwitcher", () => ({ default: () => <span>period</span> }));
 vi.mock("./AddItemPanel", () => ({ default: () => <p>forma za dodavanje</p> }));
 
@@ -39,6 +42,7 @@ const footer = () => screen.getByText(/^Korak \d od 3/).parentElement!;
 beforeEach(() => {
   rates.value = { lower: 100, middle: 120 };
   save.mutateAsync.mockReset();
+  pending.byPatient = [];
 });
 
 describe("SpecificationWorkspace", () => {
@@ -71,6 +75,15 @@ describe("SpecificationWorkspace", () => {
     await user.type(screen.getByLabelText("Smeštaj za naredni period (EUR)"), "500");
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
     expect(screen.getByRole("button", { current: "step" })).toHaveTextContent("Obračun za uplatu");
+  });
+
+  it("unosi sestara na čekanju: pregled u prvom koraku i upozorenje pre štampe", async () => {
+    pending.byPatient = [{ patientId: "p1", count: 2 }];
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    expect(screen.getByText("Unosi sestara čekaju odobrenje (2)")).toBeInTheDocument();
+    expect(screen.getByText("pregled unosa sestara")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
+    expect(screen.getByText(/2 unosa sestara još čeka/)).toBeInTheDocument();
   });
 
   it("bez kursa: polja za kurs su otvorena i pregled upozorava", async () => {
