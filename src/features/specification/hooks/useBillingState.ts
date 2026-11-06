@@ -2,21 +2,26 @@ import { useEffect, useState } from "react";
 import { notify } from "@shared/lib/notify";
 import { useExchangeRates } from "@entities/exchange-rate/model/ExchangeRateContext";
 import { computeBilling } from "@features/specification/lib/billing";
+import { useSaveBilling } from "@features/specification/hooks/useSaveBilling";
 import { Specification } from "@features/specification/types/types";
 
 const toNumber = (v: string) => Number(v.replace(",", ".")) || 0;
 
-// Stanje obračuna (dug, smeštaj, kursevi) — izdvojeno da bi ga koristio i PDF.
-export function useBillingState(spec: Specification) {
+// Stanje obračuna (dug, smeštaj, kursevi). Živi iznad koraka čarobnjaka, pa se
+// unete vrednosti i oznaka "nesačuvano" ne gube pri prelasku sa koraka na korak.
+export function useBillingState(spec: Specification, patientId: string) {
   const { rates, updateRates } = useExchangeRates();
-  const [debt, setDebt] = useState("");
-  const [lodging, setLodging] = useState("");
+  const save = useSaveBilling(spec._id, patientId);
+  const [debt, setDebtRaw] = useState("");
+  const [lodging, setLodgingRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    setDebt(spec.billing?.previousDebtEUR ? String(spec.billing.previousDebtEUR) : "");
-    setLodging(spec.billing?.nextLodgingEUR ? String(spec.billing.nextLodgingEUR) : "");
+    setDebtRaw(spec.billing?.previousDebtEUR ? String(spec.billing.previousDebtEUR) : "");
+    setLodgingRaw(spec.billing?.nextLodgingEUR ? String(spec.billing.nextLodgingEUR) : "");
+    setDirty(false);
   }, [spec._id, spec.billing?.previousDebtEUR, spec.billing?.nextLodgingEUR]);
 
   useEffect(() => {
@@ -44,9 +49,43 @@ export function useBillingState(spec: Specification) {
     }
   };
 
+  /** Čuva dug i smeštaj. Vraća false ako čuvanje nije uspelo. */
+  const saveBilling = async (): Promise<boolean> => {
+    try {
+      await save.mutateAsync({ previousDebtEUR: result.debtEUR, nextLodgingEUR: result.lodgingEUR });
+      setDirty(false);
+      notify.success("Obračun je sačuvan.");
+      return true;
+    } catch (err) {
+      notify.error(err);
+      return false;
+    }
+  };
+
   return {
-    fields: { debt, setDebt, lodging, setLodging, lowerRate, setLowerRate, middleRate, setMiddleRate },
+    fields: {
+      debt,
+      setDebt: (v: string) => {
+        setDebtRaw(v);
+        setDirty(true);
+      },
+      lodging,
+      setLodging: (v: string) => {
+        setLodgingRaw(v);
+        setDirty(true);
+      },
+      lowerRate,
+      setLowerRate,
+      middleRate,
+      setMiddleRate,
+    },
+    rates,
     result,
     commitRates,
+    dirty,
+    saving: save.isPending,
+    saveBilling,
   };
 }
+
+export type BillingState = ReturnType<typeof useBillingState>;

@@ -21,6 +21,11 @@ describe("navigacija po ulogama", () => {
     }
   });
 
+  it("podešavanja ustanove vidi samo direktor", () => {
+    expect(labels("admin")).toContain("Podešavanja");
+    expect(labels("main-nurse")).not.toContain("Podešavanja");
+  });
+
   it("nepoznata uloga ne dobija ništa", () => {
     expect(navigationFor("Kitchen")).toEqual([]);
     expect(navigationFor(undefined)).toEqual([]);

@@ -3,6 +3,7 @@ import { LuPanelLeftClose, LuPanelLeftOpen, LuX } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { navigationFor, NavItem } from "@app/navigation";
 import { paths } from "@app/paths";
+import { useFacility } from "@entities/facility/facility";
 import BrandMark from "./BrandMark";
 
 interface SidebarProps {
@@ -72,6 +73,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
 }
 
 export default function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }: SidebarProps) {
+  const { facility } = useFacility();
   return (
     <>
       {/* Desktop */}
@@ -81,7 +83,7 @@ export default function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCl
         }`}
       >
         <div className={`flex h-16 shrink-0 items-center border-b border-gray-100 dark:border-gray-800 ${collapsed ? "justify-center" : "px-5"}`}>
-          <Link to={paths.home} aria-label="Medikalija — početna">
+          <Link to={paths.home} aria-label={`${facility.name} — početna`}>
             <BrandMark collapsed={collapsed} />
           </Link>
         </div>

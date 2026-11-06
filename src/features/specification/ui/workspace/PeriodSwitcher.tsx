@@ -3,7 +3,7 @@ import { LuCalendarClock, LuCalendarRange, LuChevronDown, LuHistory, LuSkipForwa
 import ActionMenu from "@shared/ui/menu/ActionMenu";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
-import Field, { inputClass } from "@shared/ui/form/Field";
+import Field from "@shared/ui/form/Field";
 import { notify } from "@shared/lib/notify";
 import { formatDay, getNextPeriod } from "@shared/lib/calendarDay";
 import { formatRSD } from "@shared/lib/format";
@@ -12,6 +12,7 @@ import { useActivateSpecificationPeriod } from "@features/specification/hooks/us
 import { useActivateExistingSpecification } from "@features/specification/hooks/useActivateExistingSpecification";
 import { useSpecificationHistory } from "@features/specification/hooks/useSpecificationHistory";
 import { Specification } from "@features/specification/types/types";
+import DateInput from "@shared/ui/form/DateInput";
 
 interface Props {
   patientId: string;
@@ -98,10 +99,10 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
       >
         <div className="grid grid-cols-2 gap-3">
           <Field label="Od" htmlFor={ids.start}>
-            <input id={ids.start} type="date" value={start} onChange={(e) => setStart(e.target.value)} className={inputClass} />
+            <DateInput id={ids.start} value={start} onChange={setStart} fromYear={2000} />
           </Field>
           <Field label="Do" htmlFor={ids.end} error={start && end && end < start ? "Kraj je pre početka." : undefined}>
-            <input id={ids.end} type="date" value={end} onChange={(e) => setEnd(e.target.value)} className={inputClass} />
+            <DateInput id={ids.end} value={end} onChange={setEnd} min={start || undefined} fromYear={2000} />
           </Field>
         </div>
       </Dialog>

@@ -14,7 +14,7 @@ describe("calendarDay", () => {
   });
 
   it("formatira latinicom i bez pomeranja dana", () => {
-    expect(formatDay("2026-06-09T22:00:00.000Z")).toBe("10. 6. 2026.");
+    expect(formatDay("2026-06-09T22:00:00.000Z")).toBe("10.06.2026.");
     expect(formatDay(null)).toBe("");
     expect(formatDay("nije datum")).toBe("");
   });

@@ -6,6 +6,7 @@ import { MANAGER_ROLES, paths, STAFF_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
 import { NotFoundPage } from "@pages/system/StatusPage";
+import { useFacilityDocumentTitle } from "@entities/facility/facility";
 
 // Stranice se učitavaju po potrebi (manji početni paket)
 const HomePage = lazy(() => import("@pages/HomePage"));
@@ -25,9 +26,11 @@ const UsersPage = lazy(() => import("@pages/team/UsersPage"));
 const NurseActivityPage = lazy(() => import("@pages/team/NurseActivityPage"));
 const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"));
 const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
+const FacilitySettingsPage = lazy(() => import("@pages/settings/FacilitySettingsPage"));
 
 const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
 const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
+const admins = (el: React.ReactNode) => <RequireRole roles={["admin"]}>{el}</RequireRole>;
 
 const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
   ["/nurseDashboard", paths.home],
@@ -58,6 +61,7 @@ const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
 ];
 
 export default function App() {
+  useFacilityDocumentTitle();
   return (
     <BrowserRouter>
       <Routes>
@@ -100,6 +104,7 @@ export default function App() {
             <Route path="/nurse-activity" element={managers(<NurseActivityPage />)} />
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={managers(<CalendarPage />)} />
+            <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
 
             {LEGACY.map(([from, to]) => (
               <Route key={from} path={from} element={<LegacyRedirect to={to} />} />

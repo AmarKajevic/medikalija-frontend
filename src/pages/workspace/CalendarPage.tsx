@@ -17,6 +17,7 @@ import { Input } from "@shared/ui/form/controls";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { EVENT_COLORS, eventColorHex, normalizeEventColor } from "@features/calendar/colors";
+import DateInput from "@shared/ui/form/DateInput";
 
 interface CalendarEventDto {
   _id: string;
@@ -163,10 +164,10 @@ export default function CalendarPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Od" htmlFor={`${formId}-s`}>
-                <Input id={`${formId}-s`} type="date" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value, end: draft.end < e.target.value ? e.target.value : draft.end })} />
+                <DateInput id={`${formId}-s`} value={draft.start} onChange={(v) => setDraft({ ...draft, start: v, end: draft.end < v ? v : draft.end })} fromYear={2020} />
               </Field>
               <Field label="Do" htmlFor={`${formId}-e`}>
-                <Input id={`${formId}-e`} type="date" min={draft.start} value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} />
+                <DateInput id={`${formId}-e`} min={draft.start || undefined} value={draft.end} onChange={(v) => setDraft({ ...draft, end: v })} fromYear={2020} />
               </Field>
             </div>
             <fieldset>

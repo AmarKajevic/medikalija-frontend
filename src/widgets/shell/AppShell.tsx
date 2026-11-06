@@ -4,7 +4,7 @@ import { LuMenu } from "react-icons/lu";
 import Sidebar from "./Sidebar";
 import GlobalSearch from "./GlobalSearch";
 import { NotificationsMenu, UserMenu } from "./TopbarMenus";
-import { BrandIcon } from "./BrandMark";
+import BrandMark from "./BrandMark";
 
 const COLLAPSE_KEY = "sidebar-collapsed";
 
@@ -49,7 +49,9 @@ export default function AppShell() {
           >
             <LuMenu className="h-5 w-5" />
           </button>
-          <BrandIcon className="h-7 w-7 lg:hidden" />
+          <span className="lg:hidden">
+            <BrandMark collapsed />
+          </span>
           <div className="flex flex-1 justify-center lg:justify-start">
             <GlobalSearch />
           </div>

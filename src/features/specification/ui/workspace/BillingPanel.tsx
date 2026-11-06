@@ -1,111 +1,138 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
+import { LuChevronDown, LuCircleAlert, LuCoins } from "react-icons/lu";
 import Field, { inputClass } from "@shared/ui/form/Field";
 import Button from "@shared/ui/button/Button";
-import { notify } from "@shared/lib/notify";
 import { formatEUR, formatRSD } from "@shared/lib/format";
-import { useSaveBilling } from "@features/specification/hooks/useSaveBilling";
-import { useBillingState } from "@features/specification/hooks/useBillingState";
-import { Specification } from "@features/specification/types/types";
-
-type BillingState = ReturnType<typeof useBillingState>;
+import type { BillingState } from "@features/specification/hooks/useBillingState";
 
 interface Props {
-  specification: Specification;
-  patientId: string;
   billing: BillingState;
   nextPeriodLabel: string;
 }
 
-export default function BillingPanel({ specification: spec, patientId, billing, nextPeriodLabel }: Props) {
+const rateText = (n: number) => (n > 0 ? n.toLocaleString("sr-Latn-RS", { maximumFractionDigits: 4 }) : "nije unet");
+
+export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
   const ids = { debt: useId(), lodging: useId(), lower: useId(), middle: useId() };
-  const { fields, result, commitRates } = billing;
-  const save = useSaveBilling(spec._id, patientId);
-  const [dirty, setDirty] = useState(false);
+  const { fields, result, commitRates, rates, dirty, saving, saveBilling } = billing;
+  const ratesMissing = !(rates.lower > 0 && rates.middle > 0);
+  const [showRates, setShowRates] = useState(false);
+  const ratesOpen = showRates || ratesMissing;
 
-  useEffect(() => setDirty(false), [spec._id]);
-
-  const onSave = () =>
-    save.mutate(
-      { previousDebtEUR: result.debtEUR, nextLodgingEUR: result.lodgingEUR },
-      {
-        onSuccess: () => {
-          setDirty(false);
-          notify.success("Obračun je sačuvan.");
-        },
-        onError: (err) => notify.error(err),
-      }
-    );
-
-  const rows: Array<[string, string, string]> = [
-    ["Specifikacija", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
-    ["Dug iz prethodnog perioda", formatRSD(result.debtRSD), formatEUR(result.debtEUR)],
-    ["Smeštaj za naredni period", formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)],
+  const rows: Array<[string, string, string, string]> = [
+    ["Lekovi, artikli, analize i troškovi", "iz koraka 1", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
+    ["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)],
+    ["Smeštaj za naredni period", nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)],
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Dug iz prethodnog perioda (EUR)" htmlFor={ids.debt}>
+        <Field
+          label="Dug iz prethodnog perioda (EUR)"
+          htmlFor={ids.debt}
+          hint="Iznos koji porodica nije platila do sada. Ako duga nema, ostavite prazno."
+        >
           <input
             id={ids.debt}
             inputMode="decimal"
             value={fields.debt}
-            onChange={(e) => {
-              fields.setDebt(e.target.value);
-              setDirty(true);
-            }}
+            onChange={(e) => fields.setDebt(e.target.value)}
             placeholder="0,00"
             className={inputClass}
           />
         </Field>
-        <Field label="Smeštaj za naredni period (EUR)" htmlFor={ids.lodging} hint={nextPeriodLabel}>
+        <Field
+          label="Smeštaj za naredni period (EUR)"
+          htmlFor={ids.lodging}
+          hint={`Cena smeštaja koja se plaća unapred, za period ${nextPeriodLabel}.`}
+        >
           <input
             id={ids.lodging}
             inputMode="decimal"
             value={fields.lodging}
-            onChange={(e) => {
-              fields.setLodging(e.target.value);
-              setDirty(true);
-            }}
+            onChange={(e) => fields.setLodging(e.target.value)}
             placeholder="0,00"
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Niži kurs (specifikacija)" htmlFor={ids.lower} hint="Važi za sve pacijente.">
-          <input
-            id={ids.lower}
-            inputMode="decimal"
-            value={fields.lowerRate}
-            onChange={(e) => fields.setLowerRate(e.target.value)}
-            onBlur={commitRates}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Srednji kurs (dug i smeštaj)" htmlFor={ids.middle} hint="Važi za sve pacijente.">
-          <input
-            id={ids.middle}
-            inputMode="decimal"
-            value={fields.middleRate}
-            onChange={(e) => fields.setMiddleRate(e.target.value)}
-            onBlur={commitRates}
             className={inputClass}
           />
         </Field>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
+      {/* Kursna lista: retko se menja i važi za sve pacijente, pa je sklopljena */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800">
+        <button
+          type="button"
+          onClick={() => setShowRates((v) => !v)}
+          aria-expanded={ratesOpen}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <LuCoins className="h-5 w-5 shrink-0 text-gray-400" />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-gray-800 dark:text-white/90">Kurs evra</span>
+              <span className="block text-xs text-gray-500 dark:text-gray-400">
+                Niži {rateText(rates.lower)} · Srednji {rateText(rates.middle)} — isti za sve pacijente
+              </span>
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand-600 dark:text-brand-400">
+            {ratesOpen ? "Sakrij" : "Promeni"}
+            <LuChevronDown className={`h-4 w-4 transition ${ratesOpen ? "rotate-180" : ""}`} />
+          </span>
+        </button>
+        {ratesOpen && (
+          <div className="space-y-4 border-t border-gray-200 p-4 dark:border-gray-800">
+            {ratesMissing && (
+              <p className="flex gap-2 rounded-lg bg-warning-50 p-3 text-xs text-warning-700 dark:bg-warning-500/10 dark:text-warning-400">
+                <LuCircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                Kurs nije unet, pa iznosi u evrima ne mogu da se izračunaju. Unesite današnji kurs.
+              </p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Niži kurs" htmlFor={ids.lower} hint="Za preračun specifikacije iz dinara u evre.">
+                <input
+                  id={ids.lower}
+                  inputMode="decimal"
+                  value={fields.lowerRate}
+                  onChange={(e) => fields.setLowerRate(e.target.value)}
+                  onBlur={commitRates}
+                  placeholder="npr. 116,5"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Srednji kurs" htmlFor={ids.middle} hint="Za preračun duga i smeštaja iz evra u dinare.">
+                <input
+                  id={ids.middle}
+                  inputMode="decimal"
+                  value={fields.middleRate}
+                  onChange={(e) => fields.setMiddleRate(e.target.value)}
+                  onBlur={commitRates}
+                  placeholder="npr. 117,2"
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Kurs se čuva automatski kad izađete iz polja.</p>
+          </div>
+        )}
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+        <table className="w-full min-w-[480px] text-sm">
           <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/[0.03] dark:text-gray-400">
             <tr>
-              <th className="px-4 py-2 text-left font-medium">Stavka</th>
+              <th className="px-4 py-2 text-left font-medium">Šta se plaća</th>
               <th className="px-4 py-2 text-right font-medium">RSD</th>
               <th className="px-4 py-2 text-right font-medium">EUR</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 tabular-nums dark:divide-gray-800">
-            {rows.map(([label, r, e]) => (
+            {rows.map(([label, note, r, e]) => (
               <tr key={label} className="text-gray-700 dark:text-gray-300">
-                <td className="px-4 py-2.5">{label}</td>
+                <td className="px-4 py-2.5">
+                  {label}
+                  <span className="block text-xs text-gray-400">{note}</span>
+                </td>
                 <td className="px-4 py-2.5 text-right">{r}</td>
                 <td className="px-4 py-2.5 text-right">{e}</td>
               </tr>
@@ -119,9 +146,9 @@ export default function BillingPanel({ specification: spec, patientId, billing, 
         </table>
       </div>
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {dirty && <span className="text-xs text-warning-600 dark:text-warning-400">Imate nesačuvane izmene</span>}
-        <Button onClick={onSave} loading={save.isPending} size="sm">
+        <Button onClick={() => void saveBilling()} loading={saving} size="sm" variant={dirty ? "primary" : "outline"}>
           Sačuvaj obračun
         </Button>
       </div>

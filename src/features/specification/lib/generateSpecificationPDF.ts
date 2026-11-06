@@ -6,6 +6,11 @@ import logoUrl from "../../../../public/images/logo/logo-medikalija.webp"
 import type { TDocumentDefinitions } from "pdfmake/interfaces";
 import { formatDay } from "@shared/lib/calendarDay";
 
+// Iznosi kao u aplikaciji: 5.860,00 (sr-Latn-RS)
+const money = new Intl.NumberFormat("sr-Latn-RS", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qtyFmt = new Intl.NumberFormat("sr-Latn-RS", { maximumFractionDigits: 2 });
+import { DEFAULT_FACILITY, type Facility, facilityContactLine } from "@entities/facility/facility";
+
 (pdfMake as unknown as { vfs: unknown }).vfs = vfsFonts;
 
 interface GeneratePDFParams {
@@ -26,6 +31,8 @@ interface GeneratePDFParams {
   totalRSD: number;
   totalEUR: number;
   nextPeriodLabel: string;
+  /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
+  facility?: Facility;
   /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
   mode?: "download" | "print";
 }
@@ -46,18 +53,24 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     totalEUR,
     nextPeriodLabel,
     mode = "download",
+    facility = DEFAULT_FACILITY,
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
   const periodText = `${formatDate(startDate)} – ${formatDate(endDate)}`;
 
-  // Učitaj logo
+  // Logo ustanove; ugrađeni logo samo za postojeću instalaciju koja nije postavila svoj.
+  // Sve ide kroz canvas → PNG jer pdfmake ne podržava WebP.
+  const logoSource = facility.logo || (facility.name === DEFAULT_FACILITY.name ? logoUrl : "");
   let logoBase64 = "";
-  try {
-    logoBase64 = await loadImageAsBase64(logoUrl);
-  } catch {
-    console.warn("Logo nije učitan");
+  if (logoSource) {
+    try {
+      logoBase64 = await loadImageAsBase64(logoSource);
+    } catch {
+      console.warn("Logo nije učitan");
+    }
   }
+  const contactLine = facilityContactLine(facility);
 
   // ✅ ZAJEDNIČKE ŠIRINE KOLONA za sve tri tabele
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
@@ -72,13 +85,16 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       // Red: logo levo, ime pacijenta desno
       {
         columns: [
-          logoBase64
-            ? {
-                width: 170,
-                image: logoBase64,
-                alignment: "left",
-              }
-            : { width: 100, text: "" },
+          {
+            width: 250,
+            stack: [
+              logoBase64
+                ? { image: logoBase64, fit: [170, 60], alignment: "left", margin: [0, 0, 0, 4] }
+                : { text: facility.name, style: "facilityName" },
+              logoBase64 ? { text: facility.name, bold: true, fontSize: 9 } : { text: facility.subtitle, fontSize: 9, color: "#555" },
+              contactLine ? { text: contactLine, fontSize: 8, color: "#666", margin: [0, 2, 0, 0] } : { text: "" },
+            ],
+          },
           {
             width: "*",
             text: patientName,
@@ -104,18 +120,18 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
             ],
             [
               { text: "Dug iz prethodnog perioda" },
-              { text: debtRSD.toFixed(2), alignment: "right" },
-              { text: debtEUR.toFixed(2), alignment: "right" },
+              { text: money.format(debtRSD), alignment: "right" },
+              { text: money.format(debtEUR), alignment: "right" },
             ],
             [
               { text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` },
-              { text: lodgingRSD.toFixed(2), alignment: "right" },
-              { text: lodgingEUR.toFixed(2), alignment: "right" },
+              { text: money.format(lodgingRSD), alignment: "right" },
+              { text: money.format(lodgingEUR), alignment: "right" },
             ],
             [
               { text: "UKUPNO", bold: true },
-              { text: (debtRSD + lodgingRSD).toFixed(2), bold: true, alignment: "right" },
-              { text: (debtEUR + lodgingEUR).toFixed(2), bold: true, alignment: "right" },
+              { text: money.format(debtRSD + lodgingRSD), bold: true, alignment: "right" },
+              { text: money.format(debtEUR + lodgingEUR), bold: true, alignment: "right" },
             ],
           ],
         },
@@ -135,19 +151,19 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
           widths: colWidths,
           body: [
             [
-              { text: "NAZIV LEKA", bold: true },
-              { text: "KOMADA", bold: true, alignment: "center" },
-              { text: "VREDNOST", bold: true, alignment: "right" },
+              { text: "NAZIV", bold: true },
+              { text: "KOLIČINA", bold: true, alignment: "center" },
+              { text: "RSD", bold: true, alignment: "right" },
             ],
             ...items.map((item) => [
               { text: item.formattedName },
-              { text: item.amount.toString(), alignment: "center" },
-              { text: item.price.toFixed(2), alignment: "right" },
+              { text: qtyFmt.format(item.amount), alignment: "center" },
+              { text: money.format(item.price), alignment: "right" },
             ]),
             [
               { text: "" },
               { text: "Ukupno", bold: true, alignment: "right" },
-              { text: specTotalRSD.toFixed(2), bold: true, alignment: "right" },
+              { text: money.format(specTotalRSD), bold: true, alignment: "right" },
             ],
           ],
         },
@@ -173,23 +189,23 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
             ],
             [
               { text: "Specifikacija troškova " },
-              { text: specTotalRSD.toFixed(2), alignment: "right" },
-              { text: specEUR.toFixed(2), alignment: "right" },
+              { text: money.format(specTotalRSD), alignment: "right" },
+              { text: money.format(specEUR), alignment: "right" },
             ],
             [
               { text: "Dug iz prethodnog perioda" },
-              { text: debtRSD.toFixed(2), alignment: "right" },
-              { text: debtEUR.toFixed(2), alignment: "right" },
+              { text: money.format(debtRSD), alignment: "right" },
+              { text: money.format(debtEUR), alignment: "right" },
             ],
             [
               { text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` },
-              { text: lodgingRSD.toFixed(2), alignment: "right" },
-              { text: lodgingEUR.toFixed(2), alignment: "right" },
+              { text: money.format(lodgingRSD), alignment: "right" },
+              { text: money.format(lodgingEUR), alignment: "right" },
             ],
             [
               { text: "UKUPNO ZA NAPLATU", bold: true },
-              { text: totalRSD.toFixed(2), bold: true, alignment: "right" },
-              { text: totalEUR.toFixed(2), bold: true, alignment: "right" },
+              { text: money.format(totalRSD), bold: true, alignment: "right" },
+              { text: money.format(totalEUR), bold: true, alignment: "right" },
             ],
           ],
         },
@@ -202,7 +218,11 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
         margin: [0, 0, 0, 15],
       },
     ],
+    footer: facility.bankAccount
+      ? { text: `Uplata na račun: ${facility.bankAccount} · ${facility.name}`, fontSize: 8, color: "#666", alignment: "center", margin: [40, 20, 40, 0] }
+      : undefined,
     styles: {
+      facilityName: { fontSize: 13, bold: true },
       patientName: { fontSize: 14, bold: true },
       subheader: { fontSize: 12, bold: true },
     },
