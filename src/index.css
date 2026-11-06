@@ -133,56 +133,120 @@
   }
 }
 
-/* FullCalendar, usklađen sa dizajn sistemom (koristi se samo na stranici Kalendar) */
+/* FullCalendar, usklađen sa dizajn sistemom (stranica Kalendar). Traka sa
+   dugmadima je naša (headerToolbar=false), ovde je samo mreža i događaji. */
 .medikalija-calendar {
   --fc-border-color: var(--color-gray-200);
-  --fc-today-bg-color: var(--color-brand-50);
+  --fc-today-bg-color: color-mix(in srgb, var(--color-brand-500) 6%, transparent);
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: var(--color-gray-50);
   --fc-event-bg-color: transparent;
   --fc-event-border-color: transparent;
   --fc-event-text-color: var(--color-gray-800);
   --fc-highlight-color: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
-  font-size: 0.875rem;
+  --fc-now-indicator-color: var(--color-error-500);
+  --fc-list-event-hover-bg-color: var(--color-gray-50);
+  font-size: 0.8125rem;
 }
 .dark .medikalija-calendar {
   --fc-border-color: var(--color-gray-800);
-  --fc-today-bg-color: color-mix(in srgb, var(--color-brand-500) 14%, transparent);
+  --fc-today-bg-color: color-mix(in srgb, var(--color-brand-500) 10%, transparent);
   --fc-neutral-bg-color: var(--color-gray-900);
   --fc-event-text-color: var(--color-gray-100);
-}
-.medikalija-calendar .fc-toolbar-title {
-  @apply text-lg font-semibold tracking-tight capitalize text-gray-900 dark:text-white;
-}
-.medikalija-calendar .fc-button {
-  @apply h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-none capitalize transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/5;
-}
-.medikalija-calendar .fc-button-primary:not(:disabled).fc-button-active,
-.medikalija-calendar .fc-button-primary:not(:disabled):active {
-  @apply border-brand-600 bg-brand-600 text-white;
-}
-.medikalija-calendar .fc-button:disabled {
-  @apply border-gray-200 bg-white text-gray-400 opacity-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-500;
-}
-.medikalija-calendar .fc-button:focus {
-  @apply shadow-none ring-3 ring-brand-500/20;
-}
-.medikalija-calendar .fc-button-group > .fc-button {
-  @apply rounded-none first:rounded-l-lg last:rounded-r-lg;
-}
-.medikalija-calendar .fc-col-header-cell-cushion {
-  @apply py-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400;
-}
-.medikalija-calendar .fc-daygrid-day-number {
-  @apply p-2 text-xs font-medium text-gray-600 dark:text-gray-400;
-}
-.medikalija-calendar .fc-day-today .fc-daygrid-day-number {
-  @apply font-semibold text-brand-700 dark:text-brand-300;
-}
-.medikalija-calendar .fc-daygrid-event,
-.medikalija-calendar .fc-h-event {
-  @apply mx-1 mb-0.5 cursor-pointer rounded-md bg-gray-100 py-0.5 hover:bg-gray-200 dark:bg-white/[0.06] dark:hover:bg-white/10;
+  --fc-list-event-hover-bg-color: rgb(255 255 255 / 0.03);
 }
 .medikalija-calendar .fc-scrollgrid {
-  @apply overflow-hidden rounded-xl;
+  border-left: 0;
+  border-top: 0;
+}
+.medikalija-calendar .fc-col-header-cell-cushion {
+  @apply py-2.5 text-xs font-medium capitalize text-gray-500 dark:text-gray-400;
+}
+.medikalija-calendar .fc-day-today .fc-col-header-cell-cushion {
+  @apply font-semibold text-brand-700 dark:text-brand-300;
+}
+.medikalija-calendar .fc-daygrid-day-number {
+  @apply p-1.5 text-xs font-medium text-gray-600 dark:text-gray-400;
+}
+.medikalija-calendar .fc-day-today .fc-daygrid-day-number {
+  @apply m-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 p-0 px-1 text-white;
+}
+.medikalija-calendar .fc-timegrid-slot {
+  height: 2.25rem;
+}
+.medikalija-calendar .fc-timegrid-slot-minor {
+  border-top-style: dashed;
+}
+.medikalija-calendar .fc-timegrid-slot-label-cushion,
+.medikalija-calendar .fc-timegrid-axis-cushion {
+  @apply text-[11px] tabular-nums text-gray-400;
+}
+.medikalija-calendar .fc-daygrid-more-link {
+  @apply ml-1 text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white;
+}
+.medikalija-calendar a.fc-col-header-cell-cushion,
+.medikalija-calendar a.fc-daygrid-day-number {
+  @apply hover:underline;
+}
+
+/* Događaji: svetla podloga u boji vrste, jača leva ivica */
+.medikalija-calendar .fc-event {
+  @apply cursor-pointer overflow-hidden rounded-md text-xs;
+  background: color-mix(in srgb, var(--ev) 14%, white);
+  border-left: 3px solid var(--ev);
+  color: var(--color-gray-800);
+}
+.dark .medikalija-calendar .fc-event {
+  background: color-mix(in srgb, var(--ev) 22%, var(--color-gray-900));
+  color: var(--color-gray-100);
+}
+.medikalija-calendar .fc-event:hover {
+  background: color-mix(in srgb, var(--ev) 24%, white);
+}
+.medikalija-calendar .fc-daygrid-dot-event,
+.medikalija-calendar .fc-daygrid-block-event {
+  @apply mx-1 mb-0.5;
+}
+.medikalija-calendar .fc-daygrid-dot-event {
+  border-left: 0;
+  background: transparent;
+}
+.medikalija-calendar .fc-timegrid-event {
+  @apply shadow-theme-xs;
+}
+.medikalija-calendar .fc-event-mirror {
+  @apply opacity-80;
+}
+.medikalija-calendar .ev-dot {
+  background: var(--ev);
+}
+.medikalija-calendar .fc-list {
+  border: 0;
+}
+.medikalija-calendar .fc-list-day-cushion {
+  @apply bg-gray-50 px-4 py-2 text-xs font-semibold capitalize text-gray-700 dark:bg-white/[0.03] dark:text-gray-300;
+}
+.medikalija-calendar .fc-list-event {
+  background: transparent;
+  border-left: 0;
+}
+.medikalija-calendar .fc-list-event-time {
+  @apply tabular-nums text-gray-500;
+}
+.medikalija-calendar .fc-list-event-dot {
+  border-color: var(--ev);
+}
+.medikalija-calendar .fc-list-empty {
+  @apply bg-transparent text-sm text-gray-500;
+}
+.ev-zelena { --ev: var(--color-brand-500); }
+.ev-plava { --ev: var(--color-blue-light-500); }
+.ev-narandzasta { --ev: var(--color-warning-500); }
+.ev-crvena { --ev: var(--color-error-500); }
+.ev-dot-zelena { background: var(--color-brand-500); }
+.ev-dot-plava { background: var(--color-blue-light-500); }
+.ev-dot-narandzasta { background: var(--color-warning-500); }
+.ev-dot-crvena { background: var(--color-error-500); }
+kbd {
+  @apply rounded border border-gray-200 bg-gray-50 px-1 font-sans text-[10px] text-gray-500 dark:border-gray-700 dark:bg-white/5;
 }

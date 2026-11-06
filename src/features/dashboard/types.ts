@@ -6,12 +6,15 @@ export interface ActivityItem {
   createdAt: string;
 }
 
+// Termin iz kalendara (oblik GET /api/calendar; celodnevni ima datume "YYYY-MM-DD")
 export interface UpcomingEvent {
-  _id: string;
+  id: string;
   title: string;
+  allDay: boolean;
   start: string;
   end: string;
   calendar: string;
+  patient?: { _id: string; name: string; lastName: string } | null;
 }
 
 export interface LowStockMedicine {
