@@ -40,7 +40,7 @@ Each layer only imports from layers below it. Path aliases (`@app/*`, `@pages/*`
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - The [Medikalija API](../medikalija-api) running (locally or deployed)
 
 ### Setup
@@ -64,6 +64,9 @@ npm run dev
 | `npm run dev` | Start the Vite dev server |
 | `npm run build` | Type-check and build for production |
 | `npm run lint` | Run ESLint |
+| `npm run typecheck` | Strict TypeScript check |
+| `npm test` | Unit and component tests (Vitest + Testing Library) |
+| `npm run test:watch` | Tests in watch mode |
 | `npm run preview` | Preview a production build locally |
 
 ## License

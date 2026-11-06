@@ -1,11 +1,13 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
 
   resolve: {
     alias: {
@@ -46,5 +48,14 @@ export default defineConfig({
         },
       },
     },
+  },
+
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    css: false,
+    restoreMocks: true,
+    // Rezultati ne smeju da zavise od zone računara (CI je UTC, kancelarija Beograd)
+    env: { TZ: "Europe/Belgrade" },
   },
 });
