@@ -10,9 +10,11 @@ import { formatRSD } from "@shared/lib/format";
 import { useActivateNextSpecificationPeriod } from "@features/specification/hooks/useActivateNextSpecificationPeriod";
 import { useActivateSpecificationPeriod } from "@features/specification/hooks/useActivateSpecificationPeriod";
 import { useActivateExistingSpecification } from "@features/specification/hooks/useActivateExistingSpecification";
-import { useSpecificationHistory } from "@features/specification/hooks/useSpecificationHistory";
+import { usePastPeriods } from "@features/specification/hooks/usePastPeriods";
+import type { PastPeriod } from "@features/specification/api/specificationApi";
 import { Specification } from "@features/specification/types/types";
 import DateInput from "@shared/ui/form/DateInput";
+import { itemsLabel } from "@features/specification/lib/itemsLabel";
 
 interface Props {
   patientId: string;
@@ -24,23 +26,24 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
   const next = useActivateNextSpecificationPeriod(patientId);
   const manual = useActivateSpecificationPeriod(patientId);
   const existing = useActivateExistingSpecification(patientId);
-  const { data: history } = useSpecificationHistory(patientId);
+  const { data: pastPeriods = [] } = usePastPeriods(patientId);
 
   const [dialog, setDialog] = useState<"manual" | "history" | null>(null);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const nextPeriod = getNextPeriod(activeSpecification.endDate);
-  // Samo periodi koji su počeli pre aktivnog, od najbližeg ka starijim
-  const activeStart = activeSpecification.startDate.slice(0, 10);
-  const pastPeriods = ((history?.history ?? []) as Specification[])
-    .filter((s) => s.startDate.slice(0, 10) < activeStart)
-    .sort((a, b) => b.startDate.localeCompare(a.startDate));
   const busy = next.isPending || manual.isPending || existing.isPending;
 
   const onActivated = (spec: Specification) => {
     notify.success(`Aktivan period: ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)}`);
     setDialog(null);
+  };
+  // Svi periodi od prijema do aktivnog (od najnovijeg); neotvaran period se pravi pri aktiviranju
+  const activatePast = (p: PastPeriod) => {
+    const done = { onSuccess: onActivated, onError: (e: unknown) => notify.error(e) };
+    if (p.specificationId) existing.mutate(p.specificationId, done);
+    else manual.mutate({ startDate: p.startDate.slice(0, 10), endDate: p.endDate.slice(0, 10) }, done);
   };
 
   return (
@@ -115,26 +118,21 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
         open={dialog === "history"}
         onClose={() => setDialog(null)}
         title="Raniji periodi"
-        description="Periodi pre trenutnog, od najnovijeg. Aktivirani period postaje aktivan za nove stavke."
+        description="Svi periodi od prijema do trenutnog, od najnovijeg. Aktivirani period postaje aktivan za nove stavke."
         size="md"
       >
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-          {pastPeriods.map((s) => (
-            <li key={s._id} className="flex items-center justify-between gap-3 py-3">
+          {pastPeriods.map((p) => (
+            <li key={p.startDate} className="flex items-center justify-between gap-3 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {formatDay(s.startDate)} – {formatDay(s.endDate)}
+                  {formatDay(p.startDate)} – {formatDay(p.endDate)}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {s.items?.length ?? 0} stavki · {formatRSD(s.totalPrice)}
+                  {p.itemsCount ? `${itemsLabel(p.itemsCount)} · ${formatRSD(p.totalPrice)}` : "Bez stavki"}
                 </p>
               </div>
-              <Button
-                size="xs"
-                variant="outline"
-                disabled={existing.isPending}
-                onClick={() => existing.mutate(s._id, { onSuccess: onActivated, onError: (e) => notify.error(e) })}
-              >
+              <Button size="xs" variant="outline" disabled={busy} onClick={() => activatePast(p)}>
                 Aktiviraj
               </Button>
             </li>
