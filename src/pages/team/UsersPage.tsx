@@ -38,7 +38,7 @@ export default function UsersPage() {
   const [filter, setFilter] = useState<Filter>("active");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [staffOpen, setStaffOpen] = useState(false);
-  const [issued, setIssued] = useState<{ link: IssuedLink; title: string; person: string } | null>(null);
+  const [issued, setIssued] = useState<{ link: IssuedLink; title: string; person: string; email?: string | null } | null>(null);
   const [roleFor, setRoleFor] = useState<ManagedUser | null>(null);
   const [editFor, setEditFor] = useState<ManagedUser | null>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
@@ -55,7 +55,7 @@ export default function UsersPage() {
     link.mutate(
       { id: u._id, kind },
       {
-        onSuccess: (l) => setIssued({ link: l, title: kind === "invite" ? "Nova pozivnica" : "Link za novu lozinku", person: `${u.name} ${u.lastName}` }),
+        onSuccess: (l) => setIssued({ link: l, title: kind === "invite" ? "Nova pozivnica" : "Link za novu lozinku", person: `${u.name} ${u.lastName}`, email: u.email }),
         onError: (err) => notify.error(err),
       }
     );
@@ -223,13 +223,13 @@ export default function UsersPage() {
             onInvited={(u, l) => {
               setInviteOpen(false);
               setFilter("invited");
-              setIssued({ link: l, title: "Pozivnica je spremna", person: `${u.name} ${u.lastName}` });
+              setIssued({ link: l, title: "Pozivnica je spremna", person: `${u.name} ${u.lastName}`, email: u.email });
             }}
           />
           <StaffDialog open={staffOpen} onClose={() => setStaffOpen(false)} />
           <RoleDialog user={roleFor} onClose={() => setRoleFor(null)} />
           <EditUserDialog user={editFor} onClose={() => setEditFor(null)} />
-          <LinkDialog link={issued?.link ?? null} title={issued?.title ?? ""} person={issued?.person ?? ""} onClose={() => setIssued(null)} />
+          <LinkDialog link={issued?.link ?? null} title={issued?.title ?? ""} person={issued?.person ?? ""} email={issued?.email} onClose={() => setIssued(null)} />
         </>
       )}
 

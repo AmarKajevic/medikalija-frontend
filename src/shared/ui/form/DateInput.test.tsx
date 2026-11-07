@@ -71,6 +71,122 @@ describe("DateInput", () => {
     expect(onValue).not.toHaveBeenCalled();
   });
 
+  describe("ispravljanje greške", () => {
+    const setup = async () => {
+      const user = userEvent.setup();
+      render(<Harness initial="2026-05-03" />);
+      const input = screen.getByLabelText("Datum") as HTMLInputElement;
+      await user.click(input);
+      return { user, input };
+    };
+
+    it("cifra otkucana preko pogrešne je menja (ne umeće), kursor preskače tačku", async () => {
+      const { user, input } = await setup();
+      input.setSelectionRange(3, 3); // ispred "0" u mesecu
+      await user.keyboard("1");
+      expect(input).toHaveValue("03.15.2026"); // 15. mesec ne postoji — čeka se ispravka
+      await user.keyboard("0");
+      expect(input).toHaveValue("03.10.2026");
+      expect(screen.getByTestId("value")).toHaveTextContent("2026-10-03");
+    });
+
+    it("brisanje u sredini ne preuređuje tekst; nova cifra dovršava datum", async () => {
+      const { user, input } = await setup();
+      input.setSelectionRange(5, 5); // posle "5"
+      await user.keyboard("{Backspace}");
+      expect(input).toHaveValue("03.0.2026");
+      expect(input.selectionStart).toBe(4);
+      await user.keyboard("7");
+      expect(input).toHaveValue("03.07.2026");
+      expect(screen.getByTestId("value")).toHaveTextContent("2026-07-03");
+    });
+
+    it("posle zamene kursor preskoči tačku; Backspace onda briše cifru, ne tačku", async () => {
+      const { user, input } = await setup();
+      input.setSelectionRange(4, 4);
+      await user.keyboard("6");
+      expect(input).toHaveValue("03.06.2026");
+      expect(input.selectionStart).toBe(6);
+      await user.keyboard("{Backspace}");
+      expect(input).toHaveValue("03.0.2026");
+      expect(input.selectionStart).toBe(4);
+      await user.keyboard("7");
+      expect(input).toHaveValue("03.07.2026");
+    });
+
+    it("Delete ispred tačke briše cifru posle nje", async () => {
+      const { user, input } = await setup();
+      input.setSelectionRange(5, 5);
+      await user.keyboard("{Delete}");
+      expect(input).toHaveValue("03.05.026");
+      expect(input.selectionStart).toBe(5);
+    });
+
+    it("strelice menjaju deo na kom je kursor", async () => {
+      const { user, input } = await setup();
+      input.setSelectionRange(1, 1);
+      await user.keyboard("{ArrowUp}{ArrowUp}");
+      expect(input).toHaveValue("05.05.2026");
+      input.setSelectionRange(4, 4);
+      await user.keyboard("{ArrowDown}");
+      expect(input).toHaveValue("05.04.2026");
+      input.setSelectionRange(8, 8);
+      await user.keyboard("{ArrowUp}");
+      expect(input).toHaveValue("05.04.2027");
+      expect(screen.getByTestId("value")).toHaveTextContent("2027-04-05");
+    });
+
+    it("31. januar + mesec = 28. februar (ne 3. mart)", async () => {
+      const user = userEvent.setup();
+      render(<Harness initial="2026-01-31" />);
+      const input = screen.getByLabelText("Datum") as HTMLInputElement;
+      await user.click(input);
+      input.setSelectionRange(4, 4);
+      await user.keyboard("{ArrowUp}");
+      expect(input).toHaveValue("28.02.2026");
+    });
+
+    it("Esc vraća poslednji ispravan datum i ne zatvara dijalog", async () => {
+      const user = userEvent.setup();
+      const close = vi.fn();
+      render(
+        <Dialog open onClose={close} title="Otpust">
+          <Harness initial="2026-05-03" />
+        </Dialog>
+      );
+      const input = screen.getByLabelText("Datum");
+      await user.click(input);
+      await user.keyboard("{Backspace}{Backspace}{Backspace}");
+      expect(input).toHaveValue("03.05.2");
+      await user.keyboard("{Escape}");
+      expect(input).toHaveValue("03.05.2026");
+      expect(close).not.toHaveBeenCalled();
+    });
+
+    it("dugme × briše datum", async () => {
+      const user = userEvent.setup();
+      render(<Harness initial="2026-05-03" />);
+      await user.click(screen.getByRole("button", { name: "Obriši datum" }));
+      expect(screen.getByLabelText("Datum")).toHaveValue("");
+      expect(screen.getByTestId("value")).toBeEmptyDOMElement();
+    });
+
+    it("Tab-om u popunjeno polje: ceo datum je označen pa se samo prekuca", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <button type="button">pre</button>
+          <Harness initial="2026-05-03" />
+        </>
+      );
+      await user.click(screen.getByRole("button", { name: "pre" }));
+      await user.tab();
+      await user.keyboard("10062026");
+      expect(screen.getByLabelText("Datum")).toHaveValue("10.06.2026");
+      expect(screen.getByTestId("value")).toHaveTextContent("2026-06-10");
+    });
+  });
+
   it("brisanje polja briše vrednost", async () => {
     const user = userEvent.setup();
     render(<Harness initial="2026-01-10" />);

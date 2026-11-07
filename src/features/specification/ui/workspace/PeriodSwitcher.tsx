@@ -31,7 +31,11 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
   const [end, setEnd] = useState("");
 
   const nextPeriod = getNextPeriod(activeSpecification.endDate);
-  const pastPeriods = (history?.history ?? []) as Specification[];
+  // Samo periodi koji su počeli pre aktivnog, od najbližeg ka starijim
+  const activeStart = activeSpecification.startDate.slice(0, 10);
+  const pastPeriods = ((history?.history ?? []) as Specification[])
+    .filter((s) => s.startDate.slice(0, 10) < activeStart)
+    .sort((a, b) => b.startDate.localeCompare(a.startDate));
   const busy = next.isPending || manual.isPending || existing.isPending;
 
   const onActivated = (spec: Specification) => {
@@ -107,7 +111,13 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
         </div>
       </Dialog>
 
-      <Dialog open={dialog === "history"} onClose={() => setDialog(null)} title="Raniji periodi" size="md">
+      <Dialog
+        open={dialog === "history"}
+        onClose={() => setDialog(null)}
+        title="Raniji periodi"
+        description="Periodi pre trenutnog, od najnovijeg. Aktivirani period postaje aktivan za nove stavke."
+        size="md"
+      >
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
           {pastPeriods.map((s) => (
             <li key={s._id} className="flex items-center justify-between gap-3 py-3">

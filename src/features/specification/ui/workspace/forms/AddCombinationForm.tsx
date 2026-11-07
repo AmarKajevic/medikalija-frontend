@@ -11,7 +11,7 @@ import { normalizeSearch } from "@shared/lib/search";
 
 const normalize = normalizeSearch;
 
-export default function AddCombinationForm({ patientId }: { patientId: string }) {
+export default function AddCombinationForm({ patientId, specificationId }: { patientId: string; specificationId?: string }) {
   const { data: groups = [], isLoading } = useGetCombinations();
   const { mutate, isPending, variables } = useAddCombinationToPatient();
   const [query, setQuery] = useState("");
@@ -37,7 +37,7 @@ export default function AddCombinationForm({ patientId }: { patientId: string })
 
   const add = (combinationId: string, name: string) =>
     mutate(
-      { patientId, combinationId },
+      { patientId, combinationId, specificationId },
       {
         onSuccess: () => notify.success(`${name}: dodato u specifikaciju.`),
         onError: (err) => notify.error(err),

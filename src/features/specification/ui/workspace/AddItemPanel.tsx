@@ -60,9 +60,9 @@ export default function AddItemPanel({ specId, patientId, preset }: { specId: st
         })}
       </div>
 
-      {kind === "medicine" && <ConsumeItemForm key="medicine" kind="medicine" patientId={patientId} />}
-      {kind === "article" && <ConsumeItemForm key="article" kind="article" patientId={patientId} />}
-      {kind === "combination" && <AddCombinationForm patientId={patientId} />}
+      {kind === "medicine" && <ConsumeItemForm key="medicine" kind="medicine" patientId={patientId} specificationId={specId} />}
+      {kind === "article" && <ConsumeItemForm key="article" kind="article" patientId={patientId} specificationId={specId} />}
+      {kind === "combination" && <AddCombinationForm patientId={patientId} specificationId={specId} />}
       {kind === "extra" && (
         <AddExtraCostForm key={preset?.kind === "extra" ? preset.nonce : "extra"} specId={specId} patientId={patientId} initialLabel={preset?.kind === "extra" ? preset.label : undefined} />
       )}

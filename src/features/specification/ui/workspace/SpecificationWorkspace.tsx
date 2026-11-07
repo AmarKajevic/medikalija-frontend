@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode, useMemo, useRef, useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuCheck, LuDownload, LuLock, LuPrinter } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
@@ -10,7 +10,7 @@ import { Specification } from "@features/specification/types/types";
 import { itemDisplayName } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
-import { usePendingSummary } from "@features/nurse-entries/model";
+import { useNurseEntries } from "@features/nurse-entries/model";
 import EntryReview from "@features/nurse-entries/ui/EntryReview";
 import SpecificationItems from "./SpecificationItems";
 import BillingPanel from "./BillingPanel";
@@ -31,6 +31,10 @@ interface Props {
   specification: Specification;
   patientId: string;
   patientName: string;
+  /** "billing" = period specifikacije (istekao, u njemu se pravi obračun) */
+  period?: "active" | "billing";
+  /** Koji unosi sestara na čekanju pripadaju ovom periodu (po danu kad je dato) */
+  pendingFilter?: (performedAt: string) => boolean;
 }
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
@@ -89,7 +93,7 @@ function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }
   );
 }
 
-export default function SpecificationWorkspace({ specification: spec, patientId, patientName }: Props) {
+export default function SpecificationWorkspace({ specification: spec, patientId, patientName, period = "active", pendingFilter }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
   const addPanelRef = useRef<HTMLDivElement>(null);
@@ -101,9 +105,12 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   };
   const billing = useBillingState(spec, patientId);
   const { facility } = useFacility();
-  const pendingCount = usePendingSummary().data?.byPatient.find((p) => p.patientId === patientId)?.count ?? 0;
+  const pending = useNurseEntries({ patientId, status: ["pending"], limit: 500 }).data ?? [];
+  const pendingCount = pending.filter((e) => !pendingFilter || pendingFilter(e.performedAt)).length;
+  const reviewFilter = useMemo(() => (pendingFilter ? (e: { performedAt: string }) => pendingFilter(e.performedAt) : undefined), [pendingFilter]);
   const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
-  const canAdd = !!spec.isActive;
+  const isBilling = period === "billing";
+  const canAdd = isBilling || !!spec.isActive;
   const current = STEPS[step - 1]!;
 
   // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
@@ -136,14 +143,27 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
     <div className="flex min-h-full flex-col gap-5">
       {/* Period i status */}
       <div className="flex flex-wrap items-center gap-2">
-        {canAdd ? (
-          <PeriodSwitcher patientId={patientId} activeSpecification={spec} />
+        {isBilling ? (
+          <>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
+            </span>
+            <Badge size="sm" color="warning">Period specifikacije</Badge>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Istekao period — ovde se pravi obračun za naplatu.</span>
+          </>
+        ) : canAdd ? (
+          <>
+            <PeriodSwitcher patientId={patientId} activeSpecification={spec} />
+            <Badge size="sm" color="success">Aktivan period</Badge>
+          </>
         ) : (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
-          </span>
+          <>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
+            </span>
+            <Badge size="sm" color="light">Zatvoren period</Badge>
+          </>
         )}
-        {canAdd ? <Badge size="sm" color="success">Aktivan period</Badge> : <Badge size="sm" color="light">Zatvoren period</Badge>}
       </div>
 
       <div>
@@ -163,7 +183,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
               </p>
             </header>
             <div className="p-5">
-              <EntryReview patientId={patientId} />
+              <EntryReview patientId={patientId} filter={reviewFilter} />
             </div>
           </div>
         )}

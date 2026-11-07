@@ -67,10 +67,13 @@ describe("CalendarPage", () => {
     expect(JSON.parse(localStorage.getItem("calendar.hidden") ?? "[]")).toEqual(["plava"]);
   });
 
-  it("sestra: samo pregled", async () => {
+  it("sestra zakazuje, ali ne menja tuđe termine", async () => {
     auth.role = "nurse";
-    renderWithProviders(<CalendarPage />, { route: "/calendar?view=week&date=2026-11-02" });
+    const { user } = renderWithProviders(<CalendarPage />, { route: "/calendar?view=week&date=2026-11-02" });
     await screen.findAllByText("Pregled kardiologa");
-    expect(screen.queryByRole("button", { name: /Novi/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Novi/ })).toBeInTheDocument();
+    await user.click(screen.getAllByText("Pregled kardiologa")[0]!);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Izmeni" })).not.toBeInTheDocument();
   });
 });
