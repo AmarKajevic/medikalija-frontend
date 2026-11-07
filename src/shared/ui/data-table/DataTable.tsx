@@ -3,7 +3,7 @@ import { LuArrowDown, LuArrowUp, LuChevronLeft, LuChevronRight, LuChevronsUpDown
 import { Input } from "@shared/ui/form/controls";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 
 export interface Column<T> {
   id: string;
@@ -63,8 +63,8 @@ export default function DataTable<T>({
 
   const rows = useMemo(() => {
     let list = data ?? [];
-    const q = normalizeSearch(query.trim());
-    if (q && searchText) list = list.filter((r) => normalizeSearch(searchText(r)).includes(q));
+    const q = query.trim();
+    if (q && searchText) list = list.filter((r) => matchesSearch(searchText(r), q));
     const col = sort && columns.find((c) => c.id === sort.id);
     if (col?.sortValue) {
       const dir = sort!.dir === "asc" ? 1 : -1;
@@ -112,7 +112,8 @@ export default function DataTable<T>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      {/* relative: da apsolutni sr-only naslovi ne probiju širinu stranice na telefonu */}
+      <div className="relative overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/60 dark:border-gray-800 dark:bg-white/[0.02]">

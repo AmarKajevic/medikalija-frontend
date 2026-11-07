@@ -7,7 +7,7 @@ import { Input } from "@shared/ui/form/controls";
 import Avatar from "@shared/ui/avatar/Avatar";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 import { paths } from "@app/paths";
 import { usePatients } from "@features/patients/hooks/usePatients";
 import NurseEntryPanel from "@features/nurse-entries/ui/NurseEntryPanel";
@@ -35,8 +35,8 @@ export default function CarePage() {
     [data]
   );
   const visible = useMemo(() => {
-    const q = normalizeSearch(query.trim());
-    return q ? patients.filter((p) => normalizeSearch(`${p.name} ${p.lastName}`).includes(q)) : patients;
+    const q = query.trim();
+    return q ? patients.filter((p) => matchesSearch(`${p.name} ${p.lastName}`, q)) : patients;
   }, [patients, query]);
   const selected = patients.find((p) => p._id === selectedId);
 

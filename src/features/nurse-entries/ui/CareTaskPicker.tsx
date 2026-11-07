@@ -7,7 +7,7 @@ import DateInput from "@shared/ui/form/DateInput";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 import { todayIso } from "@shared/lib/dateText";
 import { CareTask, isBillableTask, useCareTasks, useCreateEntries } from "@features/nurse-entries/model";
 
@@ -38,8 +38,8 @@ export default function CareTaskPicker({ patientId, onSaved }: { patientId: stri
   const [time, setTime] = useState(nowTime());
 
   const groups = useMemo(() => {
-    const q = normalizeSearch(query.trim());
-    const visible = tasks.filter((t) => !q || normalizeSearch(`${t.name} ${t.category}`).includes(q));
+    const q = query.trim();
+    const visible = tasks.filter((t) => !q || matchesSearch(`${t.name} ${t.category}`, q));
     const byCategory = new Map<string, CareTask[]>();
     for (const t of visible) byCategory.set(t.category || "Nega", [...(byCategory.get(t.category || "Nega") ?? []), t]);
     return [...byCategory.entries()];

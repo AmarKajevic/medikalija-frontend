@@ -1,7 +1,7 @@
 import { KeyboardEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import { LuCheck, LuChevronsUpDown, LuSearch, LuX } from "react-icons/lu";
 import { inputClass } from "@shared/ui/form/Field";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch, searchRank } from "@shared/lib/search";
 import { transliterate } from "@shared/lib/script";
 import { useScript } from "@shared/lib/scriptContext";
 
@@ -44,14 +44,13 @@ export default function SearchSelect({ id, value, onChange, options, placeholder
   const selectedLabel = selected ? transliterate(selected.label, script) : "";
 
   const filtered = useMemo(() => {
-    const q = normalizeSearch(query.trim());
+    const q = query.trim();
     if (!q) return options.slice(0, MAX_SHOWN);
-    // Svaka reč upita mora da se nađe ("mil jov" nalazi "Jovanović Milica")
-    const words = q.split(/\s+/);
+    // Svaka reč upita je početak neke reči ("mil jov" nalazi "Jovanović Milica"; "an" ne nalazi "Jovanović")
     return options
-      .map((o) => ({ o, text: normalizeSearch(`${o.label} ${o.description ?? ""}`) }))
-      .filter(({ text }) => words.every((w) => text.includes(w)))
-      .sort((a, b) => Number(!a.text.startsWith(words[0]!)) - Number(!b.text.startsWith(words[0]!)))
+      .map((o) => ({ o, text: `${o.label} ${o.description ?? ""}` }))
+      .filter(({ text }) => matchesSearch(text, q))
+      .sort((a, b) => searchRank(a.o.label, q) - searchRank(b.o.label, q))
       .map(({ o }) => o)
       .slice(0, MAX_SHOWN);
   }, [options, query]);

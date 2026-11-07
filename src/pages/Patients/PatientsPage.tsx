@@ -184,7 +184,6 @@ export default function PatientsPage() {
           onRowClick={(p) => navigate(paths.patient(p._id))}
           searchText={(p) => `${p.name} ${p.lastName} ${p.contactPerson ?? ""} ${p.address ?? ""}`}
           searchPlaceholder="Pretraži po imenu, kontaktu, adresi..."
-          initialSort={{ id: "name", dir: "asc" }}
           empty={{
             icon: <LuUsers />,
             title: filter === "discharged" ? "Nema otpuštenih pacijenata" : "Još nema pacijenata",

@@ -5,7 +5,7 @@ import Badge from "@shared/ui/badge/Badge";
 import { Input } from "@shared/ui/form/controls";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 import { formatQty, roleLabel } from "@shared/lib/format";
 import { useWorkNotes } from "@entities/diagnosis/hooks/useDiagnosis";
 import { personName, STATUS_META, useNurseEntries } from "@features/nurse-entries/model";
@@ -52,9 +52,9 @@ export default function PeriodNotes({ specification: spec, patientId, onAddAsCos
   const notes = useWorkNotes(patientId, from, to);
   const care = useNurseEntries({ patientId, from, to: new Date(new Date(to).getTime() - 1).toISOString(), limit: 1000 });
 
-  const q = normalizeSearch(query.trim());
-  const noteList = (notes.data ?? []).filter((n) => !q || normalizeSearch(`${n.description} ${n.createdBy?.name ?? ""} ${n.createdBy?.lastName ?? ""}`).includes(q));
-  const careList = (care.data ?? []).filter((e) => !q || normalizeSearch(`${e.name} ${e.note} ${personName(e.createdBy)}`).includes(q));
+  const q = query.trim();
+  const noteList = (notes.data ?? []).filter((n) => !q || matchesSearch(`${n.description} ${n.createdBy?.name ?? ""} ${n.createdBy?.lastName ?? ""}`, q));
+  const careList = (care.data ?? []).filter((e) => !q || matchesSearch(`${e.name} ${e.note} ${personName(e.createdBy)}`, q));
   const loading = tab === "notes" ? notes.isLoading : care.isLoading;
 
   return (
