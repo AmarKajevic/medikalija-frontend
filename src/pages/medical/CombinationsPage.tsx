@@ -10,7 +10,7 @@ import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { formatRSD } from "@shared/lib/format";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 import { useGetCombinations } from "@features/combinations/hooks/useGetCombinations";
 import { useAddCombination } from "@features/combinations/hooks/useAddCombination";
 import { useDeleteCombination } from "@features/combinations/hooks/useDeleteCombination";
@@ -41,8 +41,8 @@ function CombinationDialog({ open, onClose, groups, defaultGroup }: { open: bool
   }, [open, defaultGroup]);
 
   const filtered = useMemo(() => {
-    const q = normalizeSearch(query.trim());
-    return q ? analyses.filter((a) => normalizeSearch(a.name).includes(q)) : analyses;
+    const q = query.trim();
+    return q ? analyses.filter((a) => matchesSearch(a.name, q)) : analyses;
   }, [analyses, query]);
   const chosen = analyses.filter((a) => selected.includes(a._id));
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -126,12 +126,12 @@ export default function CombinationsPage() {
   const [dialog, setDialog] = useState<{ type: "create"; group?: string } | { type: "deleteCombination"; id: string; name: string } | { type: "deleteGroup"; id: string; name: string } | null>(null);
   const close = () => setDialog(null);
 
-  const q = normalizeSearch(query.trim());
+  const q = query.trim();
   const visible = groups
     .map((g) => ({
       ...g,
       combinations: (g.combinations ?? []).filter(
-        (c) => !q || normalizeSearch(c.name).includes(q) || normalizeSearch(g.name).includes(q) || (c.analyses ?? []).some((a) => normalizeSearch(a.name).includes(q))
+        (c) => !q || matchesSearch(c.name, q) || matchesSearch(g.name, q) || (c.analyses ?? []).some((a) => matchesSearch(a.name, q))
       ),
     }))
     .filter((g) => g.combinations.length > 0 || (!q && true));

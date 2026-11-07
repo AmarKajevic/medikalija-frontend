@@ -136,7 +136,7 @@ export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+      <div className="relative overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full min-w-[480px] text-sm">
           <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/[0.03] dark:text-gray-400">
             <tr>

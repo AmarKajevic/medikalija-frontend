@@ -7,9 +7,8 @@ import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { formatRSD } from "@shared/lib/format";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch } from "@shared/lib/search";
 
-const normalize = normalizeSearch;
 
 export default function AddCombinationForm({ patientId, specificationId }: { patientId: string; specificationId?: string }) {
   const { data: groups = [], isLoading } = useGetCombinations();
@@ -17,7 +16,7 @@ export default function AddCombinationForm({ patientId, specificationId }: { pat
   const [query, setQuery] = useState("");
 
   const rows = useMemo(() => {
-    const q = normalize(query.trim());
+    const q = query.trim();
     return groups.flatMap((g) =>
       (g.combinations ?? [])
         .map((c) => ({
@@ -28,9 +27,9 @@ export default function AddCombinationForm({ patientId, specificationId }: { pat
         .filter(
           (c) =>
             !q ||
-            normalize(c.name).includes(q) ||
-            normalize(g.name).includes(q) ||
-            (c.analyses ?? []).some((a) => normalize(a.name).includes(q))
+            matchesSearch(c.name, q) ||
+            matchesSearch(g.name, q) ||
+            (c.analyses ?? []).some((a) => matchesSearch(a.name, q))
         )
     );
   }, [groups, query]);

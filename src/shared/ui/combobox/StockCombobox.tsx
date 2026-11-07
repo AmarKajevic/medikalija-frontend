@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { LuChevronsUpDown, LuSearch } from "react-icons/lu";
 import { inputClass } from "@shared/ui/form/Field";
 import { formatQty } from "@shared/lib/format";
-import { normalizeSearch } from "@shared/lib/search";
+import { matchesSearch, searchRank } from "@shared/lib/search";
 import { transliterate } from "@shared/lib/script";
 import { useScript } from "@shared/lib/scriptContext";
 
@@ -25,7 +25,6 @@ interface StockComboboxProps {
   loading?: boolean;
 }
 
-const normalize = normalizeSearch;
 
 export default function StockCombobox({
   id,
@@ -47,14 +46,10 @@ export default function StockCombobox({
   const selectedLabel = selected ? transliterate(selected.label, script) : undefined;
 
   const filtered = useMemo(() => {
-    const q = normalize(query.trim());
-    const list = q ? options.filter((o) => normalize(o.label).includes(q)) : options;
+    const q = query.trim();
+    const list = q ? options.filter((o) => matchesSearch(o.label, q)) : options;
     // Prvo ono što počinje upitom, pa ostalo; unutar toga po abecedi
-    return [...list].sort((a, b) => {
-      const aStarts = normalize(a.label).startsWith(q) ? 0 : 1;
-      const bStarts = normalize(b.label).startsWith(q) ? 0 : 1;
-      return aStarts - bStarts || a.label.localeCompare(b.label, "sr");
-    });
+    return [...list].sort((a, b) => searchRank(a.label, q) - searchRank(b.label, q) || a.label.localeCompare(b.label, "sr"));
   }, [options, query]);
 
   useEffect(() => setHighlight(0), [query, open]);
