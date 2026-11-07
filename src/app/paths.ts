@@ -48,8 +48,8 @@ export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "s
 export const CARE_ROLES: Role[] = ["admin", "main-nurse", "nurse"];
 /** Vide medicinsku dokumentaciju (svi osim socijalnog radnika) */
 export const CLINICAL_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
-/** Zakazuju u kalendaru (doktor i socijalni radnik samo svoje termine) */
-export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
+/** Zakazuju u kalendaru (uprava menja sve termine, ostali samo svoje) */
+export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker"];
 /** Socijalni karton: čitaju */
 export const SOCIAL_READ_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
 /** Socijalni karton: pišu */

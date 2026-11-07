@@ -17,6 +17,7 @@ export function refreshAfterSpecChange(qc: QueryClient, patientId: string, spec?
 
   const keys: unknown[][] = [
     ["patientSpecification", patientId],
+    ["billingPeriodSpecification", patientId],
     ["specificationHistory", patientId],
     ["specification"],
     ["usedMedicine", patientId],

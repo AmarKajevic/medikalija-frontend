@@ -16,13 +16,18 @@ export function useBillingState(spec: Specification, patientId: string) {
   const [lodging, setLodgingRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
+  // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
+  const [includeDebt, setIncludeDebtRaw] = useState(false);
+  const [includeLodging, setIncludeLodgingRaw] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     setDebtRaw(spec.billing?.previousDebtEUR ? String(spec.billing.previousDebtEUR) : "");
     setLodgingRaw(spec.billing?.nextLodgingEUR ? String(spec.billing.nextLodgingEUR) : "");
+    setIncludeDebtRaw(spec.billing?.includeDebt ?? (spec.billing?.previousDebtEUR ?? 0) > 0);
+    setIncludeLodgingRaw(spec.billing?.includeLodging ?? (spec.billing?.nextLodgingEUR ?? 0) > 0);
     setDirty(false);
-  }, [spec._id, spec.billing?.previousDebtEUR, spec.billing?.nextLodgingEUR]);
+  }, [spec._id, spec.billing?.previousDebtEUR, spec.billing?.nextLodgingEUR, spec.billing?.includeDebt, spec.billing?.includeLodging]);
 
   useEffect(() => {
     setLowerRate(rates.lower ? String(rates.lower) : "");
@@ -31,8 +36,8 @@ export function useBillingState(spec: Specification, patientId: string) {
 
   const result = computeBilling({
     specTotalRSD: spec.totalPrice ?? 0,
-    debtEUR: toNumber(debt),
-    lodgingEUR: toNumber(lodging),
+    debtEUR: includeDebt ? toNumber(debt) : 0,
+    lodgingEUR: includeLodging ? toNumber(lodging) : 0,
     lowerRate: toNumber(lowerRate),
     middleRate: toNumber(middleRate),
   });
@@ -52,7 +57,7 @@ export function useBillingState(spec: Specification, patientId: string) {
   /** Čuva dug i smeštaj. Vraća false ako čuvanje nije uspelo. */
   const saveBilling = async (): Promise<boolean> => {
     try {
-      await save.mutateAsync({ previousDebtEUR: result.debtEUR, nextLodgingEUR: result.lodgingEUR });
+      await save.mutateAsync({ previousDebtEUR: toNumber(debt), nextLodgingEUR: toNumber(lodging), includeDebt, includeLodging });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
       return true;
@@ -78,9 +83,19 @@ export function useBillingState(spec: Specification, patientId: string) {
       setLowerRate,
       middleRate,
       setMiddleRate,
+      includeDebt,
+      setIncludeDebt: (v: boolean) => {
+        setIncludeDebtRaw(v);
+        setDirty(true);
+      },
+      includeLodging,
+      setIncludeLodging: (v: boolean) => {
+        setIncludeLodgingRaw(v);
+        setDirty(true);
+      },
     },
     rates,
-    result,
+    result: { ...result, includeDebt, includeLodging },
     commitRates,
     dirty,
     saving: save.isPending,

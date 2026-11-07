@@ -115,6 +115,53 @@ describe("korisnici", () => {
     expect(within(linkDlg).getByText(/Viberom ili lično/)).toBeInTheDocument();
   });
 
+  it("adresa suspendovanog korisnika: poruka i 'Vrati pristup' umesto greške", async () => {
+    api.get.mockResolvedValue({ data: { users: [u()] } });
+    api.post.mockRejectedValue({
+      response: {
+        status: 409,
+        data: {
+          message: "Ova e-mail adresa pripada korisniku Mira Mirić kome je ukinut pristup. Vratite mu pristup umesto nove pozivnice.",
+          existing: { _id: "u1", name: "Mira", lastName: "Mirić", status: "suspended", canLogin: true },
+        },
+      },
+    });
+    api.patch.mockResolvedValue({ data: { user: u() } });
+    const { user } = renderWithProviders(<UsersPage />);
+    await user.click(await screen.findByRole("button", { name: "Pozovi korisnika" }));
+    const dlg = screen.getByRole("dialog", { name: "Pozovi korisnika" });
+    await user.type(within(dlg).getByLabelText("Ime", { exact: true }), "Mira");
+    await user.type(within(dlg).getByLabelText("Prezime"), "Mirić");
+    await user.type(within(dlg).getByLabelText("E-mail"), "mira@dom.rs");
+    await user.click(within(dlg).getByRole("button", { name: "Napravi pozivnicu" }));
+
+    expect(await within(dlg).findByRole("alert")).toHaveTextContent("kome je ukinut pristup");
+    await user.click(within(dlg).getByRole("button", { name: /Vrati pristup/ }));
+    expect(api.patch).toHaveBeenCalledWith("/api/auth/users/u1", { status: "active" });
+  });
+
+  it("link se šalje na upisanu e-mail adresu (kad je slanje mejlova podešeno)", async () => {
+    api.get.mockImplementation(async (url: string) => (url === "/api/auth/config" ? { data: { googleClientId: null, emailEnabled: true } } : { data: { users: [u()] } }));
+    api.post.mockImplementation(async (url: string) =>
+      url === "/api/auth/links/send"
+        ? { data: { message: "Link je poslat na sanja@gmail.com." } }
+        : { data: { user: u({ _id: "u9", name: "Sanja", lastName: "P", status: "invited", email: null }), invite: { url: "https://app/invite/xyz", expiresAt: new Date().toISOString(), emailSent: false } } }
+    );
+    const { user } = renderWithProviders(<UsersPage />);
+    await user.click(await screen.findByRole("button", { name: "Pozovi korisnika" }));
+    const dlg = screen.getByRole("dialog", { name: "Pozovi korisnika" });
+    await user.type(within(dlg).getByLabelText("Ime", { exact: true }), "Sanja");
+    await user.type(within(dlg).getByLabelText("Prezime"), "P");
+    await user.click(within(dlg).getByText("Korisničkim imenom"));
+    await user.click(within(dlg).getByRole("button", { name: "Napravi pozivnicu" }));
+
+    const linkDlg = await screen.findByRole("dialog", { name: "Pozivnica je spremna" });
+    await user.type(within(linkDlg).getByLabelText("Pošalji na e-mail"), "sanja@gmail.com");
+    await user.click(await within(linkDlg).findByRole("button", { name: "Pošalji" }));
+    expect(api.post).toHaveBeenCalledWith("/api/auth/links/send", { url: "https://app/invite/xyz", email: "sanja@gmail.com" });
+    expect(notify.success).toHaveBeenCalledWith("Link je poslat na sanja@gmail.com.");
+  });
+
   it("ukidanje pristupa traži potvrdu", async () => {
     api.get.mockResolvedValue({ data: { users: [u()] } });
     api.patch.mockResolvedValue({ data: { user: u({ status: "suspended" }) } });

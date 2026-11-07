@@ -33,6 +33,9 @@ interface GeneratePDFParams {
   totalRSD: number;
   totalEUR: number;
   nextPeriodLabel: string;
+  /** Dug i smeštaj su opcioni: ono što nije uključeno se ne štampa */
+  includeDebt?: boolean;
+  includeLodging?: boolean;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
   /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
@@ -56,6 +59,8 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     nextPeriodLabel,
     mode = "download",
     facility = DEFAULT_FACILITY,
+    includeDebt = debtEUR > 0,
+    includeLodging = lodgingEUR > 0,
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
@@ -73,6 +78,16 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     }
   }
   const contactLine = facilityContactLine(facility);
+
+  // Redovi duga i smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
+  const extraRows = [
+    ...(includeDebt
+      ? [[{ text: "Dug iz prethodnog perioda" }, { text: money.format(debtRSD), alignment: "right" }, { text: money.format(debtEUR), alignment: "right" }]]
+      : []),
+    ...(includeLodging
+      ? [[{ text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
+      : []),
+  ];
 
   // ✅ ZAJEDNIČKE ŠIRINE KOLONA za sve tri tabele
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
@@ -109,42 +124,45 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       // Period (centriran)
       
 
-      // Tabela 1 – Dug + Smeštaj (EUR/RSD)
-      { text: "Dug + Smeštaj (EUR/RSD)", style: "subheader", margin: [0, 10, 0, 5] },
-      {
-        table: {
-          widths: colWidths,
-          body: [
-            [
-              { text: "", bold: true },
-              { text: "RSD", bold: true, alignment: "right" },
-              { text: "EUR", bold: true, alignment: "right" },
-            ],
-            [
-              { text: "Dug iz prethodnog perioda" },
-              { text: money.format(debtRSD), alignment: "right" },
-              { text: money.format(debtEUR), alignment: "right" },
-            ],
-            [
-              { text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` },
-              { text: money.format(lodgingRSD), alignment: "right" },
-              { text: money.format(lodgingEUR), alignment: "right" },
-            ],
-            [
-              { text: "UKUPNO", bold: true },
-              { text: money.format(debtRSD + lodgingRSD), bold: true, alignment: "right" },
-              { text: money.format(debtEUR + lodgingEUR), bold: true, alignment: "right" },
-            ],
-          ],
-        },
-        layout: {
-          hLineWidth: () => 0.5,
-          vLineWidth: () => 0.5,
-          hLineColor: () => "#aaa",
-          vLineColor: () => "#aaa",
-        },
-        margin: [0, 0, 0, 15],
-      },
+      // Tabela 1 – dug i/ili smeštaj (samo ono što je uključeno)
+      ...(includeDebt || includeLodging
+        ? [
+            {
+              text: includeDebt && includeLodging ? "Dug + Smeštaj (EUR/RSD)" : includeDebt ? "Dug iz prethodnog perioda (EUR/RSD)" : "Smeštaj za naredni period (EUR/RSD)",
+              style: "subheader",
+              margin: [0, 10, 0, 5],
+            },
+            {
+              table: {
+                widths: colWidths,
+                body: [
+                  [
+                    { text: "", bold: true },
+                    { text: "RSD", bold: true, alignment: "right" },
+                    { text: "EUR", bold: true, alignment: "right" },
+                  ],
+                  ...extraRows,
+                  ...(includeDebt && includeLodging
+                    ? [
+                        [
+                          { text: "UKUPNO", bold: true },
+                          { text: money.format(debtRSD + lodgingRSD), bold: true, alignment: "right" },
+                          { text: money.format(debtEUR + lodgingEUR), bold: true, alignment: "right" },
+                        ],
+                      ]
+                    : []),
+                ],
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: () => "#aaa",
+                vLineColor: () => "#aaa",
+              },
+              margin: [0, 0, 0, 15],
+            },
+          ]
+        : []),
 
       // Tabela 2 – Specifikacija
      { text: `Specifikacija troškova za period: ${periodText}`,bold:true, alignment: "left", margin: [0, 0, 0, 5] },
@@ -194,16 +212,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
               { text: money.format(specTotalRSD), alignment: "right" },
               { text: money.format(specEUR), alignment: "right" },
             ],
-            [
-              { text: "Dug iz prethodnog perioda" },
-              { text: money.format(debtRSD), alignment: "right" },
-              { text: money.format(debtEUR), alignment: "right" },
-            ],
-            [
-              { text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` },
-              { text: money.format(lodgingRSD), alignment: "right" },
-              { text: money.format(lodgingEUR), alignment: "right" },
-            ],
+            ...extraRows,
             [
               { text: "UKUPNO ZA NAPLATU", bold: true },
               { text: money.format(totalRSD), bold: true, alignment: "right" },
@@ -212,7 +221,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
           ],
         },
         layout: {
-          hLineWidth: (i: number) => (i === 0 || i === 4 ? 0.5 : 0.2),
+          hLineWidth: (i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2),
           vLineWidth: () => 0.5,
           hLineColor: () => "#aaa",
           vLineColor: () => "#aaa",

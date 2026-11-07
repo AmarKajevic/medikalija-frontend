@@ -28,9 +28,11 @@ interface Props {
   patientId: string;
   /** Sestre: unos se samo beleži; stanje i specifikaciju ažurira glavna sestra */
   recordOnly?: boolean;
+  /** Period u koji ide stavka (podrazumevano aktivan) */
+  specificationId?: string;
 }
 
-export default function ConsumeItemForm({ kind, patientId, recordOnly = false }: Props) {
+export default function ConsumeItemForm({ kind, patientId, recordOnly = false, specificationId }: Props) {
   const isMedicine = kind === "medicine";
   const ids = { item: useId(), amount: useId(), days: useId(), times: useId(), portion: useId() };
 
@@ -75,7 +77,8 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false }:
     if (!itemId) return notify.error("Izaberite stavku sa liste.");
     if (qty <= 0) return notify.error("Unesite količinu veću od nule.");
 
-    const payload = isMedicine ? { medicineId: itemId, amount: qty } : { articleId: itemId, amount: qty };
+    const target = specificationId ? { specificationId } : {};
+    const payload = isMedicine ? { medicineId: itemId, amount: qty, ...target } : { articleId: itemId, amount: qty, ...target };
     // TS ne može da suzi uniju mutacija preko `isMedicine`, pa je poziv eksplicitan
     const run = isMedicine
       ? useMedicine.mutateAsync(payload as { medicineId: string; amount: number })

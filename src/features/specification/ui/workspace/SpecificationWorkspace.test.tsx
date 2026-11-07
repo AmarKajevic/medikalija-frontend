@@ -19,8 +19,8 @@ vi.mock("@entities/facility/facility", async (orig) => ({
   ...(await orig<typeof import("@entities/facility/facility")>()),
   useFacility: () => ({ facility: { name: "Dom Sunce" } }),
 }));
-const pending = vi.hoisted(() => ({ byPatient: [] as Array<{ patientId: string; count: number }> }));
-vi.mock("@features/nurse-entries/model", () => ({ usePendingSummary: () => ({ data: { total: 0, byPatient: pending.byPatient } }) }));
+const pending = vi.hoisted(() => ({ entries: [] as Array<{ _id: string; performedAt: string }> }));
+vi.mock("@features/nurse-entries/model", () => ({ useNurseEntries: () => ({ data: pending.entries }) }));
 vi.mock("@features/nurse-entries/ui/EntryReview", () => ({ default: () => <p>pregled unosa sestara</p> }));
 vi.mock("./PeriodNotes", () => ({ default: ({ onAddAsCost }: { onAddAsCost?: (l: string) => void }) => <button type="button" onClick={() => onAddAsCost?.("Prevoz do stomatologa")}>dodaj iz beleške</button> }));
 vi.mock("./PeriodSwitcher", () => ({ default: () => <span>period</span> }));
@@ -43,7 +43,7 @@ const footer = () => screen.getByText(/^Korak \d od 3/).parentElement!;
 beforeEach(() => {
   rates.value = { lower: 100, middle: 120 };
   save.mutateAsync.mockReset();
-  pending.byPatient = [];
+  pending.entries = [];
 });
 
 describe("SpecificationWorkspace", () => {
@@ -65,12 +65,13 @@ describe("SpecificationWorkspace", () => {
     save.mutateAsync.mockResolvedValue({});
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
     await user.click(screen.getByRole("button", { name: /Dalje: obračun/ }));
+    await user.click(screen.getByRole("switch", { name: "Naplati: Dug iz prethodnog perioda" }));
     await user.type(screen.getByLabelText("Dug iz prethodnog perioda (EUR)"), "10");
     // 1.000 RSD + 10 € × 120
     expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0 });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, includeDebt: true, includeLodging: false });
     expect(screen.getByRole("button", { name: "Štampaj specifikaciju" })).toBeInTheDocument();
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });
@@ -79,18 +80,50 @@ describe("SpecificationWorkspace", () => {
     save.mutateAsync.mockRejectedValue(new Error("x"));
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
     await user.click(screen.getByRole("button", { name: /Dalje: obračun/ }));
+    await user.click(screen.getByRole("switch", { name: "Naplati: Smeštaj za naredni period" }));
     await user.type(screen.getByLabelText("Smeštaj za naredni period (EUR)"), "500");
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
     expect(screen.getByRole("button", { current: "step" })).toHaveTextContent("Obračun za uplatu");
   });
 
   it("unosi sestara na čekanju: pregled u prvom koraku i upozorenje pre štampe", async () => {
-    pending.byPatient = [{ patientId: "p1", count: 2 }];
+    pending.entries = [
+      { _id: "e1", performedAt: "2026-11-05T10:00:00.000Z" },
+      { _id: "e2", performedAt: "2026-11-06T10:00:00.000Z" },
+    ];
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
     expect(screen.getByText("Unosi sestara čekaju odobrenje (2)")).toBeInTheDocument();
     expect(screen.getByText("pregled unosa sestara")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
     expect(screen.getByText(/2 unosa sestara još čeka/)).toBeInTheDocument();
+  });
+
+  it("dug i smeštaj su opcioni: isključeno ne ulazi u zbir ni u pregled", async () => {
+    const withBilling = { ...spec, billing: { includeDebt: true, includeLodging: false, previousDebtEUR: 10, nextLodgingEUR: 900 } } as unknown as Specification;
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={withBilling} patientId="p1" patientName="Petar" />);
+    // 1.000 RSD + dug 10 € × 120; smeštaj isključen
+    expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
+    await user.click(screen.getByRole("switch", { name: "Naplati: Dug iz prethodnog perioda" }));
+    expect(within(footer()).getByText(/1\.000,00 RSD/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
+    expect(screen.getByText("Bez duga i smeštaja")).toBeInTheDocument();
+    expect(screen.queryByText("Dug iz prethodnog perioda")).not.toBeInTheDocument();
+  });
+
+  it("period specifikacije: oznaka perioda i unosi sestara samo iz tog perioda", () => {
+    pending.entries = [
+      { _id: "e1", performedAt: "2026-11-05T10:00:00.000Z" },
+      { _id: "e2", performedAt: "2026-12-02T10:00:00.000Z" },
+    ];
+    const billingSpec = { ...spec, isActive: false };
+    renderWithProviders(
+      <SpecificationWorkspace specification={billingSpec} patientId="p1" patientName="Petar" period="billing" pendingFilter={(at) => at < "2026-12-01"} />
+    );
+    expect(screen.getByText("Period specifikacije")).toBeInTheDocument();
+    expect(screen.queryByText("period")).not.toBeInTheDocument(); // menja se samo aktivan period
+    expect(screen.getByText("Unosi sestara čekaju odobrenje (1)")).toBeInTheDocument();
+    expect(screen.getByText("forma za dodavanje")).toBeInTheDocument(); // dodavanje je moguće
   });
 
   it("bez kursa: polja za kurs su otvorena i pregled upozorava", async () => {

@@ -24,6 +24,8 @@ export type Specification = {
   billing?: {
     lowerExchangeRate: number;
     middleExchangeRate: number;
+    includeDebt?: boolean;
+    includeLodging?: boolean;
     previousDebtEUR: number;
     previousDebtRSD: number;
     nextLodgingEUR: number;

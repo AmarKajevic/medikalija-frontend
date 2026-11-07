@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { LuChevronDown, LuCircleAlert, LuCoins } from "react-icons/lu";
 import Field, { inputClass } from "@shared/ui/form/Field";
+import { Input } from "@shared/ui/form/controls";
 import Button from "@shared/ui/button/Button";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import type { BillingState } from "@features/specification/hooks/useBillingState";
@@ -8,6 +9,33 @@ import type { BillingState } from "@features/specification/hooks/useBillingState
 interface Props {
   billing: BillingState;
   nextPeriodLabel: string;
+}
+
+// Iznos u evrima koji se uključuje prekidačem (kad je isključen, ne ide u obračun ni na štampu)
+function OptionalAmount({ id, title, hint, enabled, onToggle, value, onChange }: { id: string; title: string; hint: string; enabled: boolean; onToggle: (v: boolean) => void; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className={`rounded-xl border p-4 transition ${enabled ? "border-brand-300 bg-brand-50/40 dark:border-brand-500/40 dark:bg-brand-500/5" : "border-gray-200 dark:border-gray-800"}`}>
+      <label className="flex cursor-pointer items-start justify-between gap-3">
+        <span>
+          <span className="block text-sm font-medium text-gray-900 dark:text-white">{title}</span>
+          <span className="block text-xs text-gray-500 dark:text-gray-400">{enabled ? hint : "Ne naplaćuje se i ne štampa se."}</span>
+        </span>
+        <span className="relative mt-0.5 inline-flex shrink-0">
+          <input type="checkbox" role="switch" checked={enabled} onChange={(e) => onToggle(e.target.checked)} aria-label={`Naplati: ${title}`} className="peer sr-only" />
+          <span className="h-6 w-11 rounded-full bg-gray-200 transition peer-checked:bg-brand-500 peer-focus-visible:ring-3 peer-focus-visible:ring-brand-500/30 dark:bg-gray-700" />
+          <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+        </span>
+      </label>
+      {enabled && (
+        <div className="mt-3">
+          <label htmlFor={id} className="sr-only">
+            {title} (EUR)
+          </label>
+          <Input id={id} inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} placeholder="0,00" trailing="EUR" autoFocus={!value} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 const rateText = (n: number) => (n > 0 ? n.toLocaleString("sr-Latn-RS", { maximumFractionDigits: 4 }) : "nije unet");
@@ -21,41 +49,32 @@ export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
 
   const rows: Array<[string, string, string, string]> = [
     ["Lekovi, artikli, analize i troškovi", "iz koraka 1", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
-    ["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)],
-    ["Smeštaj za naredni period", nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)],
+    ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
+    ...(fields.includeLodging ? [["Smeštaj za naredni period", nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
   ];
 
   return (
     <div className="space-y-6">
+      {/* Dug i smeštaj su opcioni: isključeno se ne naplaćuje i ne štampa */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Dug iz prethodnog perioda (EUR)"
-          htmlFor={ids.debt}
-          hint="Iznos koji porodica nije platila do sada. Ako duga nema, ostavite prazno."
-        >
-          <input
-            id={ids.debt}
-            inputMode="decimal"
-            value={fields.debt}
-            onChange={(e) => fields.setDebt(e.target.value)}
-            placeholder="0,00"
-            className={inputClass}
-          />
-        </Field>
-        <Field
-          label="Smeštaj za naredni period (EUR)"
-          htmlFor={ids.lodging}
-          hint={`Cena smeštaja koja se plaća unapred, za period ${nextPeriodLabel}.`}
-        >
-          <input
-            id={ids.lodging}
-            inputMode="decimal"
-            value={fields.lodging}
-            onChange={(e) => fields.setLodging(e.target.value)}
-            placeholder="0,00"
-            className={inputClass}
-          />
-        </Field>
+        <OptionalAmount
+          id={ids.debt}
+          title="Dug iz prethodnog perioda"
+          hint="Iznos koji porodica nije platila do sada."
+          enabled={fields.includeDebt}
+          onToggle={fields.setIncludeDebt}
+          value={fields.debt}
+          onChange={fields.setDebt}
+        />
+        <OptionalAmount
+          id={ids.lodging}
+          title="Smeštaj za naredni period"
+          hint={`Plaća se unapred, za period ${nextPeriodLabel}`}
+          enabled={fields.includeLodging}
+          onToggle={fields.setIncludeLodging}
+          value={fields.lodging}
+          onChange={fields.setLodging}
+        />
       </div>
 
       {/* Kursna lista: retko se menja i važi za sve pacijente, pa je sklopljena */}

@@ -21,11 +21,15 @@ const patientIdOf = (e: NurseEntry) => (typeof e.patient === "object" ? e.patien
 interface Props {
   /** Bez pacijenta: svi unosi na čekanju, grupisani po pacijentu */
   patientId?: string;
+  /** Samo deo unosa (npr. dati u periodu specifikacije) */
+  filter?: (entry: NurseEntry) => boolean;
 }
 
 // Uprava pregleda unose sestara i bira šta ulazi u specifikaciju.
-export default function EntryReview({ patientId }: Props) {
-  const { data = [], isLoading, isError, refetch } = useNurseEntries({ patientId, status: ["pending"], limit: 500 }, { refetchInterval: 30_000 });
+export default function EntryReview({ patientId, filter }: Props) {
+  const query = useNurseEntries({ patientId, status: ["pending"], limit: 500 }, { refetchInterval: 30_000 });
+  const { isLoading, isError, refetch } = query;
+  const data = useMemo(() => (filter ? (query.data ?? []).filter(filter) : query.data ?? []), [query.data, filter]);
   const accept = useAcceptEntries();
   const reject = useRejectEntries();
   const [selected, setSelected] = useState<Set<string>>(new Set());

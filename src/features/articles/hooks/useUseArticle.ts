@@ -7,7 +7,7 @@ export const useUseArticle = (patientId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { articleId: string; amount: number }): Promise<ConsumeResponse> =>
+    mutationFn: (data: { articleId: string; amount: number; specificationId?: string }): Promise<ConsumeResponse> =>
       consumeArticle({ ...data, patientId }),
     onSuccess: (res) => refreshAfterSpecChange(queryClient, patientId, res.specification),
   });

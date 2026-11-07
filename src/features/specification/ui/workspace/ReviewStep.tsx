@@ -122,13 +122,18 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
             <Row key={g.key} label={`${g.label} (${g.count})`} value={formatRSD(g.total)} onEdit={() => onEditStep(1)} />
           ))}
           {groups.length > 1 && <Row label="Specifikacija ukupno" value={formatRSD(result.specTotalRSD)} sub={formatEUR(result.specEUR)} />}
-          <Row label="Dug iz prethodnog perioda" value={formatEUR(result.debtEUR)} sub={formatRSD(result.debtRSD)} onEdit={() => onEditStep(2)} />
-          <Row
-            label={`Smeštaj ${nextPeriodLabel}`}
-            value={formatEUR(result.lodgingEUR)}
-            sub={formatRSD(result.lodgingRSD)}
-            onEdit={() => onEditStep(2)}
-          />
+          {result.includeDebt && <Row label="Dug iz prethodnog perioda" value={formatEUR(result.debtEUR)} sub={formatRSD(result.debtRSD)} onEdit={() => onEditStep(2)} />}
+          {result.includeLodging && (
+            <Row label={`Smeštaj ${nextPeriodLabel}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditStep(2)} />
+          )}
+          {!result.includeDebt && !result.includeLodging && (
+            <div className="flex items-center justify-between gap-4 py-2.5 text-sm text-gray-500">
+              Bez duga i smeštaja
+              <button type="button" onClick={() => onEditStep(2)} className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
+                dodaj
+              </button>
+            </div>
+          )}
         </dl>
 
       </section>

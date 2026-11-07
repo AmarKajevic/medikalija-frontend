@@ -1,11 +1,13 @@
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
-import { LuCheck, LuCopy, LuMail, LuUser } from "react-icons/lu";
+import { LuCheck, LuCircleAlert, LuCopy, LuMail, LuSend, LuUser } from "react-icons/lu";
+import { api } from "@shared/api/api";
+import { serverMessage, useAuthConfig } from "@features/auth/model";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
 import Field from "@shared/ui/form/Field";
 import { Input, Select } from "@shared/ui/form/controls";
 import { notify } from "@shared/lib/notify";
-import { IssuedLink, ManagedUser, ROLES, useAddStaff, useInviteUser, useUpdateUser } from "@features/users/model";
+import { IssuedLink, ManagedUser, ROLES, useAddStaff, useInviteUser, useUpdateUser, useUserLink } from "@features/users/model";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
@@ -20,14 +22,20 @@ const suggestUsername = (name: string, lastName: string) =>
     .replace(/[^a-z0-9.]/g, "");
 
 // ---------- Pozovi korisnika ----------
-export function InviteDialog({ open, onClose, onInvited }: { open: boolean; onClose: () => void; onInvited: (user: ManagedUser, link: IssuedLink) => void }) {
+type Existing = { _id: string; name: string; lastName: string; status: "invited" | "active" | "suspended"; canLogin: boolean };
+
+export function InviteDialog({ open, onClose, onInvited }: { open: boolean; onClose: () => void; onInvited: (user: Pick<ManagedUser, "name" | "lastName" | "email">, link: IssuedLink) => void }) {
   const formId = useId();
   const invite = useInviteUser();
+  const update = useUpdateUser();
+  const link = useUserLink();
+  const [conflict, setConflict] = useState<{ message: string; existing: Existing } | null>(null);
   const [form, setForm] = useState({ name: "", lastName: "", role: "nurse", method: "email" as "email" | "username", email: "", username: "" });
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
   useEffect(() => {
     if (open) setForm({ name: "", lastName: "", role: "nurse", method: "email", email: "", username: "" });
+    setConflict(null);
   }, [open]);
 
   const submit = (e: FormEvent) => {
@@ -42,9 +50,34 @@ export function InviteDialog({ open, onClose, onInvited }: { open: boolean; onCl
         role: form.role,
         ...(form.method === "email" ? { email: form.email.trim() } : { username: form.username.trim().toLowerCase() }),
       },
-      { onSuccess: (res) => onInvited(res.user, res.invite), onError: (err) => notify.error(err) }
+      {
+        onSuccess: (res) => onInvited(res.user, res.invite),
+        onError: (err) => {
+          const res = (err as { response?: { status?: number; data?: { message?: string; existing?: Existing } } }).response;
+          if (res?.status === 409 && res.data?.existing) setConflict({ message: res.data.message ?? "", existing: res.data.existing });
+          else notify.error(err);
+        },
+      }
     );
   };
+
+  // Ponuđena rešenja kad adresa već pripada nekome
+  const restore = (e: Existing) =>
+    update.mutate(
+      { id: e._id, status: "active" },
+      {
+        onSuccess: () => {
+          notify.success(`${e.name} ${e.lastName} ponovo ima pristup.`);
+          onClose();
+        },
+        onError: (err) => notify.error(err),
+      }
+    );
+  const reinvite = (e: Existing) =>
+    link.mutate(
+      { id: e._id, kind: "invite" },
+      { onSuccess: (l) => onInvited({ name: e.name, lastName: e.lastName, email: form.email.trim() || null }, l), onError: (err) => notify.error(err) }
+    );
 
   const id = (k: string) => `${formId}-${k}`;
   return (
@@ -66,6 +99,28 @@ export function InviteDialog({ open, onClose, onInvited }: { open: boolean; onCl
       }
     >
       <form id={formId} onSubmit={submit} className="space-y-5" noValidate>
+        {conflict && (
+          <div role="alert" className="space-y-3 rounded-lg border border-warning-200 bg-warning-50 p-3 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300">
+            <p className="flex gap-2">
+              <LuCircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              {conflict.message}
+            </p>
+            {conflict.existing.canLogin && conflict.existing.status !== "active" && (
+              <div className="flex flex-wrap gap-2 pl-6">
+                {conflict.existing.status === "suspended" && (
+                  <Button type="button" size="xs" loading={update.isPending} onClick={() => restore(conflict.existing)}>
+                    Vrati pristup: {conflict.existing.name} {conflict.existing.lastName}
+                  </Button>
+                )}
+                {conflict.existing.status === "invited" && (
+                  <Button type="button" size="xs" loading={link.isPending} onClick={() => reinvite(conflict.existing)}>
+                    Pošalji novu pozivnicu
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ime" htmlFor={id("n")}>
             <Input id={id("n")} autoFocus value={form.name} onChange={(e) => set({ name: e.target.value })} />
@@ -129,10 +184,36 @@ export function InviteDialog({ open, onClose, onInvited }: { open: boolean; onCl
 }
 
 // ---------- Link (pozivnica ili nova lozinka) za kopiranje ----------
-export function LinkDialog({ link, title, person, onClose }: { link: IssuedLink | null; title: string; person: string; onClose: () => void }) {
+export function LinkDialog({ link, title, person, email: knownEmail, onClose }: { link: IssuedLink | null; title: string; person: string; email?: string | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => setCopied(false), [link]);
+  const { data: config } = useAuthConfig();
+  useEffect(() => {
+    setCopied(false);
+    setEmail(knownEmail ?? "");
+  }, [link, knownEmail]);
+
+  // Server šalje mejl ako je podešen; inače se otvara mejl program sa gotovom porukom
+  const sendToEmail = async () => {
+    if (!link) return;
+    const to = email.trim();
+    if (!EMAIL.test(to)) return notify.error("Unesite ispravnu e-mail adresu.");
+    if (!config?.emailEnabled) {
+      window.location.href = mailtoFor(to, link);
+      return;
+    }
+    setSending(true);
+    try {
+      const { data } = await api.post("/api/auth/links/send", { url: link.url, email: to });
+      notify.success(data.message);
+    } catch (err) {
+      notify.error(serverMessage(err, "Mejl nije poslat."));
+    } finally {
+      setSending(false);
+    }
+  };
 
   const copy = async () => {
     if (!link) return;
@@ -167,6 +248,31 @@ export function LinkDialog({ link, title, person, onClose }: { link: IssuedLink 
               {copied ? "Kopirano" : "Kopiraj"}
             </Button>
           </div>
+          <div className="space-y-1.5 border-t border-gray-100 pt-4 dark:border-gray-800">
+            <label htmlFor="link-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Pošalji na e-mail
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="link-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ime@primer.rs"
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  e.preventDefault();
+                  void sendToEmail();
+                }}
+              />
+              <Button variant="outline" startIcon={<LuSend className="h-4 w-4" />} loading={sending} onClick={() => void sendToEmail()}>
+                {config?.emailEnabled ? "Pošalji" : "Otvori u mejlu"}
+              </Button>
+            </div>
+            {config && !config.emailEnabled && (
+              <p className="text-xs text-gray-500">Otvara se vaš mejl program (Gmail, Outlook…) sa gotovom porukom i linkom. Samo kliknete „Pošalji”.</p>
+            )}
+          </div>
           <p className="text-xs text-gray-500">
             Važi do {new Date(link.expiresAt).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })} i može se iskoristiti samo jednom. Novi link poništava prethodni.
           </p>
@@ -174,6 +280,22 @@ export function LinkDialog({ link, title, person, onClose }: { link: IssuedLink 
       )}
     </Dialog>
   );
+}
+
+/** mailto: sa gotovom porukom (kad server nema podešeno slanje mejlova) */
+function mailtoFor(to: string, link: IssuedLink) {
+  const invite = link.url.includes("/invite/");
+  const subject = invite ? "Pozivnica za aplikaciju doma" : "Link za novu lozinku";
+  const until = new Date(link.expiresAt).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const body = [
+    "Zdravo,",
+    "",
+    invite ? "pozivam vas da koristite aplikaciju doma. Otvorite link i postavite svoju lozinku:" : "otvorite link i postavite novu lozinku:",
+    link.url,
+    "",
+    `Link važi do ${until} i može se iskoristiti samo jednom.`,
+  ].join("\n");
+  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // ---------- Promena uloge ----------

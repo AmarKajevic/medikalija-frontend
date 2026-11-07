@@ -1,6 +1,6 @@
 import { KeyboardEvent, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LuCalendarDays, LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { LuCalendarDays, LuChevronLeft, LuChevronRight, LuX } from "react-icons/lu";
 import { inputClass } from "@shared/ui/form/Field";
 import { MONTHS, WEEKDAYS, isoToDisplay, maskDateTyping, parseDisplayDate, splitIso, toIsoDate, todayIso } from "@shared/lib/dateText";
 
@@ -24,6 +24,30 @@ const selectClass =
   "h-8 rounded-md border border-gray-200 bg-white px-2 text-sm font-medium text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
 // Datum se kuca kao DD.MM.GGGG ili bira iz kalendara sa izborom meseca i godine.
+//
+// Ispravljanje greške mora biti lako:
+//  - kucanje na kraju samo dodaje tačke (03 → 03. → 03.05. → 03.05.1921)
+//  - izmena u sredini ne preuređuje tekst i ne pomera kursor
+//  - cifra otkucana preko postojeće je menja (kliknete ispred pogrešne cifre i otkucate tačnu)
+//  - strelice gore/dole menjaju dan, mesec ili godinu na kojoj je kursor
+//  - Esc vraća poslednji ispravan datum, × briše polje
+const FULL = /^\d{2}\.\d{2}\.\d{4}$/;
+
+/** Deo datuma na kom je kursor u "DD.MM.GGGG" */
+const segmentAt = (caret: number): "d" | "m" | "y" => (caret <= 2 ? "d" : caret <= 5 ? "m" : "y");
+
+function shiftDate(iso: string, segment: "d" | "m" | "y", delta: number): string {
+  const p = splitIso(iso)!;
+  if (segment === "d") {
+    const d = new Date(Date.UTC(p.y, p.m - 1, p.d + delta));
+    return toIsoDate(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
+  }
+  const y = segment === "y" ? p.y + delta : p.y + Math.floor((p.m - 1 + delta) / 12);
+  const m = segment === "m" ? ((((p.m - 1 + delta) % 12) + 12) % 12) + 1 : p.m;
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return toIsoDate(y, m, Math.min(p.d, lastDay));
+}
+
 export default function DateInput({
   id,
   value,
@@ -44,11 +68,22 @@ export default function DateInput({
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Kursor koji treba vratiti posle izmene teksta (React ga inače pomera na kraj)
+  const pendingCaret = useRef<number | null>(null);
+  const pointerFocus = useRef(false);
 
   useEffect(() => {
     setText(isoToDisplay(value));
     setError(null);
   }, [value]);
+
+  useLayoutEffect(() => {
+    if (pendingCaret.current === null || !inputRef.current) return;
+    const c = pendingCaret.current;
+    pendingCaret.current = null;
+    if (document.activeElement === inputRef.current) inputRef.current.setSelectionRange(c, c);
+  }, [text]);
 
   const outOfRange = useCallback((iso: string) => (min && iso < min) || (max && iso > max), [min, max]);
 
@@ -70,6 +105,13 @@ export default function DateInput({
     if (iso !== value) onChange(iso);
   };
 
+  const setTextKeepingCaret = (next: string, caret: number) => {
+    pendingCaret.current = caret;
+    setText(next);
+    if (error) setError(null);
+    if (FULL.test(next)) commitText(next);
+  };
+
   const pick = (iso: string) => {
     setOpen(false);
     setError(null);
@@ -77,11 +119,67 @@ export default function DateInput({
     onChange(iso);
   };
 
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    const el = e.currentTarget;
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+
+    if (e.key === "ArrowDown" && e.altKey) {
+      e.preventDefault();
+      setOpen(true);
+      return;
+    }
+
+    // Strelice: dan / mesec / godina na kom je kursor
+    if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.altKey) {
+      const iso = parseDisplayDate(el.value);
+      if (!iso) return;
+      e.preventDefault();
+      const next = shiftDate(iso, segmentAt(start), e.key === "ArrowUp" ? 1 : -1);
+      setTextKeepingCaret(isoToDisplay(next), start);
+      return;
+    }
+
+    // Esc vraća poslednji ispravan datum (a dijalog oko polja ostaje otvoren)
+    if (e.key === "Escape" && el.value !== isoToDisplay(value)) {
+      e.preventDefault();
+      e.stopPropagation();
+      setError(null);
+      setTextKeepingCaret(isoToDisplay(value), isoToDisplay(value).length);
+      return;
+    }
+
+    // Backspace iza tačke / Delete ispred tačke: briše se cifra, tačka ostaje na mestu
+    if (start === end && start < el.value.length && (e.key === "Backspace" || e.key === "Delete")) {
+      const dotIdx = e.key === "Backspace" ? start - 1 : start;
+      const digitIdx = e.key === "Backspace" ? start - 2 : start + 1;
+      if (el.value[dotIdx] === "." && /\d/.test(el.value[digitIdx] ?? "")) {
+        e.preventDefault();
+        const next = el.value.slice(0, digitIdx) + el.value.slice(digitIdx + 1);
+        setTextKeepingCaret(next, e.key === "Backspace" ? digitIdx : start);
+        return;
+      }
+    }
+
+    // Cifra preko postojeće cifre (pun datum, bez označenog teksta): zamena, ne umetanje
+    if (/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && start === end && start < el.value.length && el.value.length >= 10) {
+      let pos = start;
+      if (el.value[pos] === ".") pos += 1;
+      if (pos >= el.value.length) return;
+      e.preventDefault();
+      const next = el.value.slice(0, pos) + e.key + el.value.slice(pos + 1);
+      let caret = pos + 1;
+      if (next[caret] === ".") caret += 1;
+      setTextKeepingCaret(next, caret);
+    }
+  };
+
   const showInvalid = invalid || !!error;
 
   return (
     <div ref={anchorRef} className="relative">
       <input
+        ref={inputRef}
         id={inputId}
         type="text"
         inputMode="numeric"
@@ -92,22 +190,49 @@ export default function DateInput({
         autoFocus={autoFocus}
         aria-invalid={showInvalid || undefined}
         aria-describedby={[aria["aria-describedby"], error ? `${inputId}-error` : null].filter(Boolean).join(" ") || undefined}
-        onChange={(e) => {
-          const masked = maskDateTyping(e.target.value);
-          setText(masked);
-          if (error) setError(null);
-          // Čim je datum ceo, odmah se prihvata (ne čeka se izlazak iz polja)
-          if (/^\d{2}\.\d{2}\.\d{4}$/.test(masked)) commitText(masked);
+        onPointerDown={() => (pointerFocus.current = true)}
+        onFocus={(e) => {
+          // Tab-om u popunjeno polje: označi sve (samo se prekuca); klikom: kursor gde je kliknuto
+          if (!pointerFocus.current && e.currentTarget.value) e.currentTarget.select();
+          pointerFocus.current = false;
         }}
-        onBlur={(e) => commitText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown" && e.altKey) {
-            e.preventDefault();
-            setOpen(true);
+        onChange={(e) => {
+          const el = e.target;
+          const raw = el.value;
+          const caret = el.selectionStart ?? raw.length;
+          const typingAtEnd = caret === raw.length && raw.length >= text.length;
+          if (typingAtEnd) {
+            // Kucanje na kraju: tačke se dodaju same
+            const masked = maskDateTyping(raw);
+            setText(masked);
+            if (error) setError(null);
+            if (FULL.test(masked)) commitText(masked);
+          } else {
+            // Izmena u sredini ili brisanje: tekst ostaje kako je otkucan, kursor na mestu
+            setTextKeepingCaret(raw.replace(/[^\d./-]/g, "").slice(0, 10), caret);
           }
         }}
-        className={`${inputClass} pr-10 tabular-nums ${showInvalid ? "border-error-400 focus:border-error-400 focus:ring-error-500/15" : ""}`}
+        onBlur={(e) => commitText(e.target.value)}
+        onKeyDown={onKeyDown}
+        className={`${inputClass} ${text && !disabled ? "pr-16" : "pr-10"} tabular-nums ${showInvalid ? "border-error-400 focus:border-error-400 focus:ring-error-500/15" : ""}`}
       />
+      {text && !disabled && (
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setText("");
+            setError(null);
+            if (value) onChange("");
+            inputRef.current?.focus();
+          }}
+          aria-label="Obriši datum"
+          className="absolute right-9 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-white"
+        >
+          <LuX className="h-3.5 w-3.5" />
+        </button>
+      )}
       <button
         type="button"
         disabled={disabled}

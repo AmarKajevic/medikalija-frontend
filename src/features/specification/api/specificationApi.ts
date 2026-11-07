@@ -20,6 +20,8 @@ export const addExtraCost = async (specId: string, amount: number, label: string
 export const saveBilling = async (specId: string, payload: {
   previousDebtEUR: number;
   nextLodgingEUR: number;
+  includeDebt: boolean;
+  includeLodging: boolean;
 
 }) => {
   const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
@@ -65,4 +67,10 @@ export const activateExistingSpecification = async (patientId: string, specId: s
 export const activateNextSpecificationPeriod = async (patientId: string) => {
   const { data } = await api.post(`/api/specification/${patientId}/activate-next`);
   return data.specification;
+};
+
+// Period specifikacije: period pre aktivnog (poslednji istekao); null ako ga nema.
+export const fetchBillingPeriod = async (patientId: string): Promise<Specification | null> => {
+  const { data } = await api.get(`/api/specification/${patientId}/billing-period`);
+  return data.specification ?? null;
 };
