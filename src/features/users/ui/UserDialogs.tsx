@@ -201,7 +201,7 @@ export function LinkDialog({ link, title, person, email: knownEmail, onClose }: 
     const to = email.trim();
     if (!EMAIL.test(to)) return notify.error("Unesite ispravnu e-mail adresu.");
     if (!config?.emailEnabled) {
-      window.location.href = mailtoFor(to, link);
+      openComposer(to, link);
       return;
     }
     setSending(true);
@@ -270,7 +270,7 @@ export function LinkDialog({ link, title, person, email: knownEmail, onClose }: 
               </Button>
             </div>
             {config && !config.emailEnabled && (
-              <p className="text-xs text-gray-500">Otvara se vaš mejl program (Gmail, Outlook…) sa gotovom porukom i linkom. Samo kliknete „Pošalji”.</p>
+              <p className="text-xs text-gray-500">Otvara se Gmail (na telefonu mejl aplikacija) sa gotovom porukom i linkom. Samo kliknete „Pošalji”.</p>
             )}
           </div>
           <p className="text-xs text-gray-500">
@@ -282,8 +282,8 @@ export function LinkDialog({ link, title, person, email: knownEmail, onClose }: 
   );
 }
 
-/** mailto: sa gotovom porukom (kad server nema podešeno slanje mejlova) */
-function mailtoFor(to: string, link: IssuedLink) {
+/** Gotova poruka sa linkom (kad server nema podešeno slanje mejlova) */
+function messageFor(link: IssuedLink) {
   const invite = link.url.includes("/invite/");
   const subject = invite ? "Pozivnica za aplikaciju doma" : "Link za novu lozinku";
   const until = new Date(link.expiresAt).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -295,7 +295,22 @@ function mailtoFor(to: string, link: IssuedLink) {
     "",
     `Link važi do ${until} i može se iskoristiti samo jednom.`,
   ].join("\n");
-  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return { subject, body };
+}
+
+/**
+ * Telefon: mailto otvara mejl aplikaciju. Računar: mailto radi samo ako je instaliran
+ * mejl program (Outlook…), pa se umesto toga otvara Gmail u novoj kartici.
+ */
+function openComposer(to: string, link: IssuedLink) {
+  const { subject, body } = messageFor(link);
+  const touch = window.matchMedia?.("(pointer: coarse)").matches;
+  if (touch) {
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return;
+  }
+  const params = new URLSearchParams({ view: "cm", fs: "1", to, su: subject, body });
+  window.open(`https://mail.google.com/mail/?${params}`, "_blank", "noopener");
 }
 
 // ---------- Promena uloge ----------

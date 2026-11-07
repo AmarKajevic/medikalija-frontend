@@ -74,3 +74,24 @@ export const fetchBillingPeriod = async (patientId: string): Promise<Specificati
   const { data } = await api.get(`/api/specification/${patientId}/billing-period`);
   return data.specification ?? null;
 };
+
+/** Raniji period: postojeći zapis ili period iz mreže od 30 dana od prijema */
+export type PastPeriod = {
+  startDate: string;
+  endDate: string;
+  specificationId: string | null;
+  itemsCount: number;
+  totalPrice: number;
+};
+
+// Svi raniji periodi od prijema do aktivnog, od najnovijeg
+export const fetchPastPeriods = async (patientId: string): Promise<PastPeriod[]> => {
+  const { data } = await api.get(`/api/specification/${patientId}/past-periods`);
+  return data.periods ?? [];
+};
+
+// Otvara raniji period za rad (pravi zapis ako ne postoji), aktivan period se ne menja
+export const openPastPeriod = async (patientId: string, startDate: string, endDate: string): Promise<Specification> => {
+  const { data } = await api.post(`/api/specification/${patientId}/periods`, { startDate, endDate });
+  return data.specification;
+};

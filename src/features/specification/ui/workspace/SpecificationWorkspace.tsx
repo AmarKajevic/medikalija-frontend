@@ -31,8 +31,8 @@ interface Props {
   specification: Specification;
   patientId: string;
   patientName: string;
-  /** "billing" = period specifikacije (istekao, u njemu se pravi obračun) */
-  period?: "active" | "billing";
+  /** "billing" = period specifikacije (istekao, u njemu se pravi obračun); "other" = ručno izabran raniji period */
+  period?: "active" | "billing" | "other";
   /** Koji unosi sestara na čekanju pripadaju ovom periodu (po danu kad je dato) */
   pendingFilter?: (performedAt: string) => boolean;
 }
@@ -110,7 +110,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const reviewFilter = useMemo(() => (pendingFilter ? (e: { performedAt: string }) => pendingFilter(e.performedAt) : undefined), [pendingFilter]);
   const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
   const isBilling = period === "billing";
-  const canAdd = isBilling || !!spec.isActive;
+  const isChosen = period === "other";
+  const canAdd = isBilling || isChosen || !!spec.isActive;
   const current = STEPS[step - 1]!;
 
   // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
@@ -150,6 +151,11 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             </span>
             <Badge size="sm" color="warning">Period specifikacije</Badge>
             <span className="text-xs text-gray-500 dark:text-gray-400">Istekao period — ovde se pravi obračun za naplatu.</span>
+          </>
+        ) : isChosen ? (
+          <>
+            <Badge size="sm" color="light">Ručno izabran period</Badge>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Stavke i obračun idu u ovaj period.</span>
           </>
         ) : canAdd ? (
           <>

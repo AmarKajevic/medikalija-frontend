@@ -5,6 +5,7 @@ export const specKeys = {
   active: (patientId: string) => ["patientSpecification", patientId] as const,
   history: (patientId: string) => ["specificationHistory", patientId] as const,
   byId: (specId: string) => ["specification", specId] as const,
+  past: (patientId: string) => ["pastPeriods", patientId] as const,
 };
 
 // Sve što se menja kada se nešto doda u specifikaciju ili ukloni iz nje:
@@ -19,6 +20,7 @@ export function refreshAfterSpecChange(qc: QueryClient, patientId: string, spec?
     ["patientSpecification", patientId],
     ["billingPeriodSpecification", patientId],
     ["specificationHistory", patientId],
+    ["pastPeriods", patientId],
     ["specification"],
     ["usedMedicine", patientId],
     ["usedArticles", patientId],

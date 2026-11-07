@@ -9,6 +9,8 @@ export const useActivateSpecificationPeriod = (patientId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patientSpecification", patientId] });
       queryClient.invalidateQueries({ queryKey: ["specificationHistory", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["billingPeriodSpecification", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["pastPeriods", patientId] });
     },
   });
 };
