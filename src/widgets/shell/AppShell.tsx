@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import GlobalSearch from "./GlobalSearch";
 import { NotificationsMenu, UserMenu } from "./TopbarMenus";
 import BrandMark from "./BrandMark";
+import IdleLogout from "@features/auth/ui/IdleLogout";
 
 const COLLAPSE_KEY = "sidebar-collapsed";
 
@@ -63,6 +64,7 @@ export default function AppShell() {
 
         <main id="main" className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
+          <IdleLogout />
         </main>
       </div>
     </div>

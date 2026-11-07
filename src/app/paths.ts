@@ -3,6 +3,8 @@
 export const paths = {
   home: "/",
   signIn: "/signin",
+  forgotPassword: "/forgot-password",
+  invite: (token: string) => `/invite/${token}`,
 
   patients: "/patients",
   patient: (id: string) => `/patients/${id}`,
