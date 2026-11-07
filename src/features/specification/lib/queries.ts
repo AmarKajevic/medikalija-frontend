@@ -21,6 +21,8 @@ export function refreshAfterSpecChange(qc: QueryClient, patientId: string, spec?
     ["billingPeriodSpecification", patientId],
     ["specificationHistory", patientId],
     ["pastPeriods", patientId],
+    // Raspored perioda (ručna izmena datuma pomera sledeće periode)
+    ["future-specs", patientId],
     ["specification"],
     ["usedMedicine", patientId],
     ["usedArticles", patientId],

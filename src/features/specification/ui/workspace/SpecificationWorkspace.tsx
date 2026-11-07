@@ -15,6 +15,7 @@ import EntryReview from "@features/nurse-entries/ui/EntryReview";
 import SpecificationItems from "./SpecificationItems";
 import BillingPanel from "./BillingPanel";
 import PeriodSwitcher from "./PeriodSwitcher";
+import EditPeriodDates from "./EditPeriodDates";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
 import ReviewStep from "./ReviewStep";
@@ -170,6 +171,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             <Badge size="sm" color="light">Zatvoren period</Badge>
           </>
         )}
+        {/* Ručni unos datuma za svaki period; sledeći periodi se nadovezuju na novi kraj */}
+        <EditPeriodDates specification={spec} patientId={patientId} />
       </div>
 
       <div>

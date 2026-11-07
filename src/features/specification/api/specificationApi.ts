@@ -95,3 +95,9 @@ export const openPastPeriod = async (patientId: string, startDate: string, endDa
   const { data } = await api.post(`/api/specification/${patientId}/periods`, { startDate, endDate });
   return data.specification;
 };
+
+// Ručna izmena datuma perioda; periodi koji se nadovezuju pomeraju se na serveru
+export const changeSpecificationDates = async (patientId: string, specId: string, startDate: string, endDate: string): Promise<Specification> => {
+  const { data } = await api.put(`/api/specification/${patientId}/periods/${specId}`, { startDate, endDate });
+  return data.specification;
+};
