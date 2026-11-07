@@ -5,6 +5,8 @@ import { PageLoader } from "@shared/ui/feedback/Spinner";
 import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, SOCIAL_READ_ROLES, STAFF_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
+import AcceptLinkPage from "@pages/auth/AcceptLinkPage";
+import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
 import { NotFoundPage } from "@pages/system/StatusPage";
 import { useFacilityDocumentTitle } from "@entities/facility/facility";
 
@@ -75,6 +77,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path={paths.signIn} element={<SignInPage />} />
+        <Route path="/invite/:token" element={<AcceptLinkPage />} />
+        <Route path="/reset-password/:token" element={<AcceptLinkPage />} />
+        <Route path={paths.forgotPassword} element={<ForgotPasswordPage />} />
 
         <Route
           element={

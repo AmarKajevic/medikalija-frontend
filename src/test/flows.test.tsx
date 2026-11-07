@@ -130,29 +130,35 @@ describe("ConsumeItemForm", () => {
 
 // ---------- prijava ----------
 describe("SignInForm", () => {
+  beforeEach(() => api.get.mockResolvedValue({ data: { googleClientId: null, emailEnabled: false } }));
   const fill = async (user: ReturnType<typeof renderWithProviders>["user"]) => {
-    await user.type(screen.getByLabelText("Ime"), "Ana");
-    await user.type(screen.getByLabelText("Prezime"), "Admin");
+    await user.type(screen.getByLabelText("E-mail ili korisničko ime"), "ana@dom.rs");
     await user.type(screen.getByLabelText("Lozinka"), "tajna");
   };
 
-  it("pogrešni podaci daju jasnu poruku", async () => {
-    api.post.mockRejectedValue({ response: { status: 400, data: { error: "Neispravna lozinka" } } });
+  it("pogrešni podaci: poruka servera (ista za nepostojećeg korisnika i pogrešnu lozinku)", async () => {
+    api.post.mockRejectedValue({ response: { status: 401, data: { message: "Pogrešni podaci za prijavu." } } });
     const { user } = renderWithProviders(<SignInForm />);
     await fill(user);
     await user.click(screen.getByRole("button", { name: "Prijavi se" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Pogrešno ime, prezime ili lozinka.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Pogrešni podaci za prijavu.");
   });
 
-  it("uloga bez pristupa", async () => {
-    api.post.mockRejectedValue({ response: { status: 403 } });
+  it("zaključan nalog ili ukinut pristup: razlog sa servera", async () => {
+    api.post.mockRejectedValue({ response: { status: 429, data: { message: "Previše neuspešnih pokušaja. Pokušajte ponovo za 15 min." } } });
     const { user } = renderWithProviders(<SignInForm />);
     await fill(user);
     await user.click(screen.getByRole("button", { name: "Prijavi se" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Vaša uloga nema pristup aplikaciji.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Pokušajte ponovo za 15 min.");
   });
 
-  it("uspeh: prijavljuje, pamti samo ime i vraća na traženu stranicu", async () => {
+  it("bez podešene Google prijave nema Google dugmeta", async () => {
+    renderWithProviders(<SignInForm />);
+    await screen.findByLabelText("E-mail ili korisničko ime");
+    expect(screen.queryByLabelText("Prijava preko Google-a")).not.toBeInTheDocument();
+  });
+
+  it("uspeh: prijavljuje, pamti samo e-mail i vraća na traženu stranicu", async () => {
     api.post.mockResolvedValue({ data: { success: true, accessToken: "t", user: asUser("admin") } });
     const { user } = renderWithProviders(<SignInForm />, {
       // stanje koje postavlja RequireAuth kad preusmeri na prijavu
@@ -164,9 +170,9 @@ describe("SignInForm", () => {
     await user.click(screen.getByLabelText("Zapamti me na ovom uređaju"));
     await user.click(screen.getByRole("button", { name: "Prijavi se" }));
 
-    expect(api.post).toHaveBeenCalledWith("/api/auth/login", { name: "Ana", lastName: "Admin", password: "tajna" });
+    expect(api.post).toHaveBeenCalledWith("/api/auth/login", { identifier: "ana@dom.rs", password: "tajna" });
     expect(auth.login).toHaveBeenCalledWith(asUser("admin"), "t");
-    expect(JSON.parse(localStorage.getItem("rememberMe") ?? "{}")).toEqual({ name: "Ana", lastName: "Admin" });
+    expect(JSON.parse(localStorage.getItem("rememberMe") ?? "{}")).toEqual({ identifier: "ana@dom.rs" });
     expect(localStorage.getItem("rememberMe")).not.toContain("tajna");
     expect(await screen.findByText("stranica lekova")).toBeInTheDocument();
   });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
-import { LuBell, LuCheckCheck, LuLogOut, LuMonitor, LuMoon, LuSun } from "react-icons/lu";
+import { LuBell, LuCheckCheck, LuKeyRound, LuLogOut, LuMonitor, LuMoon, LuSun } from "react-icons/lu";
+import ChangePasswordDialog from "@features/auth/ui/ChangePasswordDialog";
 import { useAuth } from "@app/providers/AuthContext";
 import { ThemePreference, useTheme } from "@app/providers/ThemeContext";
 import { isManager, paths } from "@app/paths";
@@ -108,8 +109,10 @@ export function UserMenu() {
   const { user, logout } = useAuth();
   const { preference, setPreference } = useTheme();
   const navigate = useNavigate();
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   return (
+    <>
     <Popover
       width="w-64"
       trigger={(toggle) => (
@@ -157,6 +160,16 @@ export function UserMenu() {
           <div className="my-1 h-px bg-gray-100 dark:bg-gray-800" />
           <button
             type="button"
+            onClick={() => {
+              close();
+              setPasswordOpen(true);
+            }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5"
+          >
+            <LuKeyRound className="h-4 w-4 text-gray-400" /> Promeni lozinku
+          </button>
+          <button
+            type="button"
             onClick={async () => {
               close();
               await logout();
@@ -169,5 +182,7 @@ export function UserMenu() {
         </div>
       )}
     </Popover>
+    <ChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
+    </>
   );
 }
