@@ -48,18 +48,20 @@ const past = (start: string, end: string, specificationId: string | null, itemsC
 });
 
 describe("SpecificationWorkspaceDialog", () => {
-  it("otvara se period specifikacije; aktivan period je druga kartica", async () => {
-    const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
+  it("specifikacija se pravi za period specifikacije; smeštaj za period je samo informacija", async () => {
+    renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     expect(await screen.findByText("radni prostor: billing billing")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Period specifikacije · 26\.09\.2026\. – 25\.10\.2026\./ })).toHaveAttribute("aria-selected", "true");
-    await user.click(screen.getByRole("tab", { name: /Smeštaj za period/ }));
-    expect(screen.getByText("radni prostor: active active")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /Smeštaj za period/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Smeštaj za period:/).parentElement).toHaveTextContent("26.10.2026. – 24.11.2026.");
+    expect(screen.getByText(/naplaćuje se unapred/)).toBeInTheDocument();
   });
 
-  it("u prvom periodu nema kartice perioda specifikacije", () => {
+  it("u prvom periodu (još nema isteklog) radi se u tekućem periodu", () => {
     data.billing = null;
     renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     expect(screen.getByText("radni prostor: active active")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Tekući period/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("tab", { name: /Period specifikacije/ })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Vanstandardni period/ })).toBeInTheDocument();
   });
@@ -81,11 +83,11 @@ describe("izbor smeštaja za period pored kartica", () => {
 });
 
 describe("vanstandardni period", () => {
-  it("kartica pored smeštaja: izabran period se otvara kao vanstandardni", async () => {
+  it("kartica posle perioda specifikacije: izabran period se otvara kao vanstandardni", async () => {
     data.history = [spec("vanstd", "2026-10-10", "2026-10-15")];
     const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     const tabs = (await screen.findAllByRole("tab")).map((t) => t.textContent);
-    expect(tabs.findIndex((t) => t?.startsWith("Vanstandardni"))).toBe(tabs.findIndex((t) => t?.startsWith("Smeštaj za period")) + 1);
+    expect(tabs.findIndex((t) => t?.startsWith("Vanstandardni"))).toBe(tabs.findIndex((t) => t?.startsWith("Period specifikacije")) + 1);
     await user.click(screen.getByRole("tab", { name: /Vanstandardni period/ }));
     await user.click(screen.getByRole("button", { name: "izaberi vanstandardni" }));
     expect(await screen.findByText("radni prostor: nonstandard vanstd")).toBeInTheDocument();

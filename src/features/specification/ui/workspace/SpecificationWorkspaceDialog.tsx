@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LuCalendarClock, LuHistory } from "react-icons/lu";
+import { LuBedDouble, LuCalendarClock, LuHistory } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Tabs from "@shared/ui/tabs/Tabs";
@@ -40,9 +40,11 @@ const inPeriod = (spec: Specification, performedAt: string) => {
   return day >= dayKey(spec.startDate) && day <= dayKey(spec.endDate);
 };
 
-// "Napravi specifikaciju": period specifikacije (istekao, u njemu se pravi obračun),
-// smeštaj za period (tekući), vanstandardni period (ručni datumi) i ručno izabran raniji
-// period — sve sa istim mogućnostima.
+// "Napravi specifikaciju": specifikacija se pravi za period specifikacije (istekao),
+// vanstandardni period (ručni datumi) ili ručno izabran raniji period. Smeštaj za period
+// (tekući) je samo informacija — za njega se smeštaj naplaćuje unapred; menja se dugmadima
+// "Ručno izaberi period" / "Vrati se na raniji period". U prvom periodu (još nema isteklog)
+// radi se u tekućem periodu.
 export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName, keepMounted = false }: Props) {
   const live = open || keepMounted;
   const active = usePatientSpecification(live ? patientId : "");
@@ -111,10 +113,12 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
   );
 
   const loading = active.isLoading || billing.isLoading || tab === null;
+  // Kad postoji period specifikacije, tekući period se ne bira (samo se prikazuje)
+  const shownTab: PeriodTab | null = tab === "active" && billingSpec ? "billing" : tab;
   const nonStandardSpec = tab === "nonstandard" && nonStandardId ? (nonStandard.data ?? null) : null;
   const current =
-    tab === "other" ? otherSpec : tab === "nonstandard" ? nonStandardSpec : tab === "billing" && billingSpec ? billingSpec : active.data;
-  const period = tab === "other" ? "other" : tab === "nonstandard" ? "nonstandard" : tab === "billing" && billingSpec ? "billing" : "active";
+    shownTab === "other" ? otherSpec : shownTab === "nonstandard" ? nonStandardSpec : shownTab === "billing" && billingSpec ? billingSpec : active.data;
+  const period = shownTab === "other" ? "other" : shownTab === "nonstandard" ? "nonstandard" : shownTab === "billing" && billingSpec ? "billing" : "active";
 
   return (
     <Dialog open={open} onClose={onClose} size="full" title="Specifikacija" description={patientName} keepMounted={keepMounted}>
@@ -129,19 +133,30 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Tabs
             className="min-w-0"
-            value={tab ?? "active"}
+            value={shownTab ?? "active"}
             onChange={setTab}
             items={[
               ...(billingSpec
                 ? [{ value: "billing" as const, label: `Period specifikacije · ${formatDay(billingSpec.startDate)} – ${formatDay(billingSpec.endDate)}` }]
-                : []),
-              { value: "active", label: `Smeštaj za period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` },
+                : // Prvi period: još nema isteklog, pa se radi u tekućem
+                  [{ value: "active" as const, label: `Tekući period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` }]),
               { value: "nonstandard", label: "Vanstandardni period" },
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />
-            {/* Menjaju smeštaj za period — odmah dostupno, bez otvaranja menija perioda */}
-            <div className="flex flex-wrap gap-2">
+            {/* Smeštaj za period: samo informacija (naplaćuje se unapred); dugmad ga menjaju */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2.5 py-1.5 text-xs text-gray-600 dark:bg-white/[0.04] dark:text-gray-300"
+                title="Za ovaj period se smeštaj naplaćuje unapred (u obračunu: smeštaj za naredni period)"
+              >
+                <LuBedDouble className="h-3.5 w-3.5 text-gray-400" />
+                Smeštaj za period:
+                <strong className="font-semibold text-gray-800 dark:text-white/90">
+                  {formatDay(active.data.startDate)} – {formatDay(active.data.endDate)}
+                </strong>
+                <span className="text-gray-400">· naplaćuje se unapred</span>
+              </span>
               <Button size="xs" variant="outline" startIcon={<LuCalendarClock className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("manual")}>
                 Ručno izaberi period
               </Button>
@@ -150,8 +165,8 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               </Button>
             </div>
           </div>
-          <PeriodActionDialogs patientId={patientId} open={periodAction} onClose={() => setPeriodAction(null)} onActivated={() => setTab("active")} />
-          {tab === "other" && (
+          <PeriodActionDialogs patientId={patientId} open={periodAction} onClose={() => setPeriodAction(null)} onActivated={() => setTab("billing")} />
+          {shownTab === "other" && (
             <div className="flex flex-wrap items-center gap-2">
               <label htmlFor="spec-period" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Period
@@ -165,9 +180,9 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               </Select>
             </div>
           )}
-          {tab === "nonstandard" && <NonStandardPeriodPicker patientId={patientId} value={nonStandardId} onChange={setNonStandardId} />}
-          {tab === "nonstandard" && nonStandardId && !nonStandardSpec && nonStandard.isLoading && <PageLoader label="Učitavanje perioda..." />}
-          {tab === "other" && !otherSpec && (openPast.isPending || other.isLoading) && <PageLoader label="Učitavanje perioda..." />}
+          {shownTab === "nonstandard" && <NonStandardPeriodPicker patientId={patientId} value={nonStandardId} onChange={setNonStandardId} />}
+          {shownTab === "nonstandard" && nonStandardId && !nonStandardSpec && nonStandard.isLoading && <PageLoader label="Učitavanje perioda..." />}
+          {shownTab === "other" && !otherSpec && (openPast.isPending || other.isLoading) && <PageLoader label="Učitavanje perioda..." />}
           {current && (
             <SpecificationWorkspace
               key={current._id}
@@ -176,6 +191,8 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               patientName={patientName}
               period={period}
               pendingFilter={filters[period]}
+              // Smeštaj se naplaćuje unapred za tekući period (tačni datumi, i kad su ručno menjani)
+              lodgingPeriod={period === "billing" ? { start: active.data.startDate, end: active.data.endDate } : undefined}
             />
           )}
         </div>

@@ -38,6 +38,8 @@ interface Props {
   period?: "active" | "billing" | "other" | "nonstandard";
   /** Koji unosi sestara na čekanju pripadaju ovom periodu (po danu kad je dato) */
   pendingFilter?: (performedAt: string) => boolean;
+  /** Period za koji se smeštaj naplaćuje unapred (tekući period); bez njega: 30 dana posle kraja */
+  lodgingPeriod?: { start: string; end: string };
 }
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
@@ -96,7 +98,7 @@ function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }
   );
 }
 
-export default function SpecificationWorkspace({ specification: spec, patientId, patientName, period = "active", pendingFilter }: Props) {
+export default function SpecificationWorkspace({ specification: spec, patientId, patientName, period = "active", pendingFilter, lodgingPeriod }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
   const addPanelRef = useRef<HTMLDivElement>(null);
@@ -111,7 +113,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const pending = useNurseEntries({ patientId, status: ["pending"], limit: 500 }).data ?? [];
   const pendingCount = pending.filter((e) => !pendingFilter || pendingFilter(e.performedAt)).length;
   const reviewFilter = useMemo(() => (pendingFilter ? (e: { performedAt: string }) => pendingFilter(e.performedAt) : undefined), [pendingFilter]);
-  const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
+  const nextPeriodLabel = lodgingPeriod ? `${formatDay(lodgingPeriod.start)} — ${formatDay(lodgingPeriod.end)}` : getNextPeriodLabel(spec.endDate);
   const isBilling = period === "billing";
   const isChosen = period === "other";
   const isNonStandard = period === "nonstandard";
