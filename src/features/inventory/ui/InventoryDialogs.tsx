@@ -17,10 +17,12 @@ interface ItemDialogProps {
   onClose: () => void;
   /** Ako je zadat, dijalog menja postojeću stavku */
   item?: InventoryItem | null;
+  /** Novi lek: unapred izabrana vrsta (dugme "Tablete" ili "Ampule") */
+  defaultForm?: MedicineForm;
 }
 
 // Nova stavka u šifarniku ili izmena postojeće (naziv, cena, pakovanje, ispravka stanja)
-export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
+export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: ItemDialogProps) {
   const formId = useId();
   const editing = !!item;
   const { data: all = [] } = useInventoryList(cfg);
@@ -38,14 +40,14 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
 
   useEffect(() => {
     if (!open) return;
-    setForm(item?.form ?? "oral");
+    setForm(item?.form ?? defaultForm);
     setName(item?.name ?? "");
     setPrice(item ? String(item.price) : "");
     setUpp(item?.unitsPerPackage ? String(item.unitsPerPackage) : "");
     setPackages("");
     setUnits("");
     setCorrection("");
-  }, [open, item]);
+  }, [open, item, defaultForm]);
 
   const duplicate = all.find((i) => i._id !== item?._id && normalizeSearch(i.name) === normalizeSearch(name.trim()));
   const initialTotal = num(packages) * num(upp) + num(units);
@@ -91,7 +93,7 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
       open={open}
       onClose={onClose}
       size="md"
-      title={editing ? `Izmena: ${item?.name}` : `Novi ${cfg.singular}`}
+      title={editing ? `Izmena: ${item?.name}` : isMedicine ? `Novi lek — ${MEDICINE_FORM_LABEL[form].toLowerCase()}` : `Novi ${cfg.singular}`}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
