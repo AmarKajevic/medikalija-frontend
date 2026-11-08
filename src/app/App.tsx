@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
-import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, SOCIAL_READ_ROLES, STAFF_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
 import AcceptLinkPage from "@pages/auth/AcceptLinkPage";
@@ -30,6 +30,7 @@ const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"
 const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
 const FacilitySettingsPage = lazy(() => import("@pages/settings/FacilitySettingsPage"));
 const LodgingPricesPage = lazy(() => import("@pages/settings/LodgingPricesPage"));
+const PhysioPage = lazy(() => import("@pages/physio/PhysioPage"));
 const CarePage = lazy(() => import("@pages/care/CarePage"));
 const ApprovalsPage = lazy(() => import("@pages/care/ApprovalsPage"));
 const CareTasksPage = lazy(() => import("@pages/care/CareTasksPage"));
@@ -127,6 +128,7 @@ export default function App() {
             <Route path="/care-log" element={managers(<CareLogPage />)} />
             <Route path="/reports" element={<RequireRole roles={["admin", "main-nurse", "doctor"]}><ReportsPage /></RequireRole>} />
             <Route path="/reports/:reportId" element={clinical(<ReportPage />)} />
+            <Route path="/physio" element={<RequireRole roles={PHYSIO_ROLES}><PhysioPage /></RequireRole>} />
             <Route path="/social" element={<RequireRole roles={SOCIAL_READ_ROLES}><SocialPage /></RequireRole>} />
 
             {LEGACY.map(([from, to]) => (

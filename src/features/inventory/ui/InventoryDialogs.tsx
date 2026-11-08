@@ -7,7 +7,7 @@ import { Input } from "@shared/ui/form/controls";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
 import { normalizeSearch } from "@shared/lib/search";
-import { InventoryConfig, InventoryItem, useCreateItem, useInventoryList, useUpdateItem } from "@features/inventory/model";
+import { InventoryConfig, InventoryItem, useCreateItem, useInventoryList, useUpdateItem, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
 
 const num = (v: string) => Number(v.replace(",", ".")) || 0;
 
@@ -33,9 +33,12 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
   const [packages, setPackages] = useState("");
   const [units, setUnits] = useState("");
   const [correction, setCorrection] = useState("");
+  const [form, setForm] = useState<MedicineForm>("oral");
+  const isMedicine = cfg.kind === "medicine";
 
   useEffect(() => {
     if (!open) return;
+    setForm(item?.form ?? "oral");
     setName(item?.name ?? "");
     setPrice(item ? String(item.price) : "");
     setUpp(item?.unitsPerPackage ? String(item.unitsPerPackage) : "");
@@ -54,7 +57,7 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
     if (price === "" || num(price) < 0) return notify.error("Unesite cenu.");
 
     if (editing) {
-      const body: Record<string, unknown> = { name: name.trim(), [cfg.priceField]: num(price), unitsPerPackage: num(upp) };
+      const body: Record<string, unknown> = { name: name.trim(), [cfg.priceField]: num(price), unitsPerPackage: num(upp), ...(isMedicine ? { form } : {}) };
       if (correction !== "") body.quantity = num(correction);
       update.mutate(
         { id: item!._id, ...body },
@@ -69,7 +72,7 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
     } else {
       if (initialTotal <= 0) return notify.error("Unesite početno stanje (pakovanja ili komade).");
       create.mutate(
-        { name: name.trim(), price: num(price), unitsPerPackage: num(upp), packages: num(packages), units: num(units) },
+        { name: name.trim(), price: num(price), unitsPerPackage: num(upp), packages: num(packages), units: num(units), ...(isMedicine ? { form } : {}) },
         {
           onSuccess: () => {
             notify.success(`${cfg.singularCap} „${name.trim()}“ je dodat.`);
@@ -104,6 +107,25 @@ export function ItemDialog({ cfg, open, onClose, item }: ItemDialogProps) {
         <Field label="Naziv" htmlFor={id("name")} error={duplicate ? `Već postoji „${duplicate.name}“ — za dopunu stanja koristite „Dopuni“.` : undefined}>
           <Input id={id("name")} autoFocus value={name} onChange={(e) => setName(e.target.value)} invalid={!!duplicate} />
         </Field>
+        {isMedicine && (
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Vrsta leka</legend>
+            <div role="radiogroup" className="grid grid-cols-2 gap-2">
+              {(Object.keys(MEDICINE_FORM_LABEL) as MedicineForm[]).map((f) => (
+                <label
+                  key={f}
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                    form === f ? "border-brand-400 bg-brand-50 font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-300" : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  <input type="radio" name={id("form")} value={f} checked={form === f} onChange={() => setForm(f)} className="accent-brand-600" />
+                  {MEDICINE_FORM_LABEL[f]}
+                </label>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">U specifikaciji se tablete i ampule vode kao posebne grupe.</p>
+          </fieldset>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Cena po jedinici" htmlFor={id("price")}>
             <Input id={id("price")} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} trailing="RSD" placeholder="0,00" />

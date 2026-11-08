@@ -14,7 +14,7 @@ import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
-import { INVENTORY, InventoryItem, InventoryKind, stockStatus, useDeleteItem, useInventoryList } from "@features/inventory/model";
+import { INVENTORY, InventoryItem, InventoryKind, stockStatus, useDeleteItem, useInventoryList, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
 import { ItemDialog, RestockDialog } from "@features/inventory/ui/InventoryDialogs";
 
 type Filter = "all" | "low" | "out";
@@ -35,6 +35,7 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
   const remove = useDeleteItem(cfg);
 
   const [filter, setFilter] = useState<Filter>("all");
+  const [formFilter, setFormFilter] = useState<"all" | MedicineForm>("all");
   const [dialog, setDialog] = useState<{ type: "create" | "edit" | "restock" | "delete"; item?: InventoryItem } | null>(null);
 
   const counts = {
@@ -43,7 +44,13 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
     out: data.filter((i) => stockStatus(i.quantity) === "out").length,
   };
   const totalValue = data.reduce((s, i) => s + Math.max(i.quantity, 0) * i.price, 0);
-  const rows = useMemo(() => (filter === "all" ? data : data.filter((i) => stockStatus(i.quantity) === filter)), [data, filter]);
+  const rows = useMemo(
+    () =>
+      data
+        .filter((i) => filter === "all" || stockStatus(i.quantity) === filter)
+        .filter((i) => formFilter === "all" || i.form === formFilter),
+    [data, filter, formFilter]
+  );
 
   const columns: Column<InventoryItem>[] = [
     {
@@ -51,9 +58,12 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
       header: "Naziv",
       sortValue: (i) => i.name,
       cell: (i) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900 dark:text-white">{i.name}</span>
-          <StockBadge qty={i.quantity} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900 dark:text-white">{i.name}</span>
+            <StockBadge qty={i.quantity} />
+          </div>
+          {i.form && <p className="text-xs text-gray-500 dark:text-gray-400">{MEDICINE_FORM_LABEL[i.form]}</p>}
         </div>
       ),
     },
@@ -158,6 +168,19 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
           { value: "out", label: "Nema na stanju", count: counts.out },
         ]}
       />
+      {kind === "medicine" && (
+        <Tabs
+          variant="pills"
+          className="mb-4 max-w-xl"
+          value={formFilter}
+          onChange={setFormFilter}
+          items={[
+            { value: "all", label: "Sve vrste" },
+            { value: "oral", label: MEDICINE_FORM_LABEL.oral, count: data.filter((i) => i.form === "oral").length },
+            { value: "parenteral", label: MEDICINE_FORM_LABEL.parenteral, count: data.filter((i) => i.form === "parenteral").length },
+          ]}
+        />
+      )}
 
       {isError ? (
         <ErrorState message="Lista nije učitana." onRetry={() => refetch()} />

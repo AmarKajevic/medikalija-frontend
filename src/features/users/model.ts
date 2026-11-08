@@ -34,9 +34,11 @@ export const ROLES: Array<{ value: string; label: string; login: boolean }> = [
   { value: "nurse", label: "Medicinska sestra", login: true },
   { value: "doctor", label: "Doktor", login: true },
   { value: "social-worker", label: "Socijalni radnik", login: true },
+  { value: "physiotherapist", label: "Fizioterapeut", login: true },
   { value: "admin", label: "Direktor / administrator", login: true },
   { value: "Caregiver", label: "Negovatelj", login: false },
-  { value: "Physiotherapist", label: "Fizioterapeut", login: false },
+  // Stari zapis osoblja bez prijave; za pristup aplikaciji pozovite "Fizioterapeut"
+  { value: "Physiotherapist", label: "Fizioterapeut (bez prijave)", login: false },
   { value: "Occupational Therapist", label: "Radni terapeut", login: false },
   // Stari zapis osoblja bez prijave; za pristup aplikaciji pozovite "Socijalni radnik"
   { value: "Social Worker", label: "Socijalni radnik (bez prijave)", login: false },

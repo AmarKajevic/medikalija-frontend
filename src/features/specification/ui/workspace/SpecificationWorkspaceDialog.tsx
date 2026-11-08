@@ -20,6 +20,8 @@ interface Props {
   onClose: () => void;
   patientId: string;
   patientName: string;
+  /** Sklonjen prozor ostaje u memoriji: posle "Nastavi" sve je kako je ostavljeno */
+  keepMounted?: boolean;
 }
 
 type PeriodTab = "billing" | "active" | "nonstandard" | "other";
@@ -38,10 +40,11 @@ const inPeriod = (spec: Specification, performedAt: string) => {
 // "Napravi specifikaciju": period specifikacije (istekao, u njemu se pravi obračun),
 // smeštaj za period (tekući), vanstandardni period (ručni datumi) i ručno izabran raniji
 // period — sve sa istim mogućnostima.
-export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName }: Props) {
-  const active = usePatientSpecification(open ? patientId : "");
-  const billing = useBillingPeriodSpecification(open ? patientId : "");
-  const past = usePastPeriods(open ? patientId : "");
+export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName, keepMounted = false }: Props) {
+  const live = open || keepMounted;
+  const active = usePatientSpecification(live ? patientId : "");
+  const billing = useBillingPeriodSpecification(live ? patientId : "");
+  const past = usePastPeriods(live ? patientId : "");
   const openPast = useOpenPastPeriod(patientId);
   const [tab, setTab] = useState<PeriodTab | null>(null);
   // Izabran raniji period (po danu početka) i zapisi otvoreni u ovom prozoru
@@ -53,14 +56,14 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
 
   // Podrazumevano period specifikacije — uprava uglavnom obračunava istekao period
   useEffect(() => {
-    if (!open) {
+    if (!live) {
       setOtherKey("");
       setNonStandardId("");
       tried.current.clear();
       return setTab(null);
     }
     if (tab === null && !billing.isLoading) setTab(billing.data ? "billing" : "active");
-  }, [open, tab, billing.isLoading, billing.data]);
+  }, [live, tab, billing.isLoading, billing.data]);
 
   const billingSpec = billing.data ?? null;
   // Ručni izbor: svi raniji periodi od prijema (bez perioda specifikacije), od najnovijeg
@@ -109,7 +112,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
   const period = tab === "other" ? "other" : tab === "nonstandard" ? "nonstandard" : tab === "billing" && billingSpec ? "billing" : "active";
 
   return (
-    <Dialog open={open} onClose={onClose} size="full" title="Specifikacija" description={patientName}>
+    <Dialog open={open} onClose={onClose} size="full" title="Specifikacija" description={patientName} keepMounted={keepMounted}>
       {loading ? (
         <PageLoader label="Učitavanje specifikacije..." />
       ) : active.isError ? (

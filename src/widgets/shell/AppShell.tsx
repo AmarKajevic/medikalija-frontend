@@ -6,6 +6,7 @@ import GlobalSearch from "./GlobalSearch";
 import { NotificationsMenu, UserMenu } from "./TopbarMenus";
 import BrandMark from "./BrandMark";
 import IdleLogout from "@features/auth/ui/IdleLogout";
+import { SpecificationDockProvider } from "@features/specification/ui/dock/SpecificationDock";
 
 const COLLAPSE_KEY = "sidebar-collapsed";
 
@@ -25,6 +26,8 @@ export default function AppShell() {
   }, [pathname]);
 
   return (
+    // Specifikacija u toku ostaje dostupna na svakoj stranici
+    <SpecificationDockProvider>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <a
         href="#main"
@@ -68,5 +71,6 @@ export default function AppShell() {
         </main>
       </div>
     </div>
+    </SpecificationDockProvider>
   );
 }

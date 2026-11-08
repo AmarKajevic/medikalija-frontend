@@ -13,16 +13,18 @@ import EditItemDialog from "./EditItemDialog";
 const item = (over: Partial<SpecificationItem>) => ({ _id: "i1", name: "Stavka", amount: 1, price: 0, ...over }) as SpecificationItem;
 
 describe("redosled stavki", () => {
-  it("analize prve, pa lekovi, pa artikli, nega i ostalo — bez obzira na redosled dodavanja", () => {
+  it("analize, lekovi tablete, lekovi ampule, artikli, pa ostalo — bez obzira na redosled dodavanja", () => {
     const sorted = sortSpecItems([
       item({ _id: "a", category: "articles" }),
+      item({ _id: "amp", category: "medicine", form: "parenteral" }),
       item({ _id: "x", category: "extra" }),
-      item({ _id: "m1", category: "medicine" }),
+      item({ _id: "m1", category: "medicine", form: "oral" }),
       item({ _id: "c", category: "combination" }),
       item({ _id: "n", category: "care" }),
       item({ _id: "m2", category: "medicine" }),
+      item({ _id: "f", category: "physio" }),
     ]);
-    expect(sorted.map((i) => i._id)).toEqual(["c", "m1", "m2", "a", "n", "x"]);
+    expect(sorted.map((i) => i._id)).toEqual(["c", "m1", "m2", "amp", "a", "n", "f", "x"]);
   });
 });
 

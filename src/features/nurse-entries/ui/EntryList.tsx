@@ -9,7 +9,7 @@ import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
 import { useAuth } from "@app/providers/AuthContext";
-import { isPending, NurseEntry, personName, STATUS_META, useCancelEntry, useNurseEntries } from "@features/nurse-entries/model";
+import { isPending, NurseEntry, personName, STATUS_META, useCancelEntry, useNurseEntries, type EntryType } from "@features/nurse-entries/model";
 
 type Range = "today" | "week" | "all";
 
@@ -22,11 +22,11 @@ const startOf = (range: Range) => {
 };
 
 // Istorija nege i unosa sestara za pacijenta, sa ishodom odobravanja.
-export default function EntryList({ patientId, mine = false }: { patientId?: string; mine?: boolean }) {
+export default function EntryList({ patientId, mine = false, type }: { patientId?: string; mine?: boolean; type?: EntryType[] }) {
   const { user } = useAuth();
   const [range, setRange] = useState<Range>("today");
   const from = useMemo(() => startOf(range), [range]);
-  const { data = [], isLoading, isError, refetch } = useNurseEntries({ patientId, mine, from, limit: 300 });
+  const { data = [], isLoading, isError, refetch } = useNurseEntries({ patientId, mine, from, type, limit: 300 });
   const cancel = useCancelEntry();
   const [toCancel, setToCancel] = useState<NurseEntry | null>(null);
 
