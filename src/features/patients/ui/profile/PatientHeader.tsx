@@ -1,15 +1,5 @@
 import { ReactNode } from "react";
-import {
-  LuCalendarDays,
-  LuChevronDown,
-  LuClipboardList,
-  LuHistory,
-  LuHouse,
-  LuLogOut,
-  LuPackageOpen,
-  LuPhone,
-  LuPlus,
-} from "react-icons/lu";
+import { LuCalendarDays, LuChevronDown, LuClipboardList, LuHistory, LuHouse, LuLogOut, LuPackageOpen, LuPhone, LuPlus, LuUserPen } from "react-icons/lu";
 import Badge from "@shared/ui/badge/Badge";
 import Button from "@shared/ui/button/Button";
 import Avatar from "@shared/ui/avatar/Avatar";
@@ -42,17 +32,20 @@ interface Props {
   /** Porodično stanje (nega); bez njega se stavka ne prikazuje */
   onOpenFamilyStock?: () => void;
   onDischarge: () => void;
+  /** Uprava: ispravka podataka pacijenta */
+  onEdit?: () => void;
   /** Glavne akcije za ulogu (npr. "Nov izveštaj" za doktora) */
   actions?: ReactNode;
 }
 
-export default function PatientHeader({ patient, canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, actions }: Props) {
+export default function PatientHeader({ patient, canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, onEdit, actions }: Props) {
   const discharged = !!patient.dischargeDate;
 
   const menu: ActionMenuItem[] = [
     ...(onOpenFamilyStock ? [{ label: "Porodično stanje", icon: <LuPackageOpen />, onClick: onOpenFamilyStock }] : []),
     ...(canManage
       ? [
+          ...(onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
           { label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) },
           { label: "Raspored perioda (10 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) },
           ...(discharged ? [] : [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }]),

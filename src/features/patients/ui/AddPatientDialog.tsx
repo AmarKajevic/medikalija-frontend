@@ -1,4 +1,5 @@
-import { useId } from "react";
+import { useEffect, useId } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import Dialog from "@shared/ui/dialog/Dialog";
@@ -9,6 +10,9 @@ import { notify } from "@shared/lib/notify";
 import { paths } from "@app/paths";
 import { useAddPatient } from "@features/patients/hooks/useAddPatient";
 import DateInput from "@shared/ui/form/DateInput";
+import { api } from "@shared/api/api";
+import { toCalendarDay } from "@shared/lib/calendarDay";
+import type { Patient } from "@entities/patient/hooks/usePatient";
 
 type FormValues = {
   name: string;
@@ -24,10 +28,32 @@ const todayKey = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-export default function AddPatientDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+// Kalendarski dan (i stari zapisi sačuvani kao lokalna ponoć daju tačan dan)
+const dayKey = (v: string | Date | null | undefined) => (v ? toCalendarDay(v).toISOString().slice(0, 10) : "");
+const valuesOf = (p: Patient): FormValues => ({
+  name: p.name,
+  lastName: p.lastName,
+  dateOfBirth: dayKey(p.dateOfBirth),
+  admissionDate: dayKey(p.admissionDate),
+  address: p.address,
+  contactPerson: p.contactPerson ?? "",
+});
+
+// Novi pacijent, ili ispravka podataka postojećeg (`patient`) ako je nešto pogrešno uneto
+export default function AddPatientDialog({ open, onClose, patient }: { open: boolean; onClose: () => void; patient?: Patient }) {
   const formId = useId();
   const navigate = useNavigate();
-  const { mutate, isPending } = useAddPatient();
+  const qc = useQueryClient();
+  const add = useAddPatient();
+  const editing = !!patient;
+  const update = useMutation({
+    mutationFn: async (values: FormValues) => (await api.put(`/api/patient/${patient!._id}`, values)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["patient", patient!._id] });
+      qc.invalidateQueries({ queryKey: ["patients"] });
+    },
+  });
+  const isPending = add.isPending || update.isPending;
   const {
     register,
     control,
@@ -38,14 +64,31 @@ export default function AddPatientDialog({ open, onClose }: { open: boolean; onC
     defaultValues: { name: "", lastName: "", dateOfBirth: "", admissionDate: todayKey(), address: "", contactPerson: "" },
   });
 
+  // Izmena: polja popunjena trenutnim podacima pri svakom otvaranju
+  useEffect(() => {
+    if (open && patient) reset(valuesOf(patient));
+  }, [open, patient, reset]);
+
   const close = () => {
     reset();
     onClose();
   };
 
   // Datumi idu kao "YYYY-MM-DD" — backend ih tumači kao tačno taj kalendarski dan
-  const onSubmit = (values: FormValues) =>
-    mutate(
+  const onSubmit = (values: FormValues) => {
+    if (editing) {
+      return update.mutate(
+        { ...values, name: values.name.trim(), lastName: values.lastName.trim() },
+        {
+          onSuccess: () => {
+            notify.success("Podaci pacijenta su izmenjeni.");
+            onClose();
+          },
+          onError: (err) => notify.error(err, "Izmene nisu sačuvane."),
+        }
+      );
+    }
+    add.mutate(
       { ...values, name: values.name.trim(), lastName: values.lastName.trim() },
       {
         onSuccess: (res) => {
@@ -56,6 +99,7 @@ export default function AddPatientDialog({ open, onClose }: { open: boolean; onC
         onError: (err) => notify.error(err, "Pacijent nije dodat."),
       }
     );
+  };
 
   const id = (name: string) => `${formId}-${name}`;
 
@@ -64,15 +108,19 @@ export default function AddPatientDialog({ open, onClose }: { open: boolean; onC
       open={open}
       onClose={close}
       size="lg"
-      title="Novi pacijent"
-      description="Od datuma prijema računaju se 30-dnevni periodi specifikacija."
+      title={editing ? "Izmena podataka pacijenta" : "Novi pacijent"}
+      description={
+        editing
+          ? "Ispravite pogrešno uneto. Već napravljene specifikacije i periodi se ne menjaju."
+          : "Od datuma prijema računaju se 30-dnevni periodi specifikacija."
+      }
       footer={
         <>
           <Button variant="outline" size="sm" onClick={close}>
             Otkaži
           </Button>
           <Button size="sm" type="submit" form={formId} loading={isPending}>
-            Dodaj pacijenta
+            {editing ? "Sačuvaj izmene" : "Dodaj pacijenta"}
           </Button>
         </>
       }

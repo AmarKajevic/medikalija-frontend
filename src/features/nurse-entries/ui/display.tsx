@@ -1,7 +1,7 @@
-import { LuHeartHandshake, LuPackage, LuPill } from "react-icons/lu";
+import { LuActivity, LuHeartHandshake, LuPackage, LuPill } from "react-icons/lu";
 
 // Zajednički prikaz unosa (lista nege i pregled za odobrenje).
-export const TYPE_ICON = { medicine: <LuPill />, article: <LuPackage />, care: <LuHeartHandshake /> } as const;
+export const TYPE_ICON = { medicine: <LuPill />, article: <LuPackage />, care: <LuHeartHandshake />, physio: <LuActivity /> } as const;
 
 export const formatWhen = (iso: string) => {
   const d = new Date(iso);

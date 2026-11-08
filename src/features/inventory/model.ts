@@ -4,6 +4,13 @@ import { paths } from "@app/paths";
 
 export type InventoryKind = "medicine" | "article";
 
+/** Vrsta leka: u specifikaciji se vode kao posebne grupe (tablete pre ampula) */
+export type MedicineForm = "oral" | "parenteral";
+export const MEDICINE_FORM_LABEL: Record<MedicineForm, string> = {
+  oral: "Tablete, kapsule",
+  parenteral: "Ampule, rastvori, sol",
+};
+
 export interface InventoryItem {
   _id: string;
   name: string;
@@ -12,6 +19,8 @@ export interface InventoryItem {
   packageCount?: number;
   /** Cena po jedinici (lek: pricePerUnit, artikal: price) */
   price: number;
+  /** Samo lekovi */
+  form?: MedicineForm;
   updatedAt?: string;
 }
 
@@ -63,6 +72,7 @@ const toItem = (cfg: InventoryConfig, raw: RawItem): InventoryItem => ({
   unitsPerPackage: raw.unitsPerPackage,
   packageCount: raw.packageCount,
   price: Number(raw[cfg.priceField]) || 0,
+  ...(cfg.kind === "medicine" ? { form: raw.form === "parenteral" ? ("parenteral" as const) : ("oral" as const) } : {}),
   updatedAt: raw.updatedAt as string | undefined,
 });
 
@@ -106,9 +116,10 @@ export interface StockInput {
 export const useCreateItem = (cfg: InventoryConfig) => {
   const invalidate = useInvalidate(cfg);
   return useMutation({
-    mutationFn: async (v: { name: string; price: number; unitsPerPackage: number } & StockInput) => {
+    mutationFn: async (v: { name: string; price: number; unitsPerPackage: number; form?: MedicineForm } & StockInput) => {
       const { data } = await api.post(`${cfg.endpoint}/add`, {
         name: v.name,
+        ...(v.form ? { form: v.form } : {}),
         [cfg.priceField]: v.price,
         unitsPerPackage: v.unitsPerPackage || undefined,
         packages: v.packages,

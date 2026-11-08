@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { LuBell, LuPackage, LuPackageOpen, LuPill, LuUserPlus, LuUsers } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { isManager, paths } from "@app/paths";
@@ -32,6 +32,8 @@ export default function HomePage() {
   // Doktor i socijalni radnik imaju svoje radne početne strane
   if (user?.role === "doctor") return <DoctorHome greeting={greeting()} today={today()} />;
   if (user?.role === "social-worker") return <SocialHome greeting={greeting()} today={today()} />;
+  // Fizioterapeut radi samo u svojoj stranici
+  if (user?.role === "physiotherapist") return <Navigate to={paths.physio} replace />;
   return <StaffHome />;
 }
 

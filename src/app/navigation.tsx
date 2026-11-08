@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { LuArchive, LuBedDouble, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuHouse, LuLayers, LuListChecks, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
-import { CARE_ROLES, MANAGER_ROLES, paths, Role, SOCIAL_READ_ROLES, STAFF_ROLES } from "@app/paths";
+import { LuActivity, LuArchive, LuBedDouble, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuHouse, LuLayers, LuListChecks, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
+import { CARE_ROLES, MANAGER_ROLES, paths, Role, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 
 export interface NavItem {
   label: string;
@@ -24,6 +24,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Početna", to: paths.home, icon: <LuHouse />, roles: STAFF_ROLES },
       { label: "Pacijenti", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true },
       { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: CARE_ROLES },
+      { label: "Fizioterapija", to: paths.physio, icon: <LuActivity />, roles: PHYSIO_ROLES },
       { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals" },
       { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: STAFF_ROLES },
       { label: "Obaveštenja", to: paths.notifications, icon: <LuBell />, roles: MANAGER_ROLES },

@@ -3,7 +3,13 @@ import { api } from "@shared/api/api";
 import { refreshAfterSpecChange } from "@features/specification/lib/queries";
 
 // ---------- tipovi ----------
-export type EntryType = "medicine" | "article" | "care";
+export type EntryType = "medicine" | "article" | "care" | "physio";
+export type PhysioKind = "active" | "passive" | "group";
+export const PHYSIO_KIND_LABEL: Record<PhysioKind, string> = {
+  active: "Individualna aktivna fizikalna terapija",
+  passive: "Individualna pasivna fizikalna terapija",
+  group: "Grupna fizikalna terapija",
+};
 export type EntryStatus = "pending" | "processing" | "accepted" | "rejected" | "logged";
 
 export interface CareTask {
@@ -39,11 +45,16 @@ export interface NurseEntry {
   rejectReason: string;
   acceptedAmount: number | null;
   chargedPrice: number;
+  /** Fizikalna terapija */
+  physioKind?: PhysioKind | null;
+  extra?: boolean;
 }
 
 export interface NewEntry {
   type: EntryType;
-  itemId: string;
+  itemId?: string;
+  physioKind?: PhysioKind;
+  extra?: boolean;
   amount?: number;
   note?: string;
   performedAt?: string;
@@ -69,7 +80,7 @@ export const STATUS_META: Record<EntryStatus, { label: string; color: "warning" 
   logged: { label: "Zabeleženo", color: "light" },
 };
 
-export const TYPE_LABEL: Record<EntryType, string> = { medicine: "Lek", article: "Artikal", care: "Nega" };
+export const TYPE_LABEL: Record<EntryType, string> = { medicine: "Lek", article: "Artikal", care: "Nega", physio: "Fizioterapija" };
 
 export const isPending = (e: Pick<NurseEntry, "status">) => e.status === "pending" || e.status === "processing";
 export const isBillableTask = (t: Pick<CareTask, "article" | "articleAmount" | "price">) =>
@@ -180,7 +191,7 @@ export interface AcceptResult {
 export function useAcceptEntries() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ items }: { items: Array<{ id: string; amount?: number }>; patientIds: string[] }) =>
+    mutationFn: async ({ items }: { items: Array<{ id: string; amount?: number; price?: number }>; patientIds: string[] }) =>
       (await api.post("/api/nurse-entries/accept", { items })).data as { message: string; results: AcceptResult[] },
     onSettled: (_d, _e, { patientIds }) => {
       new Set(patientIds).forEach((pid) => refreshAfterSpecChange(qc, pid));

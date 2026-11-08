@@ -1,4 +1,4 @@
-export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "care" | "extra";
+export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "care" | "physio" | "extra";
 
 export type SpecificationItem = {
   _id: string;
@@ -9,6 +9,8 @@ export type SpecificationItem = {
   price: number;
   date?: string;
   analyses?: Array<{ _id: string; name: string; price: number }>;
+  /** Lekovi: "oral" tablete/kapsule, "parenteral" ampule/rastvori/sol */
+  form?: string;
   entries?: Array<{ _id: string; homeAmount?: number; familyAmount?: number; price?: number; date?: string }>;
 };
 

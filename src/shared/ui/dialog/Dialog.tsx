@@ -16,6 +16,8 @@ interface DialogProps {
   children: ReactNode;
   /** Ako je false, telo dijaloga ne skroluje samo (sadržaj sam upravlja skrolom). */
   scrollBody?: boolean;
+  /** Zatvoren dijalog ostaje u memoriji (sakriven), pa se po ponovnom otvaranju nastavlja gde se stalo */
+  keepMounted?: boolean;
 }
 
 const sizeClasses: Record<DialogSize, string> = {
@@ -40,6 +42,7 @@ export default function Dialog({
   size = "md",
   children,
   scrollBody = true,
+  keepMounted = false,
 }: DialogProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -82,15 +85,15 @@ export default function Dialog({
     panels.forEach((p, i) => (p.dataset.top = String(i === panels.length - 1)));
   });
 
-  if (!open) return null;
+  if (!open && !keepMounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-99999 flex items-center justify-center p-2 sm:p-8">
+    <div className={`fixed inset-0 z-99999 flex items-center justify-center p-2 sm:p-8 ${open ? "" : "hidden"}`} aria-hidden={open ? undefined : true}>
       <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
 
       <div
         ref={panelRef}
-        data-dialog-panel
+        data-dialog-panel={open ? "" : undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}

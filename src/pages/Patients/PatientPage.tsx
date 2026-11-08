@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { LuClipboardCheck, LuFilePlus, LuPlus } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
 import usePatient, { type Patient } from "@entities/patient/hooks/usePatient";
 import { Breadcrumbs } from "@shared/ui/page/PageHeader";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
@@ -11,7 +11,7 @@ import Tabs from "@shared/ui/tabs/Tabs";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { usePatientSpecification } from "@features/specification/hooks/usePatientSpecification";
-import SpecificationWorkspaceDialog from "@features/specification/ui/workspace/SpecificationWorkspaceDialog";
+import { useSpecificationDock } from "@features/specification/ui/dock/useSpecificationDock";
 import NurseEntryPanel from "@features/nurse-entries/ui/NurseEntryPanel";
 import EntryList from "@features/nurse-entries/ui/EntryList";
 import PatientAppointments from "@features/calendar/ui/PatientAppointments";
@@ -25,15 +25,18 @@ import SpecificationSummaryCard from "@features/patients/ui/profile/Specificatio
 import PatientActivity from "@features/patients/ui/profile/PatientActivity";
 import FamilyStockDialog from "@features/patients/ui/profile/FamilyStockDialog";
 import DischargeDialog from "@features/patients/ui/profile/DischargeDialog";
+import PhysioEntryForm from "@features/physio/ui/PhysioEntryForm";
+import AddPatientDialog from "@features/patients/ui/AddPatientDialog";
 
-type OpenDialog = "specification" | "family" | "discharge" | "socialNote" | null;
-type TabKey = "overview" | "care" | "medical" | "social";
+type OpenDialog = "family" | "discharge" | "socialNote" | "edit" | null;
+type TabKey = "overview" | "care" | "medical" | "social" | "physio";
 
-const TAB_LABELS: Record<TabKey, string> = { overview: "Pregled", care: "Nega", medical: "Medicina", social: "Socijalno" };
+const TAB_LABELS: Record<TabKey, string> = { overview: "Pregled", care: "Nega", medical: "Medicina", social: "Socijalno", physio: "Fizioterapija" };
 
 /** Kartice profila po ulozi; prva je podrazumevana */
 function tabsFor(role?: string): TabKey[] {
-  if (isManager(role)) return ["overview", "care", "medical", "social"];
+  if (isManager(role)) return ["overview", "care", "medical", "social", "physio"];
+  if (role === "physiotherapist") return ["physio"];
   if (role === "doctor") return ["medical", "care", "social"];
   if (role === "social-worker") return ["social"];
   return ["care", "medical"]; // sestra
@@ -106,6 +109,7 @@ export default function PatientPage() {
   const { data: patient, isLoading, isError, refetch } = usePatient(patientId);
   const specification = usePatientSpecification(manager ? patientId : "");
   const [dialog, setDialog] = useState<OpenDialog>(null);
+  const dock = useSpecificationDock();
   const pending = usePendingSummary(manager).data?.byPatient.find((p) => p.patientId === patientId)?.count ?? 0;
 
   if (isLoading) return <PageLoader label="Učitavanje pacijenta..." />;
@@ -116,6 +120,8 @@ export default function PatientPage() {
   const tab = tabs.includes(params.get("tab") as TabKey) ? (params.get("tab") as TabKey) : tabs[0]!;
   const patientName = `${patient.name} ${patient.lastName}`;
   const close = () => setDialog(null);
+  // Specifikacija se otvara kao "u toku": kad se skloni, ostaje kartica dole desno na svakoj stranici
+  const openSpecification = () => dock.openSpecification({ patientId: patient._id, patientName });
   const discharged = !!patient.dischargeDate;
   const canSchedule = hasRole(role, SCHEDULER_ROLES) && !discharged;
   const canWriteSocial = hasRole(role, SOCIAL_WRITE_ROLES);
@@ -137,9 +143,10 @@ export default function PatientPage() {
       <PatientHeader
         patient={patient}
         canManage={manager}
-        onOpenSpecification={() => setDialog("specification")}
+        onOpenSpecification={openSpecification}
         onOpenFamilyStock={hasRole(role, CARE_ROLES) ? () => setDialog("family") : undefined}
         onDischarge={() => setDialog("discharge")}
+        onEdit={manager ? () => setDialog("edit") : undefined}
         actions={headerActions}
       />
 
@@ -157,13 +164,13 @@ export default function PatientPage() {
                   <strong>{pending === 1 ? "1 unos sestre čeka" : `${pending} unosa sestara čeka`}</strong> odobrenje za specifikaciju.
                 </span>
               </p>
-              <Button size="sm" onClick={() => setDialog("specification")}>
+              <Button size="sm" onClick={openSpecification}>
                 Pregledaj
               </Button>
             </div>
           )}
           <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
-            <SpecificationSummaryCard specification={specification.data} isLoading={specification.isLoading} onOpen={() => setDialog("specification")} />
+            <SpecificationSummaryCard specification={specification.data} isLoading={specification.isLoading} onOpen={openSpecification} />
             <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
           </div>
         </>
@@ -178,6 +185,27 @@ export default function PatientPage() {
         </div>
       )}
 
+      {tab === "physio" && hasRole(role, PHYSIO_ROLES) && (
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
+          <Card>
+            <CardHeader title="Nova terapija" description="Redovna se ne naplaćuje; vanrednu odobrava uprava i određuje joj cenu." />
+            <CardBody>
+              {patient.dischargeDate ? (
+                <EmptyState compact title="Pacijent je otpušten" description="Novi unosi više nisu mogući." />
+              ) : (
+                <PhysioEntryForm patientId={patient._id} />
+              )}
+            </CardBody>
+          </Card>
+          <Card>
+            <CardHeader title="Fizikalna terapija" description="Šta je rađeno ovom pacijentu." />
+            <CardBody>
+              <EntryList patientId={patient._id} type={["physio"]} />
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
       {tab === "social" && hasRole(role, SOCIAL_READ_ROLES) && (
         <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
           <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />
@@ -187,8 +215,8 @@ export default function PatientPage() {
 
       {manager && (
         <>
-          <SpecificationWorkspaceDialog open={dialog === "specification"} onClose={close} patientId={patient._id} patientName={patientName} />
           <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />
+          <AddPatientDialog open={dialog === "edit"} onClose={close} patient={patient} />
         </>
       )}
       {hasRole(role, CARE_ROLES) && <FamilyStockDialog open={dialog === "family"} onClose={close} patientId={patient._id} />}

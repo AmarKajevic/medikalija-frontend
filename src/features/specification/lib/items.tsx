@@ -1,20 +1,26 @@
-import { LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
+import { LuActivity, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt, LuSyringe } from "react-icons/lu";
 import { SpecificationItem } from "@features/specification/types/types";
 
 export const CATEGORY_META = {
-  medicine: { label: "Lekovi", icon: <LuPill /> },
+  medicine: { label: "Lekovi — tablete, kapsule", icon: <LuPill /> },
+  medicineParenteral: { label: "Lekovi — ampule, rastvori, sol", icon: <LuSyringe /> },
   articles: { label: "Artikli", icon: <LuPackage /> },
   combination: { label: "Analize", icon: <LuFlaskConical /> },
   care: { label: "Nega", icon: <LuHeartHandshake /> },
+  physio: { label: "Fizikalna terapija", icon: <LuActivity /> },
   extra: { label: "Dodatni troškovi", icon: <LuReceipt /> },
 } as const;
 
 export type CategoryKey = keyof typeof CATEGORY_META | "other";
-// Redosled u specifikaciji i na štampi: analize uvek prve, pa lekovi, pa artikli i ostalo
-export const CATEGORY_ORDER: CategoryKey[] = ["combination", "medicine", "articles", "care", "extra", "other"];
+// Redosled u specifikaciji i na štampi: analize, lekovi (tablete, kapsule), lekovi (ampule,
+// rastvori, sol), artikli, pa sve ostalo
+export const CATEGORY_ORDER: CategoryKey[] = ["combination", "medicine", "medicineParenteral", "articles", "care", "physio", "extra", "other"];
 
-export const categoryOf = (item: SpecificationItem): CategoryKey =>
-  (item.category && item.category in CATEGORY_META ? item.category : "other") as CategoryKey;
+// Lekovi se dele po vrsti zapamćenoj na stavci (starije stavke bez vrste su tablete)
+export const categoryOf = (item: SpecificationItem): CategoryKey => {
+  if (item.category === "medicine" && item.form === "parenteral") return "medicineParenteral";
+  return (item.category && item.category in CATEGORY_META ? item.category : "other") as CategoryKey;
+};
 
 /** Stavke poređane po kategorijama (redosled dodavanja unutar kategorije ostaje) */
 export const sortSpecItems = <T extends SpecificationItem>(items: T[]): T[] =>
@@ -24,7 +30,7 @@ export const sortSpecItems = <T extends SpecificationItem>(items: T[]): T[] =>
     .map((x) => x.item);
 
 /** Da li se stavci menja i cena po komadu (nega i dodatni troškovi nemaju cenovnik) */
-export const hasEditablePrice = (item: SpecificationItem) => item.category === "care" || item.category === "extra";
+export const hasEditablePrice = (item: SpecificationItem) => item.category === "care" || item.category === "extra" || item.category === "physio";
 
 // Naziv stavke kako ide u PDF: za kombinacije "KKS + CRP = 200 + 300"
 export const itemDisplayName = (item: SpecificationItem) => {

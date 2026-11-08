@@ -60,17 +60,22 @@ export default function EntryReview({ patientId, filter }: Props) {
       return next;
     });
 
-  const amountOf = (e: NurseEntry) => amounts[e._id] ?? String(e.amount).replace(".", ",");
-  const invalidAmount = (e: NurseEntry) => !(toNumber(amountOf(e)) > 0);
+  // Vanredna fizikalna terapija nema količinu nego cenu, koju određuje uprava (RSD)
+  const isPhysio = (e: NurseEntry) => e.type === "physio";
+  const amountOf = (e: NurseEntry) => amounts[e._id] ?? (isPhysio(e) ? "" : String(e.amount).replace(".", ","));
+  const invalidAmount = (e: NurseEntry) => {
+    const v = amountOf(e);
+    return isPhysio(e) ? !v.trim() || !(toNumber(v) >= 0) : !(toNumber(v) > 0);
+  };
 
   const runAccept = (list: string[]) => {
     const entries = data.filter((e) => list.includes(e._id));
     const bad = entries.find(invalidAmount);
-    if (bad) return notify.error(`Neispravna količina za „${bad.name}”.`);
+    if (bad) return notify.error(isPhysio(bad) ? `Unesite cenu za „${bad.name}”.` : `Neispravna količina za „${bad.name}”.`);
 
     accept.mutate(
       {
-        items: entries.map((e) => ({ id: e._id, amount: toNumber(amountOf(e)) })),
+        items: entries.map((e) => (isPhysio(e) ? { id: e._id, price: toNumber(amountOf(e)) } : { id: e._id, amount: toNumber(amountOf(e)) })),
         patientIds: [...new Set(entries.map(patientIdOf))],
       },
       {
@@ -104,7 +109,7 @@ export default function EntryReview({ patientId, filter }: Props) {
     );
   }
   if (data.length === 0) {
-    return <EmptyState compact icon={<LuCheck />} title="Sve je pregledano" description="Nema unosa sestara koji čekaju odobrenje." />;
+    return <EmptyState compact icon={<LuCheck />} title="Sve je pregledano" description="Nema unosa koji čekaju odobrenje." />;
   }
 
   return (
@@ -172,11 +177,15 @@ export default function EntryReview({ patientId, filter }: Props) {
                     inputMode="decimal"
                     value={amountOf(e)}
                     onChange={(ev) => setAmounts((a) => ({ ...a, [e._id]: ev.target.value }))}
-                    aria-label={`Količina: ${e.name}`}
-                    aria-invalid={invalidAmount(e) || undefined}
-                    title={e.type === "care" ? "Broj puta" : "Količina"}
-                    className={`${inputClass} h-8 !w-16 text-right tabular-nums ${invalidAmount(e) ? "border-error-400" : ""}`}
+                    aria-label={isPhysio(e) ? `Cena: ${e.name}` : `Količina: ${e.name}`}
+                    aria-invalid={(!isPhysio(e) || amounts[e._id] !== undefined) && invalidAmount(e) ? true : undefined}
+                    title={isPhysio(e) ? "Cena (RSD)" : e.type === "care" ? "Broj puta" : "Količina"}
+                    placeholder={isPhysio(e) ? "Cena" : undefined}
+                    className={`${inputClass} h-8 ${isPhysio(e) ? "!w-24" : "!w-16"} text-right tabular-nums ${
+                      (!isPhysio(e) || amounts[e._id] !== undefined) && invalidAmount(e) ? "border-error-400" : ""
+                    }`}
                   />
+                  {isPhysio(e) && <span className="-ml-1 text-xs text-gray-500">RSD</span>}
                   <Button size="xs" variant="ghost" onClick={() => setRejecting([e._id])} aria-label={`Odbij ${e.name}`} disabled={accept.isPending}>
                     Odbij
                   </Button>

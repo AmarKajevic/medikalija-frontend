@@ -38,19 +38,22 @@ export const paths = {
   newReport: (patientId?: string) => `/reports/new${patientId ? `?patient=${patientId}` : ""}`,
   report: (id: string) => `/reports/${id}`,
   social: "/social",
+  physio: "/physio",
 } as const;
 
-export type Role = "admin" | "main-nurse" | "nurse" | "doctor" | "social-worker";
+export type Role = "admin" | "main-nurse" | "nurse" | "doctor" | "social-worker" | "physiotherapist";
 
 export const MANAGER_ROLES: Role[] = ["admin", "main-nurse"];
 /** Sve uloge sa prijavom */
-export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker"];
+export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist"];
 /** Nega i zalihe na odeljenju */
 export const CARE_ROLES: Role[] = ["admin", "main-nurse", "nurse"];
 /** Vide medicinsku dokumentaciju (svi osim socijalnog radnika) */
 export const CLINICAL_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
 /** Zakazuju u kalendaru (uprava menja sve termine, ostali samo svoje) */
-export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker"];
+export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist"];
+/** Fizikalna terapija: fizioterapeut beleži, uprava pregleda i odobrava vanredne */
+export const PHYSIO_ROLES: Role[] = ["admin", "main-nurse", "physiotherapist"];
 /** Socijalni karton: čitaju */
 export const SOCIAL_READ_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
 /** Socijalni karton: pišu */
