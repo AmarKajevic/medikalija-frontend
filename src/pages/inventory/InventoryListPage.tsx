@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { LuEllipsis, LuPackagePlus, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuArrowRightLeft, LuEllipsis, LuListChecks, LuPackagePlus, LuPencil, LuPill, LuPlus, LuSyringe, LuTrash2 } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { isManager } from "@app/paths";
 import PageHeader from "@shared/ui/page/PageHeader";
@@ -14,7 +14,8 @@ import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
-import { INVENTORY, InventoryItem, InventoryKind, stockStatus, useDeleteItem, useInventoryList, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
+import { INVENTORY, InventoryItem, InventoryKind, stockStatus, useDeleteItem, useInventoryList, useSetMedicineForm, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
+import SortMedicinesDialog from "@features/inventory/ui/SortMedicinesDialog";
 import { ItemDialog, RestockDialog } from "@features/inventory/ui/InventoryDialogs";
 
 type Filter = "all" | "low" | "out";
@@ -36,7 +37,11 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
 
   const [filter, setFilter] = useState<Filter>("all");
   const [formFilter, setFormFilter] = useState<"all" | MedicineForm>("all");
-  const [dialog, setDialog] = useState<{ type: "create" | "edit" | "restock" | "delete"; item?: InventoryItem } | null>(null);
+  const [dialog, setDialog] = useState<{ type: "create" | "edit" | "restock" | "delete" | "sort"; item?: InventoryItem; form?: MedicineForm } | null>(null);
+  const setForm = useSetMedicineForm();
+  // Jedan lek jednim klikom u drugu vrstu
+  const moveTo = (i: InventoryItem, form: MedicineForm) =>
+    setForm.mutate({ ids: [i._id], form }, { onSuccess: () => notify.success(`„${i.name}” → ${MEDICINE_FORM_LABEL[form]}`), onError: (e) => notify.error(e) });
 
   const counts = {
     all: data.length,
@@ -106,6 +111,19 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
             align: "right" as const,
             cell: (i: InventoryItem) => (
               <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} className="flex justify-end gap-1">
+                {i.form && (
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    startIcon={<LuArrowRightLeft className="h-3.5 w-3.5" />}
+                    disabled={setForm.isPending}
+                    onClick={() => moveTo(i, i.form === "oral" ? "parenteral" : "oral")}
+                    title={`Prebaci u: ${MEDICINE_FORM_LABEL[i.form === "oral" ? "parenteral" : "oral"]}`}
+                    aria-label={`Prebaci ${i.name} u: ${MEDICINE_FORM_LABEL[i.form === "oral" ? "parenteral" : "oral"]}`}
+                  >
+                    {i.form === "oral" ? "→ Ampule" : "→ Tablete"}
+                  </Button>
+                )}
                 <Button variant="ghost" size="xs" startIcon={<LuPackagePlus className="h-3.5 w-3.5" />} onClick={() => setDialog({ type: "restock", item: i })}>
                   Dopuni
                 </Button>
@@ -144,11 +162,25 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
         title={cfg.title}
         description={`Stanje ${kind === "medicine" ? "lekova" : "artikala"} doma. Porodične zalihe pacijenata vode se posebno.`}
         actions={
-          manager && (
+          manager &&
+          (kind === "medicine" ? (
+            // Lek se odmah dodaje u svoju vrstu (u specifikaciji su tablete i ampule posebne grupe)
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" startIcon={<LuListChecks className="h-4 w-4" />} onClick={() => setDialog({ type: "sort" })}>
+                Razvrstaj lekove
+              </Button>
+              <Button size="sm" startIcon={<LuPill className="h-4 w-4" />} onClick={() => setDialog({ type: "create", form: "oral" })}>
+                + Tablete, kapsule
+              </Button>
+              <Button size="sm" startIcon={<LuSyringe className="h-4 w-4" />} onClick={() => setDialog({ type: "create", form: "parenteral" })}>
+                + Ampule, rastvori, sol
+              </Button>
+            </div>
+          ) : (
             <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "create" })}>
               Novi {cfg.singular}
             </Button>
-          )
+          ))
         }
       />
 
@@ -208,7 +240,14 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
 
       {manager && (
         <>
-          <ItemDialog cfg={cfg} open={dialog?.type === "create" || dialog?.type === "edit"} item={dialog?.type === "edit" ? dialog.item : null} onClose={close} />
+          <ItemDialog
+            cfg={cfg}
+            open={dialog?.type === "create" || dialog?.type === "edit"}
+            item={dialog?.type === "edit" ? dialog.item : null}
+            defaultForm={dialog?.form}
+            onClose={close}
+          />
+          {kind === "medicine" && <SortMedicinesDialog open={dialog?.type === "sort"} onClose={close} medicines={data} />}
           <RestockDialog cfg={cfg} open={dialog?.type === "restock"} item={dialog?.type === "restock" ? dialog.item ?? null : null} onClose={close} />
           <ConfirmDialog
             open={dialog?.type === "delete"}

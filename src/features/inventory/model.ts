@@ -143,6 +143,20 @@ export const useUpdateItem = (cfg: InventoryConfig) => {
   });
 };
 
+/** Razvrstavanje lekova (više odjednom); menja i vrstu na stavkama u specifikacijama */
+export const useSetMedicineForm = () => {
+  const invalidate = useInvalidate(INVENTORY.medicine);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { ids: string[]; form: MedicineForm }) => (await api.patch("/api/medicine/form", v)).data as { message: string; modified: number },
+    onSuccess: () => {
+      invalidate();
+      // Grupe lekova u specifikacijama se menjaju
+      for (const key of ["specification", "patientSpecification", "billingPeriodSpecification"]) qc.invalidateQueries({ queryKey: [key] });
+    },
+  });
+};
+
 export const useDeleteItem = (cfg: InventoryConfig) => {
   const invalidate = useInvalidate(cfg);
   return useMutation({
