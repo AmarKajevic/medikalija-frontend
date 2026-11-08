@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LuCalendarClock, LuHistory } from "react-icons/lu";
+import Button from "@shared/ui/button/Button";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Tabs from "@shared/ui/tabs/Tabs";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
@@ -13,6 +15,7 @@ import { useSpecification } from "@features/specification/hooks/useSpecification
 import { Specification } from "@features/specification/types/types";
 import SpecificationWorkspace from "./SpecificationWorkspace";
 import NonStandardPeriodPicker from "./NonStandardPeriodPicker";
+import PeriodActionDialogs, { type PeriodAction } from "./PeriodActionDialogs";
 import { itemsLabel } from "@features/specification/lib/itemsLabel";
 
 interface Props {
@@ -52,6 +55,8 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
   const [opened, setOpened] = useState<Record<string, string>>({});
   const tried = useRef(new Set<string>());
   const [nonStandardId, setNonStandardId] = useState("");
+  // Ručni izbor perioda / povratak na raniji: menjaju smeštaj za period (aktivan period)
+  const [periodAction, setPeriodAction] = useState<PeriodAction | null>(null);
   const nonStandard = useSpecification(tab === "nonstandard" ? nonStandardId : "");
 
   // Podrazumevano period specifikacije — uprava uglavnom obračunava istekao period
@@ -121,7 +126,9 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
         <EmptyState title="Nema aktivne specifikacije" description="Pacijent je otpušten. Ranije specifikacije su dostupne u istoriji." />
       ) : (
         <div className="flex min-h-full flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Tabs
+            className="min-w-0"
             value={tab ?? "active"}
             onChange={setTab}
             items={[
@@ -133,6 +140,17 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />
+            {/* Menjaju smeštaj za period — odmah dostupno, bez otvaranja menija perioda */}
+            <div className="flex flex-wrap gap-2">
+              <Button size="xs" variant="outline" startIcon={<LuCalendarClock className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("manual")}>
+                Ručno izaberi period
+              </Button>
+              <Button size="xs" variant="outline" startIcon={<LuHistory className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("history")}>
+                Vrati se na raniji period
+              </Button>
+            </div>
+          </div>
+          <PeriodActionDialogs patientId={patientId} open={periodAction} onClose={() => setPeriodAction(null)} onActivated={() => setTab("active")} />
           {tab === "other" && (
             <div className="flex flex-wrap items-center gap-2">
               <label htmlFor="spec-period" className="text-sm font-medium text-gray-700 dark:text-gray-300">

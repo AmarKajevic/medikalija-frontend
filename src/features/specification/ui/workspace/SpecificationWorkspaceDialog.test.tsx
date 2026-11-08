@@ -65,6 +65,21 @@ describe("SpecificationWorkspaceDialog", () => {
   });
 });
 
+describe("izbor smeštaja za period pored kartica", () => {
+  it("ručni izbor i povratak na raniji period su odmah dostupni", async () => {
+    data.past = [past("2026-09-26", "2026-10-25", "billing", 2)];
+    const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
+    await screen.findByText("radni prostor: billing billing");
+    await user.click(screen.getByRole("button", { name: "Ručno izaberi period" }));
+    expect(screen.getByRole("dialog", { name: "Ručni izbor perioda" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Otkaži" }));
+    await user.click(screen.getByRole("button", { name: "Vrati se na raniji period" }));
+    const dlg = screen.getByRole("dialog", { name: "Raniji periodi" });
+    expect(dlg).toHaveTextContent("26.09.2026. – 25.10.2026.");
+    expect(dlg).toHaveTextContent("2 stavke");
+  });
+});
+
 describe("vanstandardni period", () => {
   it("kartica pored smeštaja: izabran period se otvara kao vanstandardni", async () => {
     data.history = [spec("vanstd", "2026-10-10", "2026-10-15")];
