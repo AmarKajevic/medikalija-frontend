@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthShell title="Zaboravljena lozinka" footer={back}>
         <div className="rounded-xl border border-gray-200 p-5 text-sm leading-relaxed text-gray-600 dark:border-gray-800 dark:text-gray-300">
-          Obratite se upravi doma. U <strong>Tim → Korisnici</strong> uprava jednim klikom pravi link za novu lozinku i šalje vam ga (poruka, Viber ili lično). Link važi 24 sata.
+          Obratite se upravi doma. U <strong>Tim → Osoblje</strong> uprava jednim klikom pravi link za novu lozinku i šalje vam ga (poruka, Viber ili lično). Link važi 24 sata.
         </div>
       </AuthShell>
     );

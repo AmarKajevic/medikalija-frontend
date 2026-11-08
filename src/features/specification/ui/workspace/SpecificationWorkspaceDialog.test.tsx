@@ -14,6 +14,13 @@ vi.mock("@features/specification/hooks/usePastPeriods", () => ({
 vi.mock("@features/specification/hooks/useSpecification", () => ({
   useSpecification: (id: string) => ({ data: (data.history as Specification[]).find((s) => s._id === id), isLoading: false }),
 }));
+vi.mock("./NonStandardPeriodPicker", () => ({
+  default: ({ onChange }: { onChange: (id: string) => void }) => (
+    <button type="button" onClick={() => onChange("vanstd")}>
+      izaberi vanstandardni
+    </button>
+  ),
+}));
 // Radni prostor se testira posebno; ovde samo koji period je otvoren
 vi.mock("./SpecificationWorkspace", () => ({
   default: ({ specification, period }: { specification: Specification; period: string }) => <p>radni prostor: {period} {specification._id}</p>,
@@ -45,7 +52,7 @@ describe("SpecificationWorkspaceDialog", () => {
     const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     expect(await screen.findByText("radni prostor: billing billing")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Period specifikacije · 26\.09\.2026\. – 25\.10\.2026\./ })).toHaveAttribute("aria-selected", "true");
-    await user.click(screen.getByRole("tab", { name: /Aktivan period/ }));
+    await user.click(screen.getByRole("tab", { name: /Smeštaj za period/ }));
     expect(screen.getByText("radni prostor: active active")).toBeInTheDocument();
   });
 
@@ -53,7 +60,20 @@ describe("SpecificationWorkspaceDialog", () => {
     data.billing = null;
     renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     expect(screen.getByText("radni prostor: active active")).toBeInTheDocument();
-    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /Period specifikacije/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Vanstandardni period/ })).toBeInTheDocument();
+  });
+});
+
+describe("vanstandardni period", () => {
+  it("kartica pored smeštaja: izabran period se otvara kao vanstandardni", async () => {
+    data.history = [spec("vanstd", "2026-10-10", "2026-10-15")];
+    const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
+    const tabs = (await screen.findAllByRole("tab")).map((t) => t.textContent);
+    expect(tabs.findIndex((t) => t?.startsWith("Vanstandardni"))).toBe(tabs.findIndex((t) => t?.startsWith("Smeštaj za period")) + 1);
+    await user.click(screen.getByRole("tab", { name: /Vanstandardni period/ }));
+    await user.click(screen.getByRole("button", { name: "izaberi vanstandardni" }));
+    expect(await screen.findByText("radni prostor: nonstandard vanstd")).toBeInTheDocument();
   });
 });
 

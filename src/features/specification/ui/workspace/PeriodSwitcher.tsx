@@ -36,7 +36,7 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
   const busy = next.isPending || manual.isPending || existing.isPending;
 
   const onActivated = (spec: Specification) => {
-    notify.success(`Aktivan period: ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)}`);
+    notify.success(`Smeštaj za period: ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)}`);
     setDialog(null);
   };
   // Svi periodi od prijema do aktivnog (od najnovijeg); neotvaran period se pravi pri aktiviranju

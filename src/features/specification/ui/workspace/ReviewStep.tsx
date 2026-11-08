@@ -126,7 +126,10 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
           {result.includeLodging && (
             <Row label={`Smeštaj ${nextPeriodLabel}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditStep(2)} />
           )}
-          {!result.includeDebt && !result.includeLodging && (
+          {result.includeEarlyLodging && (
+            <Row label="Vanstandardni period smeštaja" value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditStep(2)} />
+          )}
+          {!result.includeDebt && !result.includeLodging && !result.includeEarlyLodging && (
             <div className="flex items-center justify-between gap-4 py-2.5 text-sm text-gray-500">
               Bez duga i smeštaja
               <button type="button" onClick={() => onEditStep(2)} className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">

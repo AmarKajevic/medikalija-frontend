@@ -37,7 +37,7 @@ const billingText = (t: CareTask) => {
   const parts = [];
   if (t.article && t.articleAmount > 0) parts.push(`troši ${t.article.name} × ${formatQty(t.articleAmount)}`);
   if (t.price > 0) parts.push(`usluga ${formatRSD(t.price)}`);
-  return parts.length ? parts.join(" + ") : "samo se beleži";
+  return parts.length ? parts.join(" + ") : "bez cene — upisuje se u specifikaciji";
 };
 
 type DialogState = { type: "edit"; task: CareTask | null } | { type: "delete"; task: CareTask } | null;
@@ -83,7 +83,7 @@ export default function CareTasksPage() {
       cell: (t) => (
         <span className={isBillableTask(t) ? "text-gray-700 dark:text-gray-300" : "text-gray-400"}>
           {billingText(t)}
-          {isBillableTask(t) && <span className="block text-xs text-gray-400">ide na odobrenje</span>}
+          <span className="block text-xs text-gray-400">ide na odobrenje i u specifikaciju</span>
         </span>
       ),
     },
@@ -127,7 +127,7 @@ export default function CareTasksPage() {
     <>
       <PageHeader
         title="Usluge nege"
-        description="Lista iz koje sestre biraju šta je urađeno pacijentu. Usluga može da troši artikal sa stanja, da ima svoju cenu, ili da se samo beleži."
+        description="Lista iz koje sestre biraju šta je urađeno pacijentu. Usluga može da troši artikal sa stanja i/ili da ima svoju cenu. Svaka urađena nega ide na odobrenje i u specifikaciju."
         actions={
           <Button startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", task: null })}>
             Nova usluga

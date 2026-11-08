@@ -1,4 +1,4 @@
-export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "extra";
+export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "care" | "extra";
 
 export type SpecificationItem = {
   _id: string;
@@ -20,6 +20,8 @@ export type Specification = {
   totalPrice: number;
   extraCosts?: number;
   isActive?: boolean;
+  /** Vanstandardni period: ručni datumi van redovnog niza perioda */
+  nonStandard?: boolean;
   items: SpecificationItem[];
   billing?: {
     lowerExchangeRate: number;
@@ -30,6 +32,9 @@ export type Specification = {
     previousDebtRSD: number;
     nextLodgingEUR: number;
     nextLodgingRSD: number;
+    includeEarlyLodging?: boolean;
+    earlyLodgingEUR?: number;
+    earlyLodgingRSD?: number;
     specEUR: number;
     totalRSD: number;
     totalEUR: number;

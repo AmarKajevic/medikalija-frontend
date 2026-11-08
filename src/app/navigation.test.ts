@@ -19,9 +19,9 @@ describe("navigacija po ulogama", () => {
     expect(labels("social-worker")).toEqual(["Početna", "Pacijenti", "Kalendar", "Socijalni karton"]);
   });
 
-  it("uprava vidi sve, uključujući lekove, rezervu i korisnike", () => {
+  it("uprava vidi sve, uključujući lekove, rezervu i osoblje", () => {
     for (const role of ["admin", "main-nurse"]) {
-      expect(labels(role)).toEqual(expect.arrayContaining(["Lekovi", "Rezerva lekova", "Korisnici", "Analize", "Kalendar"]));
+      expect(labels(role)).toEqual(expect.arrayContaining(["Lekovi", "Rezerva lekova", "Osoblje", "Analize", "Kalendar"]));
     }
   });
 

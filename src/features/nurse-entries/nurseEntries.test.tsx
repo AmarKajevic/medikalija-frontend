@@ -53,7 +53,7 @@ describe("CareTaskPicker", () => {
     await user.click(await screen.findByRole("button", { name: "Promenjene pelene" }));
     await user.click(screen.getByRole("button", { name: "Više: Promenjene pelene" }));
     await user.click(screen.getByRole("button", { name: "Promenjena posteljina" }));
-    expect(screen.getByText(/uprava ga odobrava/)).toBeInTheDocument();
+    expect(screen.getByText(/Uprava odobrava unos/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Sačuvaj (3)" }));
     expect(api.post).toHaveBeenCalledWith("/api/nurse-entries", {

@@ -131,7 +131,7 @@ export function StaffOverview({ staff }: { staff: { role: string; count: number 
         icon={<LuUsers />}
         actions={
           <Link to={paths.users} className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">
-            Korisnici
+            Sve osoblje
           </Link>
         }
       />

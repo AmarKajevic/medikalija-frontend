@@ -71,7 +71,7 @@ describe("SpecificationWorkspace", () => {
     expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, includeDebt: true, includeLodging: false });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false });
     expect(screen.getByRole("button", { name: "Štampaj specifikaciju" })).toBeInTheDocument();
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });

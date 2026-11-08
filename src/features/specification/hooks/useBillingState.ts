@@ -7,18 +7,20 @@ import { Specification } from "@features/specification/types/types";
 
 const toNumber = (v: string) => Number(v.replace(",", ".")) || 0;
 
-// Stanje obračuna (dug, smeštaj, kursevi). Živi iznad koraka čarobnjaka, pa se
+// Stanje obračuna (dug, smeštaj, vanstandardni period smeštaja, kursevi). Živi iznad koraka čarobnjaka, pa se
 // unete vrednosti i oznaka "nesačuvano" ne gube pri prelasku sa koraka na korak.
 export function useBillingState(spec: Specification, patientId: string) {
   const { rates, updateRates } = useExchangeRates();
   const save = useSaveBilling(spec._id, patientId);
   const [debt, setDebtRaw] = useState("");
   const [lodging, setLodgingRaw] = useState("");
+  const [early, setEarlyRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
   // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
   const [includeDebt, setIncludeDebtRaw] = useState(false);
   const [includeLodging, setIncludeLodgingRaw] = useState(false);
+  const [includeEarly, setIncludeEarlyRaw] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -26,8 +28,18 @@ export function useBillingState(spec: Specification, patientId: string) {
     setLodgingRaw(spec.billing?.nextLodgingEUR ? String(spec.billing.nextLodgingEUR) : "");
     setIncludeDebtRaw(spec.billing?.includeDebt ?? (spec.billing?.previousDebtEUR ?? 0) > 0);
     setIncludeLodgingRaw(spec.billing?.includeLodging ?? (spec.billing?.nextLodgingEUR ?? 0) > 0);
+    setEarlyRaw(spec.billing?.earlyLodgingEUR ? String(spec.billing.earlyLodgingEUR) : "");
+    setIncludeEarlyRaw(spec.billing?.includeEarlyLodging ?? (spec.billing?.earlyLodgingEUR ?? 0) > 0);
     setDirty(false);
-  }, [spec._id, spec.billing?.previousDebtEUR, spec.billing?.nextLodgingEUR, spec.billing?.includeDebt, spec.billing?.includeLodging]);
+  }, [
+    spec._id,
+    spec.billing?.previousDebtEUR,
+    spec.billing?.nextLodgingEUR,
+    spec.billing?.earlyLodgingEUR,
+    spec.billing?.includeDebt,
+    spec.billing?.includeLodging,
+    spec.billing?.includeEarlyLodging,
+  ]);
 
   useEffect(() => {
     setLowerRate(rates.lower ? String(rates.lower) : "");
@@ -38,6 +50,7 @@ export function useBillingState(spec: Specification, patientId: string) {
     specTotalRSD: spec.totalPrice ?? 0,
     debtEUR: includeDebt ? toNumber(debt) : 0,
     lodgingEUR: includeLodging ? toNumber(lodging) : 0,
+    earlyLodgingEUR: includeEarly ? toNumber(early) : 0,
     lowerRate: toNumber(lowerRate),
     middleRate: toNumber(middleRate),
   });
@@ -57,7 +70,14 @@ export function useBillingState(spec: Specification, patientId: string) {
   /** Čuva dug i smeštaj. Vraća false ako čuvanje nije uspelo. */
   const saveBilling = async (): Promise<boolean> => {
     try {
-      await save.mutateAsync({ previousDebtEUR: toNumber(debt), nextLodgingEUR: toNumber(lodging), includeDebt, includeLodging });
+      await save.mutateAsync({
+        previousDebtEUR: toNumber(debt),
+        nextLodgingEUR: toNumber(lodging),
+        earlyLodgingEUR: toNumber(early),
+        includeDebt,
+        includeLodging,
+        includeEarlyLodging: includeEarly,
+      });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
       return true;
@@ -79,6 +99,16 @@ export function useBillingState(spec: Specification, patientId: string) {
         setLodgingRaw(v);
         setDirty(true);
       },
+      early,
+      setEarly: (v: string) => {
+        setEarlyRaw(v);
+        setDirty(true);
+      },
+      includeEarly,
+      setIncludeEarly: (v: boolean) => {
+        setIncludeEarlyRaw(v);
+        setDirty(true);
+      },
       lowerRate,
       setLowerRate,
       middleRate,
@@ -95,7 +125,7 @@ export function useBillingState(spec: Specification, patientId: string) {
       },
     },
     rates,
-    result: { ...result, includeDebt, includeLodging },
+    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly },
     commitRates,
     dirty,
     saving: save.isPending,
