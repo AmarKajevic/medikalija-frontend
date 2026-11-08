@@ -7,7 +7,7 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import { getNextPeriodLabel } from "@features/specification/lib/helpers";
 import { Specification } from "@features/specification/types/types";
-import { itemDisplayName } from "@features/specification/lib/items";
+import { itemDisplayName, sortSpecItems } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
 import { useNurseEntries } from "@features/nurse-entries/model";
@@ -33,7 +33,7 @@ interface Props {
   patientId: string;
   patientName: string;
   /** "billing" = period specifikacije (istekao, u njemu se pravi obračun); "other" = ručno izabran raniji period */
-  period?: "active" | "billing" | "other";
+  period?: "active" | "billing" | "other" | "nonstandard";
   /** Koji unosi sestara na čekanju pripadaju ovom periodu (po danu kad je dato) */
   pendingFilter?: (performedAt: string) => boolean;
 }
@@ -112,7 +112,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const nextPeriodLabel = getNextPeriodLabel(spec.endDate);
   const isBilling = period === "billing";
   const isChosen = period === "other";
-  const canAdd = isBilling || isChosen || !!spec.isActive;
+  const isNonStandard = period === "nonstandard";
+  const canAdd = isBilling || isChosen || isNonStandard || !!spec.isActive;
   const current = STEPS[step - 1]!;
 
   // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
@@ -123,7 +124,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       patientName,
       startDate: spec.startDate,
       endDate: spec.endDate,
-      items: spec.items.map((item) => ({
+      items: sortSpecItems(spec.items).map((item) => ({
         formattedName: itemDisplayName(item),
         amount: item.amount ?? 1,
         price: item.price ?? 0,
@@ -153,6 +154,13 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             <Badge size="sm" color="warning">Period specifikacije</Badge>
             <span className="text-xs text-gray-500 dark:text-gray-400">Istekao period — ovde se pravi obračun za naplatu.</span>
           </>
+        ) : isNonStandard ? (
+          <>
+            <Badge size="sm" color="warning">Vanstandardni period</Badge>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatDay(spec.startDate)} – {formatDay(spec.endDate)} · stavke i obračun idu u ovaj period
+            </span>
+          </>
         ) : isChosen ? (
           <>
             <Badge size="sm" color="light">Ručno izabran period</Badge>
@@ -161,7 +169,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         ) : canAdd ? (
           <>
             <PeriodSwitcher patientId={patientId} activeSpecification={spec} />
-            <Badge size="sm" color="success">Aktivan period</Badge>
+            <Badge size="sm" color="success">Smeštaj za period</Badge>
           </>
         ) : (
           <>

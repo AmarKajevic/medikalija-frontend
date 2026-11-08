@@ -22,7 +22,8 @@ export const saveBilling = async (specId: string, payload: {
   nextLodgingEUR: number;
   includeDebt: boolean;
   includeLodging: boolean;
-
+  earlyLodgingEUR: number;
+  includeEarlyLodging: boolean;
 }) => {
   const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
   return data.specification;
@@ -96,8 +97,25 @@ export const openPastPeriod = async (patientId: string, startDate: string, endDa
   return data.specification;
 };
 
+// Izmena količine stavke (i cene po komadu za negu i dodatne troškove)
+export const updateSpecificationItem = async (specId: string, itemId: string, payload: { amount: number; unitPrice?: number }): Promise<Specification> => {
+  const { data } = await api.patch(`/api/specification/${specId}/item/${itemId}`, payload);
+  return data.specification;
+};
+
 // Ručna izmena datuma perioda; periodi koji se nadovezuju pomeraju se na serveru
 export const changeSpecificationDates = async (patientId: string, specId: string, startDate: string, endDate: string): Promise<Specification> => {
   const { data } = await api.put(`/api/specification/${patientId}/periods/${specId}`, { startDate, endDate });
+  return data.specification;
+};
+
+// Vanstandardni periodi: ručno izabrani datumi van redovnog niza perioda
+export const fetchNonStandardPeriods = async (patientId: string): Promise<Specification[]> => {
+  const { data } = await api.get(`/api/specification/${patientId}/non-standard`);
+  return data.specifications ?? [];
+};
+
+export const openNonStandardPeriod = async (patientId: string, startDate: string, endDate: string): Promise<Specification> => {
+  const { data } = await api.post(`/api/specification/${patientId}/non-standard`, { startDate, endDate });
   return data.specification;
 };

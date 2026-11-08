@@ -160,11 +160,12 @@ export function usePendingSummary(enabled = true) {
   });
 }
 
-export function useCreateEntries(patientId: string) {
+/** `specificationId`: uprava dodaje iz specifikacije u izabran period */
+export function useCreateEntries(patientId: string, specificationId?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (entries: NewEntry[]) =>
-      (await api.post("/api/nurse-entries", { patientId, entries })).data as { message: string; entries: NurseEntry[] },
+      (await api.post("/api/nurse-entries", { patientId, entries, specificationId })).data as { message: string; entries: NurseEntry[] },
     // Unos uprave odmah menja specifikaciju i stanje
     onSuccess: () => refreshAfterSpecChange(qc, patientId),
   });

@@ -28,6 +28,8 @@ interface GeneratePDFParams {
   debtRSD: number;
   lodgingEUR: number;
   lodgingRSD: number;
+  earlyLodgingEUR?: number;
+  earlyLodgingRSD?: number;
   specEUR: number;
   specTotalRSD: number;
   totalRSD: number;
@@ -36,6 +38,7 @@ interface GeneratePDFParams {
   /** Dug i smeštaj su opcioni: ono što nije uključeno se ne štampa */
   includeDebt?: boolean;
   includeLodging?: boolean;
+  includeEarlyLodging?: boolean;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
   /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
@@ -52,6 +55,8 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     debtRSD,
     lodgingEUR,
     lodgingRSD,
+    earlyLodgingEUR = 0,
+    earlyLodgingRSD = 0,
     specEUR,
     specTotalRSD,
     totalRSD,
@@ -61,6 +66,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     facility = DEFAULT_FACILITY,
     includeDebt = debtEUR > 0,
     includeLodging = lodgingEUR > 0,
+    includeEarlyLodging = earlyLodgingEUR > 0,
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
@@ -79,7 +85,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   }
   const contactLine = facilityContactLine(facility);
 
-  // Redovi duga i smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
+  // Redovi duga, smeštaja i vanstandardnog perioda smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
   const extraRows = [
     ...(includeDebt
       ? [[{ text: "Dug iz prethodnog perioda" }, { text: money.format(debtRSD), alignment: "right" }, { text: money.format(debtEUR), alignment: "right" }]]
@@ -87,7 +93,21 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     ...(includeLodging
       ? [[{ text: `Smeštaj za narednih 30 dana (${nextPeriodLabel})` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
       : []),
+    ...(includeEarlyLodging
+      ? [[{ text: "Vanstandardni period smeštaja" }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
+      : []),
   ];
+  const extraTitles = [includeDebt && "Dug", includeLodging && "Smeštaj", includeEarlyLodging && "Vanstandardni period smeštaja"].filter(Boolean);
+  const extraTitle =
+    extraTitles.length > 1
+      ? `${extraTitles.join(" + ")} (EUR/RSD)`
+      : includeDebt
+        ? "Dug iz prethodnog perioda (EUR/RSD)"
+        : includeLodging
+          ? "Smeštaj za naredni period (EUR/RSD)"
+          : "Vanstandardni period smeštaja (EUR/RSD)";
+  const extraRSD = (includeDebt ? debtRSD : 0) + (includeLodging ? lodgingRSD : 0) + (includeEarlyLodging ? earlyLodgingRSD : 0);
+  const extraEUR = (includeDebt ? debtEUR : 0) + (includeLodging ? lodgingEUR : 0) + (includeEarlyLodging ? earlyLodgingEUR : 0);
 
   // ✅ ZAJEDNIČKE ŠIRINE KOLONA za sve tri tabele
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
@@ -125,10 +145,10 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       
 
       // Tabela 1 – dug i/ili smeštaj (samo ono što je uključeno)
-      ...(includeDebt || includeLodging
+      ...(extraRows.length > 0
         ? [
             {
-              text: includeDebt && includeLodging ? "Dug + Smeštaj (EUR/RSD)" : includeDebt ? "Dug iz prethodnog perioda (EUR/RSD)" : "Smeštaj za naredni period (EUR/RSD)",
+              text: extraTitle,
               style: "subheader",
               margin: [0, 10, 0, 5],
             },
@@ -142,12 +162,12 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
                     { text: "EUR", bold: true, alignment: "right" },
                   ],
                   ...extraRows,
-                  ...(includeDebt && includeLodging
+                  ...(extraRows.length > 1
                     ? [
                         [
                           { text: "UKUPNO", bold: true },
-                          { text: money.format(debtRSD + lodgingRSD), bold: true, alignment: "right" },
-                          { text: money.format(debtEUR + lodgingEUR), bold: true, alignment: "right" },
+                          { text: money.format(extraRSD), bold: true, alignment: "right" },
+                          { text: money.format(extraEUR), bold: true, alignment: "right" },
                         ],
                       ]
                     : []),

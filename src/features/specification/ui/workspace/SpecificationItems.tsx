@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { LuReceipt, LuTrash2 } from "react-icons/lu";
+import { LuPencil, LuReceipt, LuTrash2 } from "react-icons/lu";
 import { CATEGORY_META, CATEGORY_ORDER, categoryOf } from "@features/specification/lib/items";
 import { Specification, SpecificationItem } from "@features/specification/types/types";
 import { useDeleteSpecificationItem } from "@features/specification/hooks/useDeleteSpecificationItem";
 import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
+import EditItemDialog from "./EditItemDialog";
 import { formatQty, formatRSD } from "@shared/lib/format";
 
 const deleteHint = (item: SpecificationItem) => {
   const tracked = (item.entries?.length ?? 0) > 0;
-  if (item.category === "extra") return "Trošak će biti uklonjen iz specifikacije.";
+  if (item.category === "extra" || item.category === "care") return "Trošak će biti uklonjen iz specifikacije.";
   if (!tracked) return "Ovo je starija stavka: uklanja se samo trošak, stanje na lageru se NE vraća automatski.";
   if (item.category === "combination") return "Trošak i zapis o urađenim analizama biće uklonjeni.";
   return "Trošak će biti uklonjen, a količina vraćena na stanje (doma i porodično).";
@@ -24,6 +25,7 @@ interface Props {
 export default function SpecificationItems({ specification: spec, patientId }: Props) {
   const remove = useDeleteSpecificationItem(patientId);
   const [pending, setPending] = useState<SpecificationItem | null>(null);
+  const [editing, setEditing] = useState<SpecificationItem | null>(null);
 
   const groups = CATEGORY_ORDER.map((key) => {
     const items = spec.items.filter((i) => categoryOf(i) === key);
@@ -84,12 +86,25 @@ export default function SpecificationItems({ specification: spec, patientId }: P
                         </p>
                       ) : null}
                     </div>
-                    <span className="w-16 shrink-0 text-right text-sm tabular-nums text-gray-500 dark:text-gray-400">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(item)}
+                      title="Izmeni količinu"
+                      className="w-16 shrink-0 rounded-md px-1 py-0.5 text-right text-sm tabular-nums text-gray-500 underline decoration-dotted underline-offset-4 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
+                    >
                       × {formatQty(item.amount ?? 1)}
-                    </span>
+                    </button>
                     <span className="w-32 shrink-0 text-right text-sm font-medium tabular-nums text-gray-800 dark:text-white/90">
                       {formatRSD(item.price)}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(item)}
+                      aria-label={`Izmeni ${item.name}`}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:bg-white/5"
+                    >
+                      <LuPencil className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => setPending(item)}
@@ -110,6 +125,8 @@ export default function SpecificationItems({ specification: spec, patientId }: P
         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ukupno za period</span>
         <span className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">{formatRSD(spec.totalPrice)}</span>
       </div>
+
+      <EditItemDialog specId={spec._id} patientId={patientId} item={editing} onClose={() => setEditing(null)} />
 
       <ConfirmDialog
         open={!!pending}

@@ -6,6 +6,7 @@ export const specKeys = {
   history: (patientId: string) => ["specificationHistory", patientId] as const,
   byId: (specId: string) => ["specification", specId] as const,
   past: (patientId: string) => ["pastPeriods", patientId] as const,
+  nonStandard: (patientId: string) => ["nonStandardPeriods", patientId] as const,
 };
 
 // Sve što se menja kada se nešto doda u specifikaciju ili ukloni iz nje:
@@ -21,6 +22,7 @@ export function refreshAfterSpecChange(qc: QueryClient, patientId: string, spec?
     ["billingPeriodSpecification", patientId],
     ["specificationHistory", patientId],
     ["pastPeriods", patientId],
+    ["nonStandardPeriods", patientId],
     // Raspored perioda (ručna izmena datuma pomera sledeće periode)
     ["future-specs", patientId],
     ["specification"],

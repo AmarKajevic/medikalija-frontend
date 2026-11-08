@@ -5,7 +5,7 @@ import { refreshAfterSpecChange } from "@features/specification/lib/queries";
 export const useSaveBilling = (specId: string, patientId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { previousDebtEUR: number; nextLodgingEUR: number; includeDebt: boolean; includeLodging: boolean }) => saveBilling(specId, payload),
+    mutationFn: (payload: Parameters<typeof saveBilling>[1]) => saveBilling(specId, payload),
     onSuccess: (spec) => refreshAfterSpecChange(queryClient, patientId, spec),
   });
 };

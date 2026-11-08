@@ -12,6 +12,7 @@ import { notify } from "@shared/lib/notify";
 import { useSpecification } from "@features/specification/hooks/useSpecification";
 import { Specification } from "@features/specification/types/types";
 import SpecificationWorkspace from "./SpecificationWorkspace";
+import NonStandardPeriodPicker from "./NonStandardPeriodPicker";
 import { itemsLabel } from "@features/specification/lib/itemsLabel";
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
   patientName: string;
 }
 
-type PeriodTab = "billing" | "active" | "other";
+type PeriodTab = "billing" | "active" | "nonstandard" | "other";
 
 // Lokalni dan iz kalendarskog dana specifikacije ("2026-10-25T00:00Z" → 25.10.)
 const dayKey = (iso: string) => iso.slice(0, 10);
@@ -35,7 +36,8 @@ const inPeriod = (spec: Specification, performedAt: string) => {
 };
 
 // "Napravi specifikaciju": period specifikacije (istekao, u njemu se pravi obračun),
-// aktivan period (tekući) i ručno izabran raniji period — sve sa istim mogućnostima.
+// smeštaj za period (tekući), vanstandardni period (ručni datumi) i ručno izabran raniji
+// period — sve sa istim mogućnostima.
 export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName }: Props) {
   const active = usePatientSpecification(open ? patientId : "");
   const billing = useBillingPeriodSpecification(open ? patientId : "");
@@ -46,11 +48,14 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
   const [otherKey, setOtherKey] = useState("");
   const [opened, setOpened] = useState<Record<string, string>>({});
   const tried = useRef(new Set<string>());
+  const [nonStandardId, setNonStandardId] = useState("");
+  const nonStandard = useSpecification(tab === "nonstandard" ? nonStandardId : "");
 
   // Podrazumevano period specifikacije — uprava uglavnom obračunava istekao period
   useEffect(() => {
     if (!open) {
       setOtherKey("");
+      setNonStandardId("");
       tried.current.clear();
       return setTab(null);
     }
@@ -91,13 +96,17 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
       // Aktivan period: sve što ne pada u period specifikacije (unosi se raspoređuju po datumu)
       active: billingSpec ? (at: string) => !inPeriod(billingSpec, at) : undefined,
       other: otherSpec ? (at: string) => inPeriod(otherSpec, at) : undefined,
+      // U vanstandardni period se unosi sestara ne raspoređuju automatski
+      nonstandard: () => false,
     }),
     [billingSpec, otherSpec]
   );
 
   const loading = active.isLoading || billing.isLoading || tab === null;
-  const current = tab === "other" ? otherSpec : tab === "billing" && billingSpec ? billingSpec : active.data;
-  const period = tab === "other" ? "other" : tab === "billing" && billingSpec ? "billing" : "active";
+  const nonStandardSpec = tab === "nonstandard" && nonStandardId ? (nonStandard.data ?? null) : null;
+  const current =
+    tab === "other" ? otherSpec : tab === "nonstandard" ? nonStandardSpec : tab === "billing" && billingSpec ? billingSpec : active.data;
+  const period = tab === "other" ? "other" : tab === "nonstandard" ? "nonstandard" : tab === "billing" && billingSpec ? "billing" : "active";
 
   return (
     <Dialog open={open} onClose={onClose} size="full" title="Specifikacija" description={patientName}>
@@ -109,19 +118,18 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
         <EmptyState title="Nema aktivne specifikacije" description="Pacijent je otpušten. Ranije specifikacije su dostupne u istoriji." />
       ) : (
         <div className="flex min-h-full flex-col gap-4">
-          {(billingSpec || otherPeriods.length > 0) && (
-            <Tabs
-              value={tab ?? "active"}
-              onChange={setTab}
-              items={[
-                ...(billingSpec
-                  ? [{ value: "billing" as const, label: `Period specifikacije · ${formatDay(billingSpec.startDate)} – ${formatDay(billingSpec.endDate)}` }]
-                  : []),
-                { value: "active", label: `Aktivan period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` },
-                ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
-              ]}
-            />
-          )}
+          <Tabs
+            value={tab ?? "active"}
+            onChange={setTab}
+            items={[
+              ...(billingSpec
+                ? [{ value: "billing" as const, label: `Period specifikacije · ${formatDay(billingSpec.startDate)} – ${formatDay(billingSpec.endDate)}` }]
+                : []),
+              { value: "active", label: `Smeštaj za period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` },
+              { value: "nonstandard", label: "Vanstandardni period" },
+              ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
+            ]}
+          />
           {tab === "other" && (
             <div className="flex flex-wrap items-center gap-2">
               <label htmlFor="spec-period" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -136,6 +144,8 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               </Select>
             </div>
           )}
+          {tab === "nonstandard" && <NonStandardPeriodPicker patientId={patientId} value={nonStandardId} onChange={setNonStandardId} />}
+          {tab === "nonstandard" && nonStandardId && !nonStandardSpec && nonStandard.isLoading && <PageLoader label="Učitavanje perioda..." />}
           {tab === "other" && !otherSpec && (openPast.isPending || other.isLoading) && <PageLoader label="Učitavanje perioda..." />}
           {current && (
             <SpecificationWorkspace

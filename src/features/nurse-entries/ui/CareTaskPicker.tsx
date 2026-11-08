@@ -9,7 +9,7 @@ import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { matchesSearch } from "@shared/lib/search";
 import { todayIso } from "@shared/lib/dateText";
-import { CareTask, isBillableTask, useCareTasks, useCreateEntries } from "@features/nurse-entries/model";
+import { CareTask, useCareTasks, useCreateEntries } from "@features/nurse-entries/model";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const nowTime = () => {
@@ -26,10 +26,12 @@ function performedAtIso(date: string, time: string): string | undefined {
 }
 
 // Sestra bira iz kataloga šta je urađeno pacijentu (može više odjednom).
-export default function CareTaskPicker({ patientId, onSaved }: { patientId: string; onSaved?: () => void }) {
+// `specificationId`: uprava dodaje negu iz specifikacije (odmah ulazi u izabran period, bez vremena izvođenja)
+export default function CareTaskPicker({ patientId, onSaved, specificationId }: { patientId: string; onSaved?: () => void; specificationId?: string }) {
   const ids = { note: useId(), date: useId(), time: useId() };
   const { data: tasks = [], isLoading } = useCareTasks();
-  const create = useCreateEntries(patientId);
+  const create = useCreateEntries(patientId, specificationId);
+  const fromSpec = !!specificationId;
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [note, setNote] = useState("");
@@ -47,7 +49,6 @@ export default function CareTaskPicker({ patientId, onSaved }: { patientId: stri
 
   const chosen = tasks.filter((t) => selected[t._id]);
   const count = chosen.reduce((s, t) => s + (selected[t._id] ?? 0), 0);
-  const needsApproval = chosen.some(isBillableTask);
 
   const toggle = (id: string) => setSelected((s) => (s[id] ? omit(s, id) : { ...s, [id]: 1 }));
   const step = (id: string, delta: number) =>
@@ -153,7 +154,7 @@ export default function CareTaskPicker({ patientId, onSaved }: { patientId: stri
         <Textarea id={ids.note} rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="npr. pacijent nemiran tokom noći" />
       </Field>
 
-      {customTime ? (
+      {fromSpec ? null : customTime ? (
         <div className="grid grid-cols-[1fr_120px] gap-2">
           <Field label="Datum" htmlFor={ids.date}>
             <DateInput id={ids.date} value={date} onChange={setDate} max={todayIso()} />
@@ -169,9 +170,11 @@ export default function CareTaskPicker({ patientId, onSaved }: { patientId: stri
       )}
 
       <Button type="submit" className="w-full" loading={create.isPending} disabled={chosen.length === 0}>
-        {chosen.length === 0 ? "Izaberite uslugu" : `Sačuvaj (${count})`}
+        {chosen.length === 0 ? "Izaberite uslugu" : fromSpec ? `Dodaj u specifikaciju (${count})` : `Sačuvaj (${count})`}
       </Button>
-      {needsApproval && <p className="-mt-2 text-center text-xs text-gray-500 dark:text-gray-400">Deo izabranog se naplaćuje — uprava ga odobrava pre ulaska u specifikaciju.</p>}
+      {chosen.length > 0 && !fromSpec && (
+        <p className="-mt-2 text-center text-xs text-gray-500 dark:text-gray-400">Uprava odobrava unos pre ulaska u specifikaciju.</p>
+      )}
     </form>
   );
 }

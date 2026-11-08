@@ -27,7 +27,7 @@ const GoogleMark = () => (
 
 type Confirm = { kind: "suspend" | "delete"; user: ManagedUser } | null;
 
-// Korisnici: pristup samo po pozivu. Admin poziva, menja ulogu, suspenduje.
+// Osoblje: pristup samo po pozivu. Admin poziva, menja ulogu, suspenduje.
 export default function UsersPage() {
   const { user: me } = useAuth();
   const isAdmin = me?.role === "admin";
@@ -165,7 +165,7 @@ export default function UsersPage() {
   return (
     <>
       <PageHeader
-        title="Korisnici"
+        title="Osoblje"
         description="Pristup samo po pozivu: osoba dobija link, sama postavlja lozinku ili se prijavljuje Google-om."
         actions={
           isAdmin && (
@@ -192,7 +192,7 @@ export default function UsersPage() {
         ]}
       />
       {isError ? (
-        <ErrorState message="Korisnici nisu učitani." onRetry={() => refetch()} />
+        <ErrorState message="Osoblje nije učitano." onRetry={() => refetch()} />
       ) : (
         <DataTable
           columns={columns}

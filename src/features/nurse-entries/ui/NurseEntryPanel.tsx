@@ -7,7 +7,7 @@ import CareTaskPicker from "./CareTaskPicker";
 
 type EntryTab = "care" | "medicine" | "article" | "note";
 
-// Sve što sestra unosi za pacijenta: urađena nega (iz liste), lek, artikal, učinak.
+// Sve što sestra unosi za pacijenta: urađena nega (iz liste), lek, artikal, dijagnoza (iz šablona) / učinak.
 export default function NurseEntryPanel({ patientId, title = "Novi unos" }: { patientId: string; title?: string }) {
   const [tab, setTab] = useState<EntryTab>("care");
   return (
@@ -23,7 +23,7 @@ export default function NurseEntryPanel({ patientId, title = "Novi unos" }: { pa
             { value: "care", label: "Nega" },
             { value: "medicine", label: "Lek" },
             { value: "article", label: "Artikal" },
-            { value: "note", label: "Učinak" },
+            { value: "note", label: "Dijagnoza" },
           ]}
         />
         {tab === "care" && <CareTaskPicker key={patientId} patientId={patientId} />}
