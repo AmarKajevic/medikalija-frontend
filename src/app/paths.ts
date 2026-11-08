@@ -28,6 +28,7 @@ export const paths = {
   notifications: "/notifications",
   calendar: "/calendar",
   settings: "/settings",
+  lodgingPrices: "/lodging-prices",
   care: "/care",
   approvals: "/approvals",
   careTasks: "/care-tasks",

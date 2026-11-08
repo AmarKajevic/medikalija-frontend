@@ -1,38 +1,31 @@
-import { useMemo, useState } from "react";
-import { LuPlus, LuSearch } from "react-icons/lu";
+import { useMemo } from "react";
+import { LuPlus } from "react-icons/lu";
 import { useGetCombinations } from "@features/combinations/hooks/useGetCombinations";
 import { useAddCombinationToPatient } from "@features/combinations/hooks/useAddCombinationToPatient";
-import { inputClass } from "@shared/ui/form/Field";
+import SearchGroup from "@shared/ui/group/SearchGroup";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
 import { formatRSD } from "@shared/lib/format";
-import { matchesSearch } from "@shared/lib/search";
-
 
 export default function AddCombinationForm({ patientId, specificationId }: { patientId: string; specificationId?: string }) {
   const { data: groups = [], isLoading } = useGetCombinations();
   const { mutate, isPending, variables } = useAddCombinationToPatient();
-  const [query, setQuery] = useState("");
-
-  const rows = useMemo(() => {
-    const q = query.trim();
-    return groups.flatMap((g) =>
-      (g.combinations ?? [])
-        .map((c) => ({
-          ...c,
-          groupName: g.name,
-          price: (c.analyses ?? []).reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+  // Kombinacije po grupama; svaka grupa se otvara posebno i ima svoju pretragu
+  const sections = useMemo(
+    () =>
+      groups
+        .map((g) => ({
+          name: g.name,
+          rows: (g.combinations ?? []).map((c) => ({
+            ...c,
+            groupName: g.name,
+            price: (c.analyses ?? []).reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+          })),
         }))
-        .filter(
-          (c) =>
-            !q ||
-            matchesSearch(c.name, q) ||
-            matchesSearch(g.name, q) ||
-            (c.analyses ?? []).some((a) => matchesSearch(a.name, q))
-        )
-    );
-  }, [groups, query]);
+        .filter((g) => g.rows.length > 0),
+    [groups]
+  );
 
   const add = (combinationId: string, name: string) =>
     mutate(
@@ -45,41 +38,35 @@ export default function AddCombinationForm({ patientId, specificationId }: { pat
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <LuSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Pretraži kombinacije ili analize..."
-          className={`${inputClass} pl-9`}
-        />
-      </div>
-
       {isLoading ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-16" />
           ))}
         </div>
-      ) : rows.length === 0 ? (
-        <EmptyState compact title="Nema kombinacija" description={query ? "Probajte drugi pojam." : undefined} />
+      ) : sections.length === 0 ? (
+        <EmptyState compact title="Nema kombinacija" description="Kombinacije analiza pravi uprava u meniju Kombinacije analiza." />
       ) : (
-        <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
-          {rows.map((c) => {
+        <div className="max-h-[480px] space-y-2 overflow-y-auto pr-1">
+          {sections.map((g) => (
+            <SearchGroup
+              key={g.name}
+              title={g.name}
+              items={g.rows}
+              getKey={(c) => `${g.name}-${c._id}`}
+              searchText={(c) => `${c.name} ${(c.analyses ?? []).map((a) => a.name).join(" ")}`}
+              searchPlaceholder="Pretraži kombinacije ili analize..."
+              defaultOpen={sections.length === 1}
+              renderItem={(c) => {
             const adding = isPending && variables?.combinationId === c._id;
             return (
-              <li
-                key={`${c.groupName}-${c._id}`}
-                className="flex items-start gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800"
-              >
+              <div className="flex items-start gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-800 dark:text-white/90">{c.name}</p>
                   <p className="mt-0.5 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
                     {(c.analyses ?? []).map((a) => a.name).join(", ")}
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
-                    {c.groupName} · <span className="font-medium text-gray-700 dark:text-gray-300">{formatRSD(c.price)}</span>
-                  </p>
+                  <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">{formatRSD(c.price)}</p>
                 </div>
                 <button
                   type="button"
@@ -91,10 +78,12 @@ export default function AddCombinationForm({ patientId, specificationId }: { pat
                   <LuPlus className="h-3.5 w-3.5" />
                   {adding ? "..." : "Dodaj"}
                 </button>
-              </li>
+              </div>
             );
-          })}
-        </ul>
+              }}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

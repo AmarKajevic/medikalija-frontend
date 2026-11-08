@@ -1,5 +1,5 @@
 import { FormEvent, useId, useMemo, useState } from "react";
-import { LuCheck, LuClock, LuMinus, LuPlus, LuSearch } from "react-icons/lu";
+import { LuCheck, LuClock, LuMinus, LuPlus } from "react-icons/lu";
 import { Input, Textarea } from "@shared/ui/form/controls";
 import Field from "@shared/ui/form/Field";
 import Button from "@shared/ui/button/Button";
@@ -7,7 +7,7 @@ import DateInput from "@shared/ui/form/DateInput";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
-import { matchesSearch } from "@shared/lib/search";
+import SearchGroup from "@shared/ui/group/SearchGroup";
 import { todayIso } from "@shared/lib/dateText";
 import { CareTask, useCareTasks, useCreateEntries } from "@features/nurse-entries/model";
 
@@ -32,20 +32,20 @@ export default function CareTaskPicker({ patientId, onSaved, specificationId }: 
   const { data: tasks = [], isLoading } = useCareTasks();
   const create = useCreateEntries(patientId, specificationId);
   const fromSpec = !!specificationId;
-  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [note, setNote] = useState("");
   const [customTime, setCustomTime] = useState(false);
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState(nowTime());
 
+  // Usluge po grupama; svaka grupa se otvara posebno i ima svoju pretragu
   const groups = useMemo(() => {
-    const q = query.trim();
-    const visible = tasks.filter((t) => !q || matchesSearch(`${t.name} ${t.category}`, q));
     const byCategory = new Map<string, CareTask[]>();
-    for (const t of visible) byCategory.set(t.category || "Nega", [...(byCategory.get(t.category || "Nega") ?? []), t]);
+    for (const t of tasks) byCategory.set(t.category || "Nega", [...(byCategory.get(t.category || "Nega") ?? []), t]);
     return [...byCategory.entries()];
-  }, [tasks, query]);
+  }, [tasks]);
+  // Kratka lista je odmah otvorena; duga je zatvorena po grupama
+  const openAll = groups.length === 1 || tasks.length <= 8;
 
   const chosen = tasks.filter((t) => selected[t._id]);
   const count = chosen.reduce((s, t) => s + (selected[t._id] ?? 0), 0);
@@ -95,17 +95,21 @@ export default function CareTaskPicker({ patientId, onSaved, specificationId }: 
 
   return (
     <form onSubmit={onSubmit} className="@container space-y-4">
-      {tasks.length > 8 && (
-        <Input leading={<LuSearch className="h-4 w-4" />} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Pretraži usluge..." aria-label="Pretraži usluge" />
-      )}
-
-      <div className="max-h-[420px] space-y-4 overflow-y-auto pr-1">
-        {groups.length === 0 && <p className="py-6 text-center text-sm text-gray-500">Nema usluge za „{query}”.</p>}
-        {groups.map(([category, items]) => (
-          <div key={category}>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{category}</p>
-            <div className="grid gap-2 @md:grid-cols-2">
-              {items.map((t) => {
+      <div className="max-h-[480px] space-y-2 overflow-y-auto pr-1">
+        {groups.map(([category, items]) => {
+          const picked = items.filter((t) => selected[t._id]).length;
+          return (
+            <SearchGroup
+              key={category}
+              title={category}
+              items={items}
+              getKey={(t) => t._id}
+              searchText={(t) => t.name}
+              searchPlaceholder={`Pretraži: ${category.toLowerCase()}...`}
+              defaultOpen={openAll}
+              listClassName="grid gap-2 @md:grid-cols-2"
+              badge={picked > 0 ? <span className="rounded-full bg-brand-500 px-1.5 text-[11px] font-semibold text-white">{picked}</span> : undefined}
+              renderItem={(t) => {
                 const qty = selected[t._id] ?? 0;
                 return (
                   <div
@@ -144,10 +148,10 @@ export default function CareTaskPicker({ patientId, onSaved, specificationId }: 
                     )}
                   </div>
                 );
-              })}
-            </div>
-          </div>
-        ))}
+              }}
+            />
+          );
+        })}
       </div>
 
       <Field label="Napomena (nije obavezno)" htmlFor={ids.note}>

@@ -15,6 +15,9 @@ export function useBillingState(spec: Specification, patientId: string) {
   const [debt, setDebtRaw] = useState("");
   const [lodging, setLodgingRaw] = useState("");
   const [early, setEarlyRaw] = useState("");
+  // Izabrana cena iz cenovnika smeštaja (naziv, npr. "30 dana"); "" = ručno unet iznos
+  const [lodgingOption, setLodgingOptionRaw] = useState("");
+  const [earlyOption, setEarlyOptionRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
   // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
@@ -30,6 +33,8 @@ export function useBillingState(spec: Specification, patientId: string) {
     setIncludeLodgingRaw(spec.billing?.includeLodging ?? (spec.billing?.nextLodgingEUR ?? 0) > 0);
     setEarlyRaw(spec.billing?.earlyLodgingEUR ? String(spec.billing.earlyLodgingEUR) : "");
     setIncludeEarlyRaw(spec.billing?.includeEarlyLodging ?? (spec.billing?.earlyLodgingEUR ?? 0) > 0);
+    setLodgingOptionRaw(spec.billing?.nextLodgingOption ?? "");
+    setEarlyOptionRaw(spec.billing?.earlyLodgingOption ?? "");
     setDirty(false);
   }, [
     spec._id,
@@ -39,6 +44,8 @@ export function useBillingState(spec: Specification, patientId: string) {
     spec.billing?.includeDebt,
     spec.billing?.includeLodging,
     spec.billing?.includeEarlyLodging,
+    spec.billing?.nextLodgingOption,
+    spec.billing?.earlyLodgingOption,
   ]);
 
   useEffect(() => {
@@ -77,6 +84,8 @@ export function useBillingState(spec: Specification, patientId: string) {
         includeDebt,
         includeLodging,
         includeEarlyLodging: includeEarly,
+        nextLodgingOption: lodgingOption,
+        earlyLodgingOption: earlyOption,
       });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
@@ -104,6 +113,19 @@ export function useBillingState(spec: Specification, patientId: string) {
         setEarlyRaw(v);
         setDirty(true);
       },
+      lodgingOption,
+      earlyOption,
+      /** Izbor cene iz cenovnika: iznos + naziv zajedno */
+      chooseLodging: (option: string, amount: string) => {
+        setLodgingOptionRaw(option);
+        setLodgingRaw(amount);
+        setDirty(true);
+      },
+      chooseEarly: (option: string, amount: string) => {
+        setEarlyOptionRaw(option);
+        setEarlyRaw(amount);
+        setDirty(true);
+      },
       includeEarly,
       setIncludeEarly: (v: boolean) => {
         setIncludeEarlyRaw(v);
@@ -125,7 +147,7 @@ export function useBillingState(spec: Specification, patientId: string) {
       },
     },
     rates,
-    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly },
+    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption },
     commitRates,
     dirty,
     saving: save.isPending,

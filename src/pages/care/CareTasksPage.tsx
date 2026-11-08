@@ -212,7 +212,7 @@ function TaskDialog({ open, task, categories, onClose }: { open: boolean; task: 
   const summary =
     [usesArticle && articleName && `skida ${amount || "?"} × ${articleName} sa stanja (prvo porodično) i naplaćuje ga`, hasPrice && price && `naplaćuje uslugu ${price} RSD`]
       .filter(Boolean)
-      .join(", a ") || "samo se beleži u negu pacijenta, bez odobravanja i naplate";
+      .join(", a ") || "ulazi u specifikaciju bez cene (cenu upisuje uprava)";
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -309,7 +309,7 @@ function TaskDialog({ open, task, categories, onClose }: { open: boolean; task: 
 
         <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
           Kad sestra unese ovu uslugu, ona <strong className="font-medium text-gray-800 dark:text-gray-200">{summary}</strong>.
-          {(usesArticle || hasPrice) && " Pre naplate je odobrava uprava."}
+          {" Pre ulaska u specifikaciju unos odobrava uprava."}
         </p>
       </form>
     </Dialog>

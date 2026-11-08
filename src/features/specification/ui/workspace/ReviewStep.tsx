@@ -124,10 +124,10 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
           {groups.length > 1 && <Row label="Specifikacija ukupno" value={formatRSD(result.specTotalRSD)} sub={formatEUR(result.specEUR)} />}
           {result.includeDebt && <Row label="Dug iz prethodnog perioda" value={formatEUR(result.debtEUR)} sub={formatRSD(result.debtRSD)} onEdit={() => onEditStep(2)} />}
           {result.includeLodging && (
-            <Row label={`Smeštaj ${nextPeriodLabel}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditStep(2)} />
+            <Row label={`Smeštaj ${nextPeriodLabel}${result.lodgingOption ? ` · ${result.lodgingOption}` : ""}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditStep(2)} />
           )}
           {result.includeEarlyLodging && (
-            <Row label="Vanstandardni period smeštaja" value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditStep(2)} />
+            <Row label={`Vanstandardni period smeštaja${result.earlyLodgingOption ? ` · ${result.earlyLodgingOption}` : ""}`} value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditStep(2)} />
           )}
           {!result.includeDebt && !result.includeLodging && !result.includeEarlyLodging && (
             <div className="flex items-center justify-between gap-4 py-2.5 text-sm text-gray-500">
