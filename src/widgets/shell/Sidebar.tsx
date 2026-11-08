@@ -6,6 +6,7 @@ import { isManager, paths } from "@app/paths";
 import { usePendingSummary } from "@features/nurse-entries/model";
 import { useFacility } from "@entities/facility/facility";
 import BrandMark from "./BrandMark";
+import { prefetchRoute } from "@app/routeLoaders";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -46,6 +47,8 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                   <NavLink
                     to={item.to}
                     onClick={onNavigate}
+                    onMouseEnter={() => prefetchRoute(item.to)}
+                    onFocus={() => prefetchRoute(item.to)}
                     title={collapsed ? (count ? `${item.label} (${count})` : item.label) : undefined}
                     aria-current={active ? "page" : undefined}
                     className={`group flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${

@@ -12,6 +12,8 @@ import { notify } from "@shared/lib/notify";
 import { paths } from "@app/paths";
 import { NurseEntry, personName, TYPE_LABEL, useAcceptEntries, useNurseEntries, useRejectEntries } from "@features/nurse-entries/model";
 import { formatWhen, TYPE_ICON } from "./display";
+import { formatRSD } from "@shared/lib/format";
+import { usePhysioPrices } from "@features/physio/model";
 
 const REASONS = ["Greška u unosu", "Dupli unos", "Ne naplaćuje se", "Nije dato pacijentu"];
 
@@ -31,6 +33,10 @@ export default function EntryReview({ patientId, filter }: Props) {
   const { isLoading, isError, refetch } = query;
   const data = useMemo(() => (filter ? (query.data ?? []).filter(filter) : query.data ?? []), [query.data, filter]);
   const accept = useAcceptEntries();
+  // Vanredna fizikalna terapija: cena iz cenovnika (admin je unosi unapred u "Cene fizioterapije")
+  const hasPhysio = data.some((e) => e.type === "physio");
+  const physioPrices = usePhysioPrices({ enabled: hasPhysio }).data ?? [];
+  const physioPrice = (e: NurseEntry) => physioPrices.find((p) => p.kind === e.physioKind)?.priceRSD ?? null;
   const reject = useRejectEntries();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [amounts, setAmounts] = useState<Record<string, string>>({});
@@ -60,22 +66,22 @@ export default function EntryReview({ patientId, filter }: Props) {
       return next;
     });
 
-  // Vanredna fizikalna terapija nema količinu nego cenu, koju određuje uprava (RSD)
+  // Fizikalna terapija nema količinu za izmenu; cena dolazi iz cenovnika
   const isPhysio = (e: NurseEntry) => e.type === "physio";
-  const amountOf = (e: NurseEntry) => amounts[e._id] ?? (isPhysio(e) ? "" : String(e.amount).replace(".", ","));
-  const invalidAmount = (e: NurseEntry) => {
-    const v = amountOf(e);
-    return isPhysio(e) ? !v.trim() || !(toNumber(v) >= 0) : !(toNumber(v) > 0);
-  };
+  const amountOf = (e: NurseEntry) => amounts[e._id] ?? String(e.amount).replace(".", ",");
+  const invalidAmount = (e: NurseEntry) => (isPhysio(e) ? physioPrice(e) === null : !(toNumber(amountOf(e)) > 0));
 
   const runAccept = (list: string[]) => {
     const entries = data.filter((e) => list.includes(e._id));
     const bad = entries.find(invalidAmount);
-    if (bad) return notify.error(isPhysio(bad) ? `Unesite cenu za „${bad.name}”.` : `Neispravna količina za „${bad.name}”.`);
+    if (bad)
+      return notify.error(
+        isPhysio(bad) ? `Cena za „${bad.name}” nije uneta. Admin je unosi u „Cene fizioterapije”.` : `Neispravna količina za „${bad.name}”.`
+      );
 
     accept.mutate(
       {
-        items: entries.map((e) => (isPhysio(e) ? { id: e._id, price: toNumber(amountOf(e)) } : { id: e._id, amount: toNumber(amountOf(e)) })),
+        items: entries.map((e) => (isPhysio(e) ? { id: e._id } : { id: e._id, amount: toNumber(amountOf(e)) })),
         patientIds: [...new Set(entries.map(patientIdOf))],
       },
       {
@@ -173,19 +179,27 @@ export default function EntryReview({ patientId, filter }: Props) {
                   )}
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <input
-                    inputMode="decimal"
-                    value={amountOf(e)}
-                    onChange={(ev) => setAmounts((a) => ({ ...a, [e._id]: ev.target.value }))}
-                    aria-label={isPhysio(e) ? `Cena: ${e.name}` : `Količina: ${e.name}`}
-                    aria-invalid={(!isPhysio(e) || amounts[e._id] !== undefined) && invalidAmount(e) ? true : undefined}
-                    title={isPhysio(e) ? "Cena (RSD)" : e.type === "care" ? "Broj puta" : "Količina"}
-                    placeholder={isPhysio(e) ? "Cena" : undefined}
-                    className={`${inputClass} h-8 ${isPhysio(e) ? "!w-24" : "!w-16"} text-right tabular-nums ${
-                      (!isPhysio(e) || amounts[e._id] !== undefined) && invalidAmount(e) ? "border-error-400" : ""
-                    }`}
-                  />
-                  {isPhysio(e) && <span className="-ml-1 text-xs text-gray-500">RSD</span>}
+                  {isPhysio(e) ? (
+                    physioPrice(e) !== null ? (
+                      <span className="text-sm font-medium tabular-nums text-gray-800 dark:text-white/90" title="Cena iz cenovnika fizioterapije">
+                        {formatRSD(physioPrice(e)!)}
+                      </span>
+                    ) : (
+                      <Link to={paths.physioPrices} className="text-xs font-medium text-warning-700 hover:underline dark:text-warning-400">
+                        Cena nije uneta
+                      </Link>
+                    )
+                  ) : (
+                    <input
+                      inputMode="decimal"
+                      value={amountOf(e)}
+                      onChange={(ev) => setAmounts((a) => ({ ...a, [e._id]: ev.target.value }))}
+                      aria-label={`Količina: ${e.name}`}
+                      aria-invalid={invalidAmount(e) || undefined}
+                      title={e.type === "care" ? "Broj puta" : "Količina"}
+                      className={`${inputClass} h-8 !w-16 text-right tabular-nums ${invalidAmount(e) ? "border-error-400" : ""}`}
+                    />
+                  )}
                   <Button size="xs" variant="ghost" onClick={() => setRejecting([e._id])} aria-label={`Odbij ${e.name}`} disabled={accept.isPending}>
                     Odbij
                   </Button>

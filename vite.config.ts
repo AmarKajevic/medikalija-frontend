@@ -25,26 +25,11 @@ export default defineConfig({
 
     rollupOptions: {
       output: {
+        // Samo stabilno jezgro (retko se menja) u poseban paket, da ga browser drži u kešu
+        // i posle izmena aplikacije. Kalendar, PDF i Word izvoz NISU ovde: uvoze se tek
+        // kad zatrebaju, pa ih Rollup sam deli — ručno grupisanje bi ih vuklo u početno učitavanje.
         manualChunks: {
-          // 🟦 React core u svoj bundle
-          react: ["react", "react-dom"],
-
-          // 🟪 FullCalendar (ogroman!)
-          fullcalendar: [
-            "@fullcalendar/react",
-            "@fullcalendar/daygrid",
-            "@fullcalendar/timegrid",
-            "@fullcalendar/interaction",
-          ],
-
-          // PDF (pdfmake sa fontovima) učitava se samo kad se pravi PDF
-          pdf: ["pdfmake"],
-
-          // 🟩 DOCX i FileSaver – teški moduli
-          docs: ["docx", "file-saver"],
-
-          // 🟫 Najviše korišćene vendor biblioteke
-          vendor: ["axios", "@tanstack/react-query"],
+          react: ["react", "react-dom", "react-router", "@tanstack/react-query", "axios"],
         },
       },
     },

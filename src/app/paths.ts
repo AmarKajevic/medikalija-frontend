@@ -29,6 +29,7 @@ export const paths = {
   calendar: "/calendar",
   settings: "/settings",
   lodgingPrices: "/lodging-prices",
+  physioPrices: "/physio-prices",
   care: "/care",
   approvals: "/approvals",
   careTasks: "/care-tasks",

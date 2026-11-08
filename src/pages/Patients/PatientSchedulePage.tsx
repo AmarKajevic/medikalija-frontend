@@ -1,8 +1,7 @@
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LuDownload } from "react-icons/lu";
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } from "docx";
-import { saveAs } from "file-saver";
+import { useState } from "react";
+import { LuDownload, LuFileText, LuPrinter } from "react-icons/lu";
 import { api } from "@shared/api/api";
 import { paths } from "@app/paths";
 import usePatient from "@entities/patient/hooks/usePatient";
@@ -14,6 +13,7 @@ import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { calendarYear, formatDay } from "@shared/lib/calendarDay";
 import { notify } from "@shared/lib/notify";
+import { useFacility } from "@entities/facility/facility";
 
 type Period = { index: number; startDate: string; endDate: string; isPast: boolean; isCurrent: boolean };
 
@@ -23,7 +23,9 @@ const groupByYear = (periods: Period[]) =>
     return acc;
   }, {});
 
+// docx (~340 KB) se učitava tek na klik "Izvezi", ne sa stranicom
 async function exportWord(name: string, grouped: Record<number, Period[]>) {
+  const [{ Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType }, { saveAs }] = await Promise.all([import("docx"), import("file-saver")]);
   const cell = (text: string, bold = false) =>
     new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, bold })] })] });
 
@@ -55,12 +57,27 @@ export default function PatientSchedulePage() {
 
   const name = patient ? `${patient.name} ${patient.lastName}` : "Pacijent";
   const grouped = groupByYear(periods);
+  const { facility } = useFacility();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  // Jedna godina: štampa ili PDF (pdfmake se učitava tek na klik)
+  const yearPdf = async (year: string, list: Period[], mode: "download" | "print") => {
+    setBusy(`${year}-${mode}`);
+    try {
+      const { generateSchedulePDF } = await import("@features/patients/lib/schedulePdf");
+      await generateSchedulePDF({ patientName: name, year, periods: list, facility, mode });
+    } catch (e) {
+      notify.error(e, "PDF nije napravljen.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <>
       <PageHeader
         title="Raspored obračunskih perioda"
-        description="Periodi od 30 kalendarskih dana od dana prijema, za narednih 10 godina (prestupne godine su uračunate)."
+        description="Periodi od 30 kalendarskih dana od dana prijema, za narednih 20 godina (prestupne godine su uračunate). Svaka godina se štampa ili preuzima kao PDF posebno."
         breadcrumbs={[{ label: "Pacijenti", to: paths.patients }, { label: name, to: paths.patient(patientId) }, { label: "Raspored" }]}
         actions={
           <Button
@@ -70,7 +87,7 @@ export default function PatientSchedulePage() {
             disabled={periods.length === 0}
             onClick={() => exportWord(name, grouped).catch((e) => notify.error(e, "Dokument nije napravljen."))}
           >
-            Preuzmi Word
+            Sve godine (Word)
           </Button>
         }
       />
@@ -85,7 +102,34 @@ export default function PatientSchedulePage() {
         <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
           {Object.entries(grouped).map(([year, list]) => (
             <Card key={year}>
-              <CardHeader title={`${year}.`} description={`${list.length} perioda`} />
+              <CardHeader
+                title={`${year}.`}
+                description={`${list.length} perioda`}
+                actions={
+                  <div className="flex gap-1">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      startIcon={<LuPrinter className="h-3.5 w-3.5" />}
+                      loading={busy === `${year}-print`}
+                      onClick={() => void yearPdf(year, list, "print")}
+                      aria-label={`Štampaj ${year}.`}
+                    >
+                      Štampaj
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      startIcon={<LuFileText className="h-3.5 w-3.5" />}
+                      loading={busy === `${year}-download`}
+                      onClick={() => void yearPdf(year, list, "download")}
+                      aria-label={`PDF ${year}.`}
+                    >
+                      PDF
+                    </Button>
+                  </div>
+                }
+              />
               <ol className="divide-y divide-gray-100 dark:divide-gray-800">
                 {list.map((p) => (
                   <li

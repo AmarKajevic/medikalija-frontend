@@ -129,6 +129,23 @@ describe("SpecificationWorkspace", () => {
     expect(screen.getByText("forma za dodavanje")).toBeInTheDocument(); // dodavanje je moguće
   });
 
+  it("zatvorena specifikacija: samo pregled, izmene tek posle upozorenja", async () => {
+    const closed = { ...spec, isActive: false } as Specification;
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={closed} patientId="p1" patientName="Petar" />);
+    expect(screen.getByText("Zatvoren period · samo pregled")).toBeInTheDocument();
+    expect(screen.queryByText(/forma za dodavanje/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ukloni Andol" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Omogući izmene" }));
+    const warn = screen.getByRole("dialog", { name: "Izmena zatvorene specifikacije" });
+    expect(warn).toHaveTextContent(/na sopstvenu odgovornost/);
+    await user.click(within(warn).getByRole("button", { name: "Razumem, omogući izmene" }));
+
+    expect(screen.getByText("forma za dodavanje")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ukloni Andol" })).toBeInTheDocument();
+    expect(screen.getByText(/Zatvoren period · izmene na sopstvenu odgovornost/)).toBeInTheDocument();
+  });
+
   it("smeštaj se bira iz cenovnika; može i drugi iznos ručno", async () => {
     lodging.prices = [
       { _id: "l1", name: "10 dana", days: 10, priceEUR: 200, active: true },

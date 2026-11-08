@@ -191,7 +191,7 @@ export interface AcceptResult {
 export function useAcceptEntries() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ items }: { items: Array<{ id: string; amount?: number; price?: number }>; patientIds: string[] }) =>
+    mutationFn: async ({ items }: { items: Array<{ id: string; amount?: number }>; patientIds: string[] }) =>
       (await api.post("/api/nurse-entries/accept", { items })).data as { message: string; results: AcceptResult[] },
     onSettled: (_d, _e, { patientIds }) => {
       new Set(patientIds).forEach((pid) => refreshAfterSpecChange(qc, pid));

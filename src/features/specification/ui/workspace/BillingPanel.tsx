@@ -11,6 +11,8 @@ import { paths } from "@app/paths";
 interface Props {
   billing: BillingState;
   nextPeriodLabel: string;
+  /** Zatvorena specifikacija: obračun se samo prikazuje */
+  readOnly?: boolean;
 }
 
 const MANUAL = "__manual";
@@ -104,7 +106,7 @@ function OptionalAmount({
   );
 }
 
-export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
+export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false }: Props) {
   const ids = { debt: useId(), lodging: useId(), early: useId() };
   const { fields, result, dirty, saving, saveBilling } = billing;
   const { user } = useAuth();
@@ -118,7 +120,7 @@ export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
   ];
 
   return (
-    <div className="space-y-6">
+    <fieldset disabled={readOnly} className="min-w-0 space-y-6">
       {prices.length === 0 && (
         <p className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
           Cenovnik smeštaja je prazan, pa se iznos smeštaja unosi ručno.{" "}
@@ -196,10 +198,12 @@ export default function BillingPanel({ billing, nextPeriodLabel }: Props) {
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         {dirty && <span className="text-xs text-warning-600 dark:text-warning-400">Imate nesačuvane izmene</span>}
-        <Button onClick={() => void saveBilling()} loading={saving} size="sm" variant={dirty ? "primary" : "outline"}>
-          Sačuvaj obračun
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => void saveBilling()} loading={saving} size="sm" variant={dirty ? "primary" : "outline"}>
+            Sačuvaj obračun
+          </Button>
+        )}
       </div>
-    </div>
+    </fieldset>
   );
 }

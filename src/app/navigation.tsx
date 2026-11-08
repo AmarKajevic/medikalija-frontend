@@ -63,6 +63,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Aktivnosti sestara", to: paths.nurseActivity, icon: <LuUserCheck />, roles: MANAGER_ROLES },
       { label: "Osoblje", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES },
       { label: "Cene smeštaja", to: paths.lodgingPrices, icon: <LuBedDouble />, roles: ["admin"] },
+      { label: "Cene fizioterapije", to: paths.physioPrices, icon: <LuActivity />, roles: ["admin"] },
       { label: "Podešavanja", to: paths.settings, icon: <LuSettings />, roles: ["admin"] },
     ],
   },
