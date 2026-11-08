@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { LuEllipsis, LuExternalLink, LuTrash2, LuUserPlus, LuUsers } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
@@ -17,6 +17,7 @@ import { notify } from "@shared/lib/notify";
 import { usePatients } from "@features/patients/hooks/usePatients";
 import { useDeletePatient } from "@features/patients/hooks/useDeletePatient";
 import AddPatientDialog from "@features/patients/ui/AddPatientDialog";
+import { pages } from "@app/routeLoaders";
 
 type PatientRow = {
   _id: string;
@@ -40,6 +41,11 @@ const ageOf = (dob: string) => {
 };
 
 export default function PatientsPage() {
+  // Sledeći korak je skoro uvek profil pacijenta — njegov kod se preuzima unapred
+  useEffect(() => {
+    pages.PatientPage().catch(() => {});
+  }, []);
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const manager = isManager(user?.role);

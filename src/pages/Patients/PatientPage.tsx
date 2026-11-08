@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { LuClipboardCheck, LuFilePlus, LuPlus } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
@@ -12,6 +12,7 @@ import { PageLoader } from "@shared/ui/feedback/Spinner";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { usePatientSpecification } from "@features/specification/hooks/usePatientSpecification";
 import { useSpecificationDock } from "@features/specification/ui/dock/useSpecificationDock";
+import { loadSpecificationDialog } from "@app/routeLoaders";
 import NurseEntryPanel from "@features/nurse-entries/ui/NurseEntryPanel";
 import EntryList from "@features/nurse-entries/ui/EntryList";
 import PatientAppointments from "@features/calendar/ui/PatientAppointments";
@@ -110,6 +111,10 @@ export default function PatientPage() {
   const specification = usePatientSpecification(manager ? patientId : "");
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const dock = useSpecificationDock();
+  // Uprava sa profila skoro uvek otvara specifikaciju: kod prozora se preuzima odmah
+  useEffect(() => {
+    if (manager) loadSpecificationDialog().catch(() => {});
+  }, [manager]);
   const pending = usePendingSummary(manager).data?.byPatient.find((p) => p.patientId === patientId)?.count ?? 0;
 
   if (isLoading) return <PageLoader label="Učitavanje pacijenta..." />;
@@ -188,7 +193,7 @@ export default function PatientPage() {
       {tab === "physio" && hasRole(role, PHYSIO_ROLES) && (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
           <Card>
-            <CardHeader title="Nova terapija" description="Redovna se ne naplaćuje; vanrednu odobrava uprava i određuje joj cenu." />
+            <CardHeader title="Nova terapija" description="Redovna se ne naplaćuje; vanrednu odobrava uprava (cena iz cenovnika)." />
             <CardBody>
               {patient.dischargeDate ? (
                 <EmptyState compact title="Pacijent je otpušten" description="Novi unosi više nisu mogući." />

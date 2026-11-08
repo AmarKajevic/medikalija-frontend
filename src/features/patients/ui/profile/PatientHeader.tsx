@@ -47,7 +47,7 @@ export default function PatientHeader({ patient, canManage, onOpenSpecification,
       ? [
           ...(onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
           { label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) },
-          { label: "Raspored perioda (10 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) },
+          { label: "Raspored perioda (20 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) },
           ...(discharged ? [] : [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }]),
         ]
       : []),

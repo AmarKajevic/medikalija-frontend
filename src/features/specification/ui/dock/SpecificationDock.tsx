@@ -1,9 +1,14 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { LuArrowUpRight, LuClipboardList, LuX } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { isManager, paths } from "@app/paths";
-import SpecificationWorkspaceDialog from "@features/specification/ui/workspace/SpecificationWorkspaceDialog";
+import { PageLoader } from "@shared/ui/feedback/Spinner";
+import { loadSpecificationDialog } from "@app/routeLoaders";
+
+// Prozor specifikacije je velik (koraci, obračun, forme) i treba samo upravi — učitava
+// se tek kad se specifikacija otvori, ne sa svakom stranicom
+const SpecificationWorkspaceDialog = lazy(loadSpecificationDialog);
 import { DockContext } from "./useSpecificationDock";
 
 // Specifikacija "u toku": kad se prozor specifikacije skloni (X ili Esc), ostaje mala
@@ -26,6 +31,15 @@ const load = (): Docked | null => {
     return null;
   }
 };
+
+// Dok se kod prozora učitava (samo prvi put)
+const LoadingOverlay = () => (
+  <div className="fixed inset-0 z-99999 flex items-center justify-center bg-gray-900/30">
+    <div className="rounded-2xl bg-white px-6 py-4 shadow-theme-xl dark:bg-gray-900">
+      <PageLoader label="Otvaranje specifikacije..." />
+    </div>
+  </div>
+);
 
 export function SpecificationDockProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -55,14 +69,16 @@ export function SpecificationDockProvider({ children }: { children: ReactNode })
       {children}
       {active && (
         <>
-          <SpecificationWorkspaceDialog
-            key={active.patientId}
-            open={open}
-            onClose={() => setOpen(false)}
-            patientId={active.patientId}
-            patientName={active.patientName}
-            keepMounted
-          />
+          <Suspense fallback={open ? <LoadingOverlay /> : null}>
+            <SpecificationWorkspaceDialog
+              key={active.patientId}
+              open={open}
+              onClose={() => setOpen(false)}
+              patientId={active.patientId}
+              patientName={active.patientName}
+              keepMounted
+            />
+          </Suspense>
           {!open && (
             <div
               role="region"

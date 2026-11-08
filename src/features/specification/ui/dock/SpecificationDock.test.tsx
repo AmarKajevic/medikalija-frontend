@@ -48,7 +48,8 @@ describe("SpecificationDock", () => {
   it("sklonjena specifikacija ostaje kao kartica; Nastavi je vraća, × je zatvara", async () => {
     const { user } = renderDock();
     await user.click(screen.getByRole("button", { name: "Napravi specifikaciju" }));
-    expect(screen.getByRole("dialog", { name: "Specifikacija" })).toHaveTextContent("Milica Jovanović");
+    // Prozor se učitava tek kad zatreba (lazy)
+    expect(await screen.findByRole("dialog", { name: "Specifikacija" })).toHaveTextContent("Milica Jovanović");
 
     await user.click(screen.getByRole("button", { name: "Zatvori" }));
     const card = screen.getByRole("region", { name: "Specifikacija u toku" });

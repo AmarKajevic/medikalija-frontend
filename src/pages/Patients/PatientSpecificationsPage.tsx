@@ -36,7 +36,7 @@ export default function PatientSpecificationsPage() {
       header: "Status",
       cell: (s) => (s.isActive && data?.activeSpec?._id === s._id ? <Badge size="sm" color="success" dot>Aktivan</Badge> : <Badge size="sm" color="light">Zatvoren</Badge>),
     },
-    { id: "items", header: "Stavke", align: "right", hideBelow: "sm", sortValue: (s) => s.items?.length ?? 0, cell: (s) => <span className="tabular-nums">{s.items?.length ?? 0}</span> },
+    { id: "items", header: "Stavke", align: "right", hideBelow: "sm", sortValue: (s) => s.itemsCount ?? s.items?.length ?? 0, cell: (s) => <span className="tabular-nums">{s.itemsCount ?? s.items?.length ?? 0}</span> },
     { id: "total", header: "Specifikacija", align: "right", sortValue: (s) => s.totalPrice ?? 0, cell: (s) => <span className="tabular-nums">{formatRSD(s.totalPrice)}</span> },
     {
       id: "billing",

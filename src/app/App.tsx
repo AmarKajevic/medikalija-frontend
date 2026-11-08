@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { pages } from "@app/routeLoaders";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
@@ -11,33 +12,34 @@ import { NotFoundPage } from "@pages/system/StatusPage";
 import { useFacilityDocumentTitle } from "@entities/facility/facility";
 
 // Stranice se učitavaju po potrebi (manji početni paket)
-const HomePage = lazy(() => import("@pages/HomePage"));
-const PatientsPage = lazy(() => import("@pages/Patients/PatientsPage"));
-const PatientPage = lazy(() => import("@pages/Patients/PatientPage"));
-const PatientSpecificationsPage = lazy(() => import("@pages/Patients/PatientSpecificationsPage"));
-const PatientSchedulePage = lazy(() => import("@pages/Patients/PatientSchedulePage"));
-const SpecificationPage = lazy(() => import("@features/specification/ui/SpecViewPage"));
-const InventoryListPage = lazy(() => import("@pages/inventory/InventoryListPage"));
-const InventoryItemPage = lazy(() => import("@pages/inventory/InventoryItemPage"));
-const FamilyStockPage = lazy(() => import("@pages/inventory/FamilyStockPage"));
-const ReservePage = lazy(() => import("@pages/inventory/ReservePage"));
-const AnalysesPage = lazy(() => import("@pages/medical/AnalysesPage"));
-const CombinationsPage = lazy(() => import("@pages/medical/CombinationsPage"));
-const DiagnosisTemplatesPage = lazy(() => import("@pages/medical/DiagnosisTemplatesPage"));
-const UsersPage = lazy(() => import("@pages/team/UsersPage"));
-const NurseActivityPage = lazy(() => import("@pages/team/NurseActivityPage"));
-const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"));
-const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
-const FacilitySettingsPage = lazy(() => import("@pages/settings/FacilitySettingsPage"));
-const LodgingPricesPage = lazy(() => import("@pages/settings/LodgingPricesPage"));
-const PhysioPage = lazy(() => import("@pages/physio/PhysioPage"));
-const CarePage = lazy(() => import("@pages/care/CarePage"));
-const ApprovalsPage = lazy(() => import("@pages/care/ApprovalsPage"));
-const CareTasksPage = lazy(() => import("@pages/care/CareTasksPage"));
-const CareLogPage = lazy(() => import("@pages/care/CareLogPage"));
-const ReportsPage = lazy(() => import("@pages/reports/ReportsPage"));
-const ReportPage = lazy(() => import("@pages/reports/ReportPage"));
-const SocialPage = lazy(() => import("@pages/social/SocialPage"));
+const HomePage = lazy(pages.HomePage);
+const PatientsPage = lazy(pages.PatientsPage);
+const PatientPage = lazy(pages.PatientPage);
+const PatientSpecificationsPage = lazy(pages.PatientSpecificationsPage);
+const PatientSchedulePage = lazy(pages.PatientSchedulePage);
+const SpecificationPage = lazy(pages.SpecificationPage);
+const InventoryListPage = lazy(pages.InventoryListPage);
+const InventoryItemPage = lazy(pages.InventoryItemPage);
+const FamilyStockPage = lazy(pages.FamilyStockPage);
+const ReservePage = lazy(pages.ReservePage);
+const AnalysesPage = lazy(pages.AnalysesPage);
+const CombinationsPage = lazy(pages.CombinationsPage);
+const DiagnosisTemplatesPage = lazy(pages.DiagnosisTemplatesPage);
+const UsersPage = lazy(pages.UsersPage);
+const NurseActivityPage = lazy(pages.NurseActivityPage);
+const NotificationsPage = lazy(pages.NotificationsPage);
+const CalendarPage = lazy(pages.CalendarPage);
+const FacilitySettingsPage = lazy(pages.FacilitySettingsPage);
+const LodgingPricesPage = lazy(pages.LodgingPricesPage);
+const PhysioPage = lazy(pages.PhysioPage);
+const PhysioPricesPage = lazy(pages.PhysioPricesPage);
+const CarePage = lazy(pages.CarePage);
+const ApprovalsPage = lazy(pages.ApprovalsPage);
+const CareTasksPage = lazy(pages.CareTasksPage);
+const CareLogPage = lazy(pages.CareLogPage);
+const ReportsPage = lazy(pages.ReportsPage);
+const ReportPage = lazy(pages.ReportPage);
+const SocialPage = lazy(pages.SocialPage);
 
 const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
 const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
@@ -122,6 +124,7 @@ export default function App() {
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
             <Route path="/lodging-prices" element={admins(<LodgingPricesPage />)} />
+            <Route path="/physio-prices" element={admins(<PhysioPricesPage />)} />
             <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
             <Route path="/care-tasks" element={managers(<CareTasksPage />)} />

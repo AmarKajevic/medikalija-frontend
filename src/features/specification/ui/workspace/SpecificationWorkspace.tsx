@@ -1,7 +1,8 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuCheck, LuDownload, LuLock, LuPrinter } from "react-icons/lu";
+import { LuArrowLeft, LuArrowRight, LuCheck, LuDownload, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
+import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import { notify } from "@shared/lib/notify";
 import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
@@ -115,6 +116,11 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const isChosen = period === "other";
   const isNonStandard = period === "nonstandard";
   const canAdd = isBilling || isChosen || isNonStandard || !!spec.isActive;
+  // Zatvorena specifikacija je samo za pregled; izmene se omogućavaju tek posle upozorenja
+  const closed = !canAdd;
+  const [unlocked, setUnlocked] = useState(false);
+  const [confirmUnlock, setConfirmUnlock] = useState(false);
+  const editable = canAdd || unlocked;
   const current = STEPS[step - 1]!;
 
   // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
@@ -178,11 +184,15 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
             </span>
-            <Badge size="sm" color="light">Zatvoren period</Badge>
+            {unlocked ? (
+              <Badge size="sm" color="warning">Zatvoren period · izmene na sopstvenu odgovornost</Badge>
+            ) : (
+              <Badge size="sm" color="light">Zatvoren period · samo pregled</Badge>
+            )}
           </>
         )}
         {/* Ručni unos datuma za svaki period; sledeći periodi se nadovezuju na novi kraj */}
-        <EditPeriodDates specification={spec} patientId={patientId} />
+        {editable && <EditPeriodDates specification={spec} patientId={patientId} />}
       </div>
         <ExchangeRateBox billing={billing} />
       </div>
@@ -209,30 +219,42 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </div>
         )}
 
+        {closed && unlocked && (
+          <p role="alert" className="mb-5 flex gap-2 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300">
+            <LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            Menjate zatvorenu specifikaciju. Izmene menjaju već obračunat period i stanje na lageru — radite ih na sopstvenu odgovornost.
+          </p>
+        )}
+
         {step === 1 && (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,400px)_1fr]">
             <div ref={addPanelRef} className="lg:sticky lg:top-0">
-              {canAdd ? (
+              {editable ? (
                 <Section title="Dodaj u specifikaciju" description="Izaberite šta dodajete, pa popunite polja ispod.">
                   <AddItemPanel specId={spec._id} patientId={patientId} preset={addPreset} />
                 </Section>
               ) : (
-                <Section title="Zatvoren period">
-                  <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    <LuLock className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                    <p>
-                      Nove stavke se dodaju samo u aktivan period, sa profila pacijenta. Ovde možete da uklonite
-                      stavku, izmenite obračun ili odštampate specifikaciju.
-                    </p>
+                <Section title="Zatvorena specifikacija">
+                  <div className="space-y-4">
+                    <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <LuLock className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                      <p>Ova specifikacija je zatvorena i otvorena je samo za pregled i štampu. Ako je potrebna ispravka, izmene možete omogućiti.</p>
+                    </div>
+                    <Button variant="outline" size="sm" startIcon={<LuLockOpen className="h-4 w-4" />} onClick={() => setConfirmUnlock(true)}>
+                      Omogući izmene
+                    </Button>
                   </div>
                 </Section>
               )}
             </div>
             <div className="min-w-0 space-y-5">
-              <Section title={`Dodato u ovom periodu (${spec.items.length})`} description="Pogrešno uneto? Uklonite stavku ikonicom korpe.">
-                <SpecificationItems specification={spec} patientId={patientId} />
+              <Section
+                title={`Dodato u ovom periodu (${spec.items.length})`}
+                description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
+              >
+                <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} />
               </Section>
-              <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={canAdd ? addAsCost : undefined} />
+              <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={editable ? addAsCost : undefined} />
             </div>
           </div>
         )}
@@ -240,7 +262,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         {step === 2 && (
           <div className="mx-auto max-w-3xl">
             <Section title="Obračun za uplatu" description="Unesite dug i smeštaj. Sve ostalo se računa samo.">
-              <BillingPanel billing={billing} nextPeriodLabel={nextPeriodLabel} />
+              <BillingPanel billing={billing} nextPeriodLabel={nextPeriodLabel} readOnly={!editable} />
             </Section>
           </div>
         )}
@@ -255,6 +277,18 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           />
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmUnlock}
+        onClose={() => setConfirmUnlock(false)}
+        onConfirm={() => {
+          setUnlocked(true);
+          setConfirmUnlock(false);
+        }}
+        title="Izmena zatvorene specifikacije"
+        description={`Specifikacija za period ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)} je zatvorena. Izmene menjaju već obračunat period (i stanje na lageru) i mogu se razlikovati od specifikacije koja je već odštampana ili poslata porodici. Izmene radite na sopstvenu odgovornost.`}
+        confirmText="Razumem, omogući izmene"
+      />
 
       {/* Ukupno je uvek vidljivo, a dugmad vode kroz korake */}
       <div className="sticky bottom-0 z-10 -mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-white/95 px-4 py-2.5 sm:py-3 shadow-theme-md backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">

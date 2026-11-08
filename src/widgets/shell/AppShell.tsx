@@ -7,6 +7,9 @@ import { NotificationsMenu, UserMenu } from "./TopbarMenus";
 import BrandMark from "./BrandMark";
 import IdleLogout from "@features/auth/ui/IdleLogout";
 import { SpecificationDockProvider } from "@features/specification/ui/dock/SpecificationDock";
+import { useAuth } from "@app/providers/AuthContext";
+import { isManager } from "@app/paths";
+import { loadSpecificationDialog, pages, prefetchWhenIdle } from "@app/routeLoaders";
 
 const COLLAPSE_KEY = "sidebar-collapsed";
 
@@ -15,6 +18,22 @@ export default function AppShell() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === "1");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user } = useAuth();
+
+  // Kad aplikacija miruje, preuzima se kod najčešćih sledećih stranica (klik je onda trenutan)
+  useEffect(() => {
+    const role = user?.role;
+    if (!role) return;
+    if (role === "physiotherapist") return prefetchWhenIdle([pages.PatientsPage, pages.PatientPage, pages.CalendarPage]);
+    if (role === "social-worker") return prefetchWhenIdle([pages.SocialPage, pages.PatientsPage, pages.PatientPage]);
+    return prefetchWhenIdle([
+      pages.PatientsPage,
+      pages.PatientPage,
+      ...(isManager(role) ? [loadSpecificationDialog] : []),
+      ...(role === "nurse" ? [pages.CarePage] : []),
+      pages.CalendarPage,
+    ]);
+  }, [user?.role]);
 
   useEffect(() => {
     localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");

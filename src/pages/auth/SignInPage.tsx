@@ -3,8 +3,13 @@ import { useAuth } from "@app/providers/AuthContext";
 import { paths } from "@app/paths";
 import SignInForm from "@features/auth/ui/SignInForm";
 import AuthShell from "./AuthShell";
+import { useEffect } from "react";
+import { pages, prefetchWhenIdle } from "@app/routeLoaders";
 
 export default function SignInPage() {
+  // Dok korisnik kuca lozinku, kod početne strane se preuzima u pozadini
+  useEffect(() => prefetchWhenIdle([pages.HomePage]), []);
+
   const { user } = useAuth();
   const location = useLocation();
   if (user) return <Navigate to={paths.home} replace />;

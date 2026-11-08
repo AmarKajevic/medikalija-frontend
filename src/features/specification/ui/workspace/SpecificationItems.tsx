@@ -20,9 +20,11 @@ const deleteHint = (item: SpecificationItem) => {
 interface Props {
   specification: Specification;
   patientId: string;
+  /** Zatvorena specifikacija: bez izmene i brisanja */
+  readOnly?: boolean;
 }
 
-export default function SpecificationItems({ specification: spec, patientId }: Props) {
+export default function SpecificationItems({ specification: spec, patientId, readOnly = false }: Props) {
   const remove = useDeleteSpecificationItem(patientId);
   const [pending, setPending] = useState<SpecificationItem | null>(null);
   const [editing, setEditing] = useState<SpecificationItem | null>(null);
@@ -86,6 +88,9 @@ export default function SpecificationItems({ specification: spec, patientId }: P
                         </p>
                       ) : null}
                     </div>
+                    {readOnly ? (
+                      <span className="w-16 shrink-0 text-right text-sm tabular-nums text-gray-500 dark:text-gray-400">× {formatQty(item.amount ?? 1)}</span>
+                    ) : (
                     <button
                       type="button"
                       onClick={() => setEditing(item)}
@@ -94,9 +99,12 @@ export default function SpecificationItems({ specification: spec, patientId }: P
                     >
                       × {formatQty(item.amount ?? 1)}
                     </button>
+                    )}
                     <span className="w-32 shrink-0 text-right text-sm font-medium tabular-nums text-gray-800 dark:text-white/90">
                       {formatRSD(item.price)}
                     </span>
+                    {!readOnly && (
+                    <>
                     <button
                       type="button"
                       onClick={() => setEditing(item)}
@@ -113,6 +121,8 @@ export default function SpecificationItems({ specification: spec, patientId }: P
                     >
                       <LuTrash2 className="h-4 w-4" />
                     </button>
+                    </>
+                    )}
                   </li>
                 ))}
               </ul>

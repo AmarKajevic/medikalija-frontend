@@ -71,17 +71,23 @@ describe("odobravanje vanredne terapije", () => {
     chargedPrice: 0,
   };
 
-  it("uprava upisuje cenu; bez cene se ne prihvata", async () => {
-    api.get.mockResolvedValue({ data: { entries: [physio] } });
+  it("cena se uzima iz cenovnika; bez cene u cenovniku se ne prihvata", async () => {
+    let prices = [{ kind: "passive", priceRSD: null as number | null }];
+    api.get.mockImplementation(async (url: string) => (url.startsWith("/api/physio-prices") ? { data: { prices } } : { data: { entries: [physio] } }));
     api.post.mockResolvedValue({ data: { message: "Prihvaćeno: 1.", results: [{ id: "e9", ok: true, message: "ok" }] } });
-    const { user } = renderWithProviders(<EntryReview patientId="p1" />);
-    const price = await screen.findByLabelText(`Cena: ${physio.name}`);
-    await user.click(screen.getByRole("button", { name: `Prihvati ${physio.name}` }));
+    const first = renderWithProviders(<EntryReview patientId="p1" />);
+    expect(await screen.findByRole("link", { name: "Cena nije uneta" })).toBeInTheDocument();
+    await first.user.click(screen.getByRole("button", { name: `Prihvati ${physio.name}` }));
     expect(api.post).not.toHaveBeenCalled();
-    expect(notify.error).toHaveBeenCalledWith(`Unesite cenu za „${physio.name}”.`);
+    expect(notify.error).toHaveBeenCalledWith(`Cena za „${physio.name}” nije uneta. Admin je unosi u „Cene fizioterapije”.`);
+    first.unmount();
 
-    await user.type(price, "1500");
+    prices = [{ kind: "passive", priceRSD: 1500 }];
+    const { user } = renderWithProviders(<EntryReview patientId="p1" />);
+    expect(await screen.findByText(/1\.500,00/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Cena:/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: `Prihvati ${physio.name}` }));
-    expect(api.post).toHaveBeenCalledWith("/api/nurse-entries/accept", { items: [{ id: "e9", price: 1500 }] });
+    expect(api.post).toHaveBeenCalledWith("/api/nurse-entries/accept", { items: [{ id: "e9" }] });
   });
+;
 });
