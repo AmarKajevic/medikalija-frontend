@@ -29,6 +29,7 @@ const NurseActivityPage = lazy(() => import("@pages/team/NurseActivityPage"));
 const NotificationsPage = lazy(() => import("@pages/workspace/NotificationsPage"));
 const CalendarPage = lazy(() => import("@pages/workspace/CalendarPage"));
 const FacilitySettingsPage = lazy(() => import("@pages/settings/FacilitySettingsPage"));
+const LodgingPricesPage = lazy(() => import("@pages/settings/LodgingPricesPage"));
 const CarePage = lazy(() => import("@pages/care/CarePage"));
 const ApprovalsPage = lazy(() => import("@pages/care/ApprovalsPage"));
 const CareTasksPage = lazy(() => import("@pages/care/CareTasksPage"));
@@ -119,6 +120,7 @@ export default function App() {
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
+            <Route path="/lodging-prices" element={admins(<LodgingPricesPage />)} />
             <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
             <Route path="/care-tasks" element={managers(<CareTasksPage />)} />

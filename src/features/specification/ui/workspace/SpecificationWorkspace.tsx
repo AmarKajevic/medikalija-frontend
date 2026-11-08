@@ -16,6 +16,7 @@ import SpecificationItems from "./SpecificationItems";
 import BillingPanel from "./BillingPanel";
 import PeriodSwitcher from "./PeriodSwitcher";
 import EditPeriodDates from "./EditPeriodDates";
+import ExchangeRateBox from "./ExchangeRateBox";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
 import ReviewStep from "./ReviewStep";
@@ -144,7 +145,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      {/* Period i status */}
+      {/* Period i status levo, kurs evra desno (uvek vidljiv, u svakom koraku) */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         {isBilling ? (
           <>
@@ -181,6 +183,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         )}
         {/* Ručni unos datuma za svaki period; sledeći periodi se nadovezuju na novi kraj */}
         <EditPeriodDates specification={spec} patientId={patientId} />
+      </div>
+        <ExchangeRateBox billing={billing} />
       </div>
 
       <div>

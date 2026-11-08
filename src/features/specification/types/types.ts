@@ -32,6 +32,8 @@ export type Specification = {
     previousDebtRSD: number;
     nextLodgingEUR: number;
     nextLodgingRSD: number;
+    nextLodgingOption?: string;
+    earlyLodgingOption?: string;
     includeEarlyLodging?: boolean;
     earlyLodgingEUR?: number;
     earlyLodgingRSD?: number;

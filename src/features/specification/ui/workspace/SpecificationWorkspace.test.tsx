@@ -24,6 +24,9 @@ vi.mock("@features/nurse-entries/model", () => ({ useNurseEntries: () => ({ data
 vi.mock("@features/nurse-entries/ui/EntryReview", () => ({ default: () => <p>pregled unosa sestara</p> }));
 vi.mock("./PeriodNotes", () => ({ default: ({ onAddAsCost }: { onAddAsCost?: (l: string) => void }) => <button type="button" onClick={() => onAddAsCost?.("Prevoz do stomatologa")}>dodaj iz beleške</button> }));
 vi.mock("./PeriodSwitcher", () => ({ default: () => <span>period</span> }));
+vi.mock("@app/providers/AuthContext", () => ({ useAuth: () => ({ user: { role: "admin" } }) }));
+const lodging = vi.hoisted(() => ({ prices: [] as Array<{ _id: string; name: string; days: number; priceEUR: number; active: boolean }> }));
+vi.mock("@features/lodging/model", () => ({ useLodgingPrices: () => ({ data: lodging.prices }) }));
 vi.mock("./AddItemPanel", () => ({ default: ({ preset }: { preset?: { kind: string; label?: string } | null }) => <p>forma za dodavanje{preset ? `: ${preset.kind} ${preset.label}` : ""}</p> }));
 
 import SpecificationWorkspace from "./SpecificationWorkspace";
@@ -71,7 +74,7 @@ describe("SpecificationWorkspace", () => {
     expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "" });
     expect(screen.getByRole("button", { name: "Štampaj specifikaciju" })).toBeInTheDocument();
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });
@@ -126,11 +129,36 @@ describe("SpecificationWorkspace", () => {
     expect(screen.getByText("forma za dodavanje")).toBeInTheDocument(); // dodavanje je moguće
   });
 
-  it("bez kursa: polja za kurs su otvorena i pregled upozorava", async () => {
-    rates.value = { lower: 0, middle: 0 };
+  it("smeštaj se bira iz cenovnika; može i drugi iznos ručno", async () => {
+    lodging.prices = [
+      { _id: "l1", name: "10 dana", days: 10, priceEUR: 200, active: true },
+      { _id: "l2", name: "30 dana", days: 30, priceEUR: 900, active: true },
+    ];
+    save.mutateAsync.mockResolvedValue({});
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
     await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
-    expect(screen.getByLabelText("Niži kurs")).toBeInTheDocument();
+    await user.click(screen.getByText("Smeštaj za naredni period", { selector: "span" }));
+    await user.selectOptions(screen.getByLabelText("Smeštaj za naredni period: cena"), "30 dana");
+    // 1.000 RSD + 900 € × 120
+    expect(within(footer()).getByText(/109\.000,00 RSD/)).toBeInTheDocument();
+    await user.click(screen.getByText("Vanstandardni period smeštaja", { selector: "span" }));
+    await user.selectOptions(screen.getByLabelText("Vanstandardni period smeštaja: cena"), "__manual");
+    await user.type(screen.getByLabelText("Vanstandardni period smeštaja (EUR)"), "50");
+    await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
+    expect(save.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ nextLodgingEUR: 900, nextLodgingOption: "30 dana", includeLodging: true, earlyLodgingEUR: 50, earlyLodgingOption: "", includeEarlyLodging: true })
+    );
+    lodging.prices = [];
+  });
+
+  it("kurs evra je uvek vidljiv u zaglavlju (od prvog koraka); bez kursa pregled upozorava", async () => {
+    rates.value = { lower: 0, middle: 0 };
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    const box = screen.getByRole("group", { name: "Kurs evra" });
+    expect(within(box).getByLabelText("Niži")).toHaveValue("");
+    expect(within(box).getByLabelText("Srednji")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
+    expect(screen.getByRole("group", { name: "Kurs evra" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
     expect(screen.getByText(/Kurs evra nije unet/)).toBeInTheDocument();
   });
