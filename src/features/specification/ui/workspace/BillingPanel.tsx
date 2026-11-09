@@ -13,6 +13,8 @@ interface Props {
   nextPeriodLabel: string;
   /** Zatvorena specifikacija: obračun se samo prikazuje */
   readOnly?: boolean;
+  /** Posle uspešnog čuvanja (npr. zatvara dijalog) */
+  onSaved?: () => void;
 }
 
 const MANUAL = "__manual";
@@ -106,14 +108,14 @@ function OptionalAmount({
   );
 }
 
-export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false }: Props) {
+export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false, onSaved }: Props) {
   const ids = { debt: useId(), lodging: useId(), early: useId() };
   const { fields, result, dirty, saving, saveBilling } = billing;
   const { user } = useAuth();
   const { data: prices = [] } = useLodgingPrices();
 
   const rows: Array<[string, string, string, string]> = [
-    ["Lekovi, artikli, analize i troškovi", "iz koraka 1", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
+    ["Lekovi, artikli, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
     ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
     ...(fields.includeLodging ? [[`Smeštaj za naredni period${fields.lodgingOption ? ` · ${fields.lodgingOption}` : ""}`, nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
     ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
@@ -199,7 +201,7 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
       <div className="flex flex-wrap items-center justify-end gap-3">
         {dirty && <span className="text-xs text-warning-600 dark:text-warning-400">Imate nesačuvane izmene</span>}
         {!readOnly && (
-          <Button onClick={() => void saveBilling()} loading={saving} size="sm" variant={dirty ? "primary" : "outline"}>
+          <Button onClick={() => void saveBilling().then((ok) => ok && onSaved?.())} loading={saving} size="sm" variant={dirty ? "primary" : "outline"}>
             Sačuvaj obračun
           </Button>
         )}

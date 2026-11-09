@@ -1,4 +1,4 @@
-// Čarobnjak specifikacije: koraci, uvek vidljivo ukupno, čuvanje obračuna usput.
+// Čarobnjak specifikacije: dva koraka, smeštaj iznad kursa, uvek vidljivo ukupno, čuvanje obračuna usput.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { renderWithProviders } from "../../../../test/render";
@@ -41,7 +41,7 @@ const spec: Specification = {
   items: [{ _id: "i1", name: "Andol", category: "medicine", amount: 10, price: 1000 }],
 };
 
-const footer = () => screen.getByText(/^Korak \d od 3/).parentElement!;
+const footer = () => screen.getByText(/^Korak \d od 2/).parentElement!;
 
 beforeEach(() => {
   rates.value = { lower: 100, middle: 120 };
@@ -64,14 +64,22 @@ describe("SpecificationWorkspace", () => {
     expect(screen.getByText("forma za dodavanje: extra Prevoz do stomatologa")).toBeInTheDocument();
   });
 
+  it("samo dva koraka: nema posebnog koraka za obračun", () => {
+    renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    const steps = within(screen.getByRole("navigation", { name: "Koraci" })).getAllByRole("button");
+    expect(steps.map((b) => b.textContent)).toEqual([expect.stringContaining("Šta je pacijent dobio"), expect.stringContaining("Pregled i štampa")]);
+    expect(screen.queryByRole("button", { name: /Dalje: obračun/ })).not.toBeInTheDocument();
+  });
+
   it("obračun se čuva pri prelasku na pregled, a ukupno uključuje dug", async () => {
     save.mutateAsync.mockResolvedValue({});
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
-    await user.click(screen.getByRole("button", { name: /Dalje: obračun/ }));
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
     await user.click(screen.getByRole("switch", { name: "Naplati: Dug iz prethodnog perioda" }));
     await user.type(screen.getByLabelText("Dug iz prethodnog perioda (EUR)"), "10");
     // 1.000 RSD + 10 € × 120
     expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Zatvori" }));
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
     expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "" });
@@ -79,14 +87,34 @@ describe("SpecificationWorkspace", () => {
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });
 
-  it("neuspelo čuvanje ostavlja korisnika na obračunu", async () => {
+  it("neuspelo čuvanje ostavlja korisnika na prvom koraku", async () => {
     save.mutateAsync.mockRejectedValue(new Error("x"));
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
-    await user.click(screen.getByRole("button", { name: /Dalje: obračun/ }));
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
     await user.click(screen.getByRole("switch", { name: "Naplati: Smeštaj za naredni period" }));
     await user.type(screen.getByLabelText("Smeštaj za naredni period (EUR)"), "500");
+    await user.click(screen.getByRole("button", { name: "Zatvori" }));
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(screen.getByRole("button", { current: "step" })).toHaveTextContent("Obračun za uplatu");
+    expect(screen.getByRole("button", { current: "step" })).toHaveTextContent("Šta je pacijent dobio");
+  });
+
+  it("smeštaj se čuva iz dijaloga i stoji na vrhu liste; uklanja se odatle", async () => {
+    save.mutateAsync.mockResolvedValue({});
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
+    await user.click(screen.getByRole("switch", { name: "Naplati: Smeštaj za naredni period" }));
+    await user.type(screen.getByLabelText("Smeštaj za naredni period (EUR)"), "500");
+    await user.click(screen.getByRole("button", { name: "Sačuvaj obračun" }));
+    expect(screen.queryByRole("dialog", { name: "Smeštaj i dug" })).not.toBeInTheDocument();
+
+    expect(screen.getByText("Dodato u ovom periodu (2)")).toBeInTheDocument();
+    const lodgingRow = screen.getByText("Smeštaj za naredni period");
+    expect(lodgingRow.compareDocumentPosition(screen.getByText("Andol")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Smeštaj i dug/ })).toHaveTextContent("500,00");
+
+    await user.click(screen.getByRole("button", { name: "Ukloni Smeštaj za naredni period" }));
+    expect(save.mutateAsync).toHaveBeenLastCalledWith(expect.objectContaining({ includeLodging: false, nextLodgingEUR: 500 }));
+    expect(screen.queryByText("Smeštaj za naredni period")).not.toBeInTheDocument();
   });
 
   it("unosi sestara na čekanju: pregled u prvom koraku i upozorenje pre štampe", async () => {
@@ -106,9 +134,12 @@ describe("SpecificationWorkspace", () => {
     const { user } = renderWithProviders(<SpecificationWorkspace specification={withBilling} patientId="p1" patientName="Petar" />);
     // 1.000 RSD + dug 10 € × 120; smeštaj isključen
     expect(within(footer()).getByText(/2\.200,00 RSD/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
+    expect(screen.getByText("Dug iz prethodnog perioda")).toBeInTheDocument(); // na vrhu liste
+    await user.click(screen.getByRole("button", { name: /Smeštaj i dug/ }));
     await user.click(screen.getByRole("switch", { name: "Naplati: Dug iz prethodnog perioda" }));
     expect(within(footer()).getByText(/1\.000,00 RSD/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Zatvori" }));
+    save.mutateAsync.mockResolvedValue({});
     await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
     expect(screen.getByText("Bez duga i smeštaja")).toBeInTheDocument();
     expect(screen.queryByText("Dug iz prethodnog perioda")).not.toBeInTheDocument();
@@ -153,7 +184,7 @@ describe("SpecificationWorkspace", () => {
     ];
     save.mutateAsync.mockResolvedValue({});
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
-    await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
     await user.click(screen.getByText("Smeštaj za naredni period", { selector: "span" }));
     await user.selectOptions(screen.getByLabelText("Smeštaj za naredni period: cena"), "30 dana");
     // 1.000 RSD + 900 € × 120
@@ -161,7 +192,7 @@ describe("SpecificationWorkspace", () => {
     await user.click(screen.getByText("Vanstandardni period smeštaja", { selector: "span" }));
     await user.selectOptions(screen.getByLabelText("Vanstandardni period smeštaja: cena"), "__manual");
     await user.type(screen.getByLabelText("Vanstandardni period smeštaja (EUR)"), "50");
-    await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
+    await user.click(screen.getByRole("button", { name: "Sačuvaj obračun" }));
     expect(save.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ nextLodgingEUR: 900, nextLodgingOption: "30 dana", includeLodging: true, earlyLodgingEUR: 50, earlyLodgingOption: "", includeEarlyLodging: true })
     );
@@ -174,9 +205,8 @@ describe("SpecificationWorkspace", () => {
     const box = screen.getByRole("group", { name: "Kurs evra" });
     expect(within(box).getByLabelText("Niži")).toHaveValue("");
     expect(within(box).getByLabelText("Srednji")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Obračun za uplatu/ }));
-    expect(screen.getByRole("group", { name: "Kurs evra" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
+    expect(screen.getByRole("group", { name: "Kurs evra" })).toBeInTheDocument();
     expect(screen.getByText(/Kurs evra nije unet/)).toBeInTheDocument();
   });
 });

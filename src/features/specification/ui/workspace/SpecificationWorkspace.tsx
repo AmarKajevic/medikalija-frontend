@@ -14,7 +14,8 @@ import { useFacility } from "@entities/facility/facility";
 import { useNurseEntries } from "@features/nurse-entries/model";
 import EntryReview from "@features/nurse-entries/ui/EntryReview";
 import SpecificationItems from "./SpecificationItems";
-import BillingPanel from "./BillingPanel";
+import { billingRows } from "@features/specification/lib/billingRows";
+import { LodgingButton, LodgingDialog, LodgingRows } from "./LodgingBilling";
 import PeriodSwitcher from "./PeriodSwitcher";
 import EditPeriodDates from "./EditPeriodDates";
 import ExchangeRateBox from "./ExchangeRateBox";
@@ -22,12 +23,11 @@ import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
 import ReviewStep from "./ReviewStep";
 
-export type Step = 1 | 2 | 3;
+export type Step = 1 | 2;
 
 const STEPS: Array<{ n: Step; title: string; hint: string }> = [
-  { n: 1, title: "Šta je pacijent dobio", hint: "Lekovi, artikli, analize, troškovi" },
-  { n: 2, title: "Obračun za uplatu", hint: "Dug i smeštaj" },
-  { n: 3, title: "Pregled i štampa", hint: "Ukupno i PDF" },
+  { n: 1, title: "Šta je pacijent dobio", hint: "Stavke, smeštaj i dug" },
+  { n: 2, title: "Pregled i štampa", hint: "Ukupno i PDF" },
 ];
 
 interface Props {
@@ -55,7 +55,7 @@ const Section = ({ title, description, children }: { title: string; description?
 function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }) {
   return (
     <nav aria-label="Koraci">
-      <ol className="grid grid-cols-3 gap-2">
+      <ol className="grid grid-cols-2 gap-2">
         {STEPS.map((s) => {
           const current = s.n === step;
           const done = s.n < step;
@@ -101,6 +101,7 @@ function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }
 export default function SpecificationWorkspace({ specification: spec, patientId, patientName, period = "active", pendingFilter, lodgingPeriod }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
+  const [lodgingOpen, setLodgingOpen] = useState(false);
   const addPanelRef = useRef<HTMLDivElement>(null);
 
   // Iz učinka sestre: otvori "Drugi trošak" sa opisom iz beleške, fokus na iznos
@@ -145,15 +146,19 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   };
   const runExport = (mode: "download" | "print") => exportPdf(mode).catch((err) => notify.error(err, "PDF nije napravljen."));
 
-  // Sa obračuna se ne ide dalje sa nesačuvanim dugom/smeštajem — čuva se usput
+  // Na pregled se ne ide sa nesačuvanim dugom/smeštajem — čuva se usput
   const goTo = async (next: Step) => {
-    if (step === 2 && next > 2 && billing.dirty && !(await billing.saveBilling())) return;
+    if (next === 2 && billing.dirty && !(await billing.saveBilling())) return;
     setStep(next);
+  };
+  const editLodging = () => {
+    setStep(1);
+    setLodgingOpen(true);
   };
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      {/* Period i status levo, kurs evra desno (uvek vidljiv, u svakom koraku) */}
+      {/* Period i status levo; smeštaj i kurs evra desno (uvek vidljivi, u svakom koraku) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         {isBilling ? (
@@ -196,7 +201,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         {/* Ručni unos datuma za svaki period; sledeći periodi se nadovezuju na novi kraj */}
         {editable && <EditPeriodDates specification={spec} patientId={patientId} />}
       </div>
-        <ExchangeRateBox billing={billing} />
+        <div className="flex flex-col items-stretch gap-2">
+          <LodgingButton billing={billing} onOpen={() => setLodgingOpen(true)} readOnly={!editable} />
+          <ExchangeRateBox billing={billing} />
+        </div>
       </div>
 
       <div>
@@ -251,10 +259,11 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             </div>
             <div className="min-w-0 space-y-5">
               <Section
-                title={`Dodato u ovom periodu (${spec.items.length})`}
+                title={`Dodato u ovom periodu (${spec.items.length + billingRows(billing, nextPeriodLabel).length})`}
                 description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
               >
-                <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} />
+                <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
+                <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
               </Section>
               <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={editable ? addAsCost : undefined} />
             </div>
@@ -262,23 +271,18 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         )}
 
         {step === 2 && (
-          <div className="mx-auto max-w-3xl">
-            <Section title="Obračun za uplatu" description="Unesite dug i smeštaj. Sve ostalo se računa samo.">
-              <BillingPanel billing={billing} nextPeriodLabel={nextPeriodLabel} readOnly={!editable} />
-            </Section>
-          </div>
-        )}
-
-        {step === 3 && (
           <ReviewStep
             specification={spec}
             billing={billing}
             nextPeriodLabel={nextPeriodLabel}
             onEditStep={setStep}
+            onEditBilling={editLodging}
             pendingCount={canAdd ? pendingCount : 0}
           />
         )}
       </div>
+
+      <LodgingDialog open={lodgingOpen} onClose={() => setLodgingOpen(false)} billing={billing} nextPeriodLabel={nextPeriodLabel} readOnly={!editable} />
 
       <ConfirmDialog
         open={confirmUnlock}
@@ -296,7 +300,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       <div className="sticky bottom-0 z-10 -mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-white/95 px-4 py-2.5 sm:py-3 shadow-theme-md backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
         <div className="min-w-0" aria-live="polite">
           <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">
-            Korak {step} od 3 · {current.title}
+            Korak {step} od 2 · {current.title}
           </p>
           <p className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white sm:text-base">
             Ukupno: <span className="whitespace-nowrap">{formatRSD(billing.result.totalRSD)}</span>
@@ -305,13 +309,13 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         </div>
         <div className="ml-auto flex gap-2">
           {step > 1 && (
-            <Button variant="outline" startIcon={<LuArrowLeft className="h-4 w-4" />} onClick={() => setStep((step - 1) as Step)}>
+            <Button variant="outline" startIcon={<LuArrowLeft className="h-4 w-4" />} onClick={() => setStep(1)}>
               Nazad
             </Button>
           )}
-          {step < 3 ? (
-            <Button endIcon={<LuArrowRight className="h-4 w-4" />} loading={billing.saving} onClick={() => void goTo((step + 1) as Step)}>
-              {step === 1 ? "Dalje: obračun" : "Dalje: pregled"}
+          {step === 1 ? (
+            <Button endIcon={<LuArrowRight className="h-4 w-4" />} loading={billing.saving} onClick={() => void goTo(2)}>
+              Dalje: pregled
             </Button>
           ) : (
             <>
