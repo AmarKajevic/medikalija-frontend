@@ -26,6 +26,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: CARE_ROLES },
       { label: "Fizioterapija", to: paths.physio, icon: <LuActivity />, roles: PHYSIO_ROLES },
       { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals" },
+      { label: "Aktivnosti", to: paths.activity, icon: <LuUserCheck />, roles: MANAGER_ROLES },
       { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: STAFF_ROLES },
       { label: "Obaveštenja", to: paths.notifications, icon: <LuBell />, roles: MANAGER_ROLES },
     ],
@@ -60,7 +61,6 @@ export const NAVIGATION: NavGroup[] = [
     label: "Tim",
     items: [
       { label: "Dnevnik nege", to: paths.careLog, icon: <LuNotebookPen />, roles: MANAGER_ROLES },
-      { label: "Aktivnosti sestara", to: paths.nurseActivity, icon: <LuUserCheck />, roles: MANAGER_ROLES },
       { label: "Osoblje", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES },
       { label: "Cene smeštaja", to: paths.lodgingPrices, icon: <LuBedDouble />, roles: ["admin"] },
       { label: "Cene fizioterapije", to: paths.physioPrices, icon: <LuActivity />, roles: ["admin"] },

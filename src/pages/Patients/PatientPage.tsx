@@ -167,7 +167,7 @@ export default function PatientPage() {
               <p className="flex items-center gap-2.5 text-sm text-warning-800 dark:text-warning-300">
                 <LuClipboardCheck className="h-5 w-5 shrink-0" />
                 <span>
-                  <strong>{pending === 1 ? "1 unos sestre čeka" : `${pending} unosa sestara čeka`}</strong> odobrenje za specifikaciju.
+                  <strong>{pending === 1 ? "1 unos osoblja čeka" : `${pending} unosa osoblja čeka`}</strong> odobrenje za specifikaciju.
                 </span>
               </p>
               <Button size="sm" onClick={openSpecification}>

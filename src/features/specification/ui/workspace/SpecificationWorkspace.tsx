@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuCheck, LuDownload, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
+import { LuArrowLeft, LuArrowRight, LuCheck, LuInfo, LuDownload, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
 import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
@@ -113,6 +113,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const { facility } = useFacility();
   const pending = useNurseEntries({ patientId, status: ["pending"], limit: 500 }).data ?? [];
   const pendingCount = pending.filter((e) => !pendingFilter || pendingFilter(e.performedAt)).length;
+  // Unosi raspoređeni po datumu u drugi period (npr. današnji idu u tekući) — ne ulaze u ovu specifikaciju
+  const otherPending = pending.length - pendingCount;
   const reviewFilter = useMemo(() => (pendingFilter ? (e: { performedAt: string }) => pendingFilter(e.performedAt) : undefined), [pendingFilter]);
   const nextPeriodLabel = lodgingPeriod ? `${formatDay(lodgingPeriod.start)} — ${formatDay(lodgingPeriod.end)}` : getNextPeriodLabel(spec.endDate);
   const isBilling = period === "billing";
@@ -218,15 +220,22 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         {step === 1 && canAdd && pendingCount > 0 && (
           <div className="mb-5 rounded-xl border border-warning-200 bg-white shadow-theme-xs dark:border-warning-500/30 dark:bg-gray-900">
             <header className="border-b border-warning-100 bg-warning-50 px-5 py-3.5 dark:border-warning-500/20 dark:bg-warning-500/10">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi sestara čekaju odobrenje ({pendingCount})</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi osoblja čekaju odobrenje ({pendingCount})</h3>
               <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-                Prihvaćeno ulazi u specifikaciju i skida se sa stanja (prvo porodično). Odbijeno se ne naplaćuje.
+                Unosi sestara i vanredna fizioterapija. Prihvaćeno ulazi u specifikaciju (lekovi i artikli se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje.
               </p>
             </header>
             <div className="p-5">
               <EntryReview patientId={patientId} filter={reviewFilter} />
             </div>
           </div>
+        )}
+
+        {step === 1 && canAdd && otherPending > 0 && (
+          <p className="mb-5 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
+            <LuInfo className="h-4 w-4 shrink-0 text-gray-400" />
+            {otherPending === 1 ? "Još 1 unos čeka" : `Još ${otherPending} unosa čeka`} odobrenje u drugom periodu (po danu kad je urađeno, npr. tekući period) i ne ulazi u ovu specifikaciju.
+          </p>
         )}
 
         {closed && unlocked && (
