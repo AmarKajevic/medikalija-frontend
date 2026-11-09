@@ -94,8 +94,8 @@ export const fetchPastPeriods = async (patientId: string): Promise<PastPeriod[]>
   return data.periods ?? [];
 };
 
-/** Period za izbor aktivnog: raniji, aktivan, današnji i jedan unapred */
-export type SelectablePeriod = PastPeriod & { isActive: boolean; isCurrent: boolean };
+/** Period iz liste za izbor: raniji, period specifikacije, aktivan (smeštaj za period), današnji i jedan unapred */
+export type SelectablePeriod = PastPeriod & { isActive: boolean; isBilling: boolean; isCurrent: boolean };
 
 // Svi periodi među kojima se bira aktivan (od prijema do današnjeg i jedan unapred), od najnovijeg
 export const fetchSelectablePeriods = async (patientId: string): Promise<SelectablePeriod[]> => {
@@ -130,4 +130,14 @@ export const fetchNonStandardPeriods = async (patientId: string): Promise<Specif
 export const openNonStandardPeriod = async (patientId: string, startDate: string, endDate: string): Promise<Specification> => {
   const { data } = await api.post(`/api/specification/${patientId}/non-standard`, { startDate, endDate });
   return data.specification;
+};
+
+// Bira period specifikacije (postojeći zapis ili ručni datumi). Smeštaj za period
+// (aktivan) postavlja server — period posle izabranog.
+export const setBillingPeriod = async (
+  patientId: string,
+  body: { specificationId: string } | { startDate: string; endDate: string }
+): Promise<{ billing: Specification; active: Specification }> => {
+  const { data } = await api.post(`/api/specification/${patientId}/billing-period`, body);
+  return { billing: data.specification, active: data.active };
 };
