@@ -59,6 +59,25 @@ describe("api: osvežavanje sesije", () => {
     expect(calls).toHaveLength(2);
   });
 
+  it("server ili mreža privremeno ne rade (503 pri osvežavanju): bez odjave", async () => {
+    const failure = vi.fn();
+    setOnAuthFailure(failure);
+    handler = (c) => (c.url === "/api/auth/refresh" ? { status: 503, data: {} } : { status: 401, data: { code: "token_expired" } });
+    await expect(api.get("/api/patient")).rejects.toThrow("401");
+    expect(failure).not.toHaveBeenCalled();
+  });
+
+  it("svaki zahtev nosi zaglavlje aplikacije (zaštita osvežavanja od tuđih sajtova)", async () => {
+    handler = () => ({ status: 200, data: {} });
+    let header: unknown;
+    api.defaults.adapter = async (config) => {
+      header = config.headers["X-Requested-With"];
+      return { status: 200, data: {}, statusText: "OK", headers: {}, config, request: {} };
+    };
+    await api.post("/api/auth/refresh");
+    expect(header).toBe("medikalija");
+  });
+
   it("403 (nema pravo) se ne tretira kao istek sesije", async () => {
     handler = () => ({ status: 403, data: {} });
     await expect(api.get("/api/users")).rejects.toThrow("403");

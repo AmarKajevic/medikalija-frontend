@@ -30,6 +30,7 @@ export const paths = {
   settings: "/settings",
   lodgingPrices: "/lodging-prices",
   physioPrices: "/physio-prices",
+  professionalServices: "/professional-services",
   care: "/care",
   approvals: "/approvals",
   careTasks: "/care-tasks",

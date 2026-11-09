@@ -1,4 +1,4 @@
-export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "care" | "physio" | "extra";
+export type SpecificationItemCategory = "medicine" | "articles" | "combination" | "professional" | "care" | "physio" | "extra";
 
 export type SpecificationItem = {
   _id: string;
@@ -38,6 +38,8 @@ export type Specification = {
     nextLodgingRSD: number;
     nextLodgingOption?: string;
     earlyLodgingOption?: string;
+    /** Napomena uz vanstandardni smeštaj (štampa se u istom redu) */
+    earlyLodgingNote?: string;
     includeEarlyLodging?: boolean;
     earlyLodgingEUR?: number;
     earlyLodgingRSD?: number;

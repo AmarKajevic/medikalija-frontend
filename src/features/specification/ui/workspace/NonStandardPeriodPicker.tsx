@@ -50,6 +50,7 @@ export default function NonStandardPeriodPicker({ patientId, value, onChange }: 
   });
 
   const invalid = !!start && !!end && end < start;
+  const selected = periods.find((p) => p._id === value);
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!start || !end || invalid) return;
@@ -57,7 +58,7 @@ export default function NonStandardPeriodPicker({ patientId, value, onChange }: 
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+    <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warning-200 bg-warning-50/40 p-3 dark:border-warning-500/30 dark:bg-warning-500/5">
       {periods.length > 0 && !creating && (
         <>
           <div className="min-w-56">
@@ -75,6 +76,11 @@ export default function NonStandardPeriodPicker({ patientId, value, onChange }: 
           <Button size="sm" variant="outline" startIcon={<LuCalendarPlus className="h-4 w-4" />} onClick={() => setCreating(true)}>
             Novi vanstandardni period
           </Button>
+          {selected && (
+            <p className="flex items-center gap-2 rounded-lg bg-warning-500 px-3.5 py-2 text-sm font-semibold text-white shadow-theme-xs" aria-live="polite">
+              Izabran period: {formatDay(selected.startDate)} – {formatDay(selected.endDate)}
+            </p>
+          )}
         </>
       )}
       {creating && (

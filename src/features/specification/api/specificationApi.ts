@@ -27,6 +27,7 @@ export const saveBilling = async (specId: string, payload: {
   /** Naziv izabrane cene iz cenovnika smeštaja ("" = ručni iznos) */
   nextLodgingOption?: string;
   earlyLodgingOption?: string;
+  earlyLodgingNote?: string;
 }) => {
   const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
   return data.specification;

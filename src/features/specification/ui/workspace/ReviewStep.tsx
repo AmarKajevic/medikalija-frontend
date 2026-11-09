@@ -129,7 +129,7 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
             <Row label={`Smeštaj ${nextPeriodLabel}${result.lodgingOption ? ` · ${result.lodgingOption}` : ""}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditBilling()} />
           )}
           {result.includeEarlyLodging && (
-            <Row label={`Vanstandardni period smeštaja${result.earlyLodgingOption ? ` · ${result.earlyLodgingOption}` : ""}`} value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditBilling()} />
+            <Row label={`Vanstandardni period smeštaja${result.earlyLodgingOption ? ` · ${result.earlyLodgingOption}` : ""}${result.earlyLodgingNote ? ` — ${result.earlyLodgingNote}` : ""}`} value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditBilling()} />
           )}
           {!result.includeDebt && !result.includeLodging && !result.includeEarlyLodging && (
             <div className="flex items-center justify-between gap-4 py-2.5 text-sm text-gray-500">

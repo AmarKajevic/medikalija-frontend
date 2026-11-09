@@ -18,6 +18,8 @@ export function useBillingState(spec: Specification, patientId: string) {
   // Izabrana cena iz cenovnika smeštaja (naziv, npr. "30 dana"); "" = ručno unet iznos
   const [lodgingOption, setLodgingOptionRaw] = useState("");
   const [earlyOption, setEarlyOptionRaw] = useState("");
+  // Napomena uz vanstandardni smeštaj (iz liste koju pravi admin)
+  const [earlyNote, setEarlyNoteRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
   // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
@@ -35,6 +37,7 @@ export function useBillingState(spec: Specification, patientId: string) {
     setIncludeEarlyRaw(spec.billing?.includeEarlyLodging ?? (spec.billing?.earlyLodgingEUR ?? 0) > 0);
     setLodgingOptionRaw(spec.billing?.nextLodgingOption ?? "");
     setEarlyOptionRaw(spec.billing?.earlyLodgingOption ?? "");
+    setEarlyNoteRaw(spec.billing?.earlyLodgingNote ?? "");
     setDirty(false);
   }, [
     spec._id,
@@ -46,6 +49,7 @@ export function useBillingState(spec: Specification, patientId: string) {
     spec.billing?.includeEarlyLodging,
     spec.billing?.nextLodgingOption,
     spec.billing?.earlyLodgingOption,
+    spec.billing?.earlyLodgingNote,
   ]);
 
   useEffect(() => {
@@ -89,6 +93,7 @@ export function useBillingState(spec: Specification, patientId: string) {
         includeEarlyLodging: includeEarly && exclude !== "early",
         nextLodgingOption: lodgingOption,
         earlyLodgingOption: earlyOption,
+        earlyLodgingNote: earlyNote,
       });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
@@ -129,6 +134,11 @@ export function useBillingState(spec: Specification, patientId: string) {
         setEarlyRaw(amount);
         setDirty(true);
       },
+      earlyNote,
+      setEarlyNote: (v: string) => {
+        setEarlyNoteRaw(v);
+        setDirty(true);
+      },
       includeEarly,
       setIncludeEarly: (v: boolean) => {
         setIncludeEarlyRaw(v);
@@ -150,7 +160,7 @@ export function useBillingState(spec: Specification, patientId: string) {
       },
     },
     rates,
-    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption },
+    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption, earlyLodgingNote: earlyNote },
     commitRates,
     dirty,
     saving: save.isPending,

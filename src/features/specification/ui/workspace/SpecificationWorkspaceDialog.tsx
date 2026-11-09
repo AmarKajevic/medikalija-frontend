@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LuBedDouble, LuCalendarClock, LuHistory } from "react-icons/lu";
+import { LuBedDouble, LuCalendarClock, LuCalendarRange, LuHistory } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Tabs from "@shared/ui/tabs/Tabs";
@@ -140,10 +140,23 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
                 ? [{ value: "billing" as const, label: `Period specifikacije · ${formatDay(billingSpec.startDate)} – ${formatDay(billingSpec.endDate)}` }]
                 : // Prvi period: još nema isteklog, pa se radi u tekućem
                   [{ value: "active" as const, label: `Tekući period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` }]),
-              { value: "nonstandard", label: "Vanstandardni period" },
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />
+            {/* Vanstandardni period: posebno, uočljivo dugme (ručni datumi van redovnih perioda) */}
+            <button
+              type="button"
+              onClick={() => setTab("nonstandard")}
+              aria-pressed={shownTab === "nonstandard"}
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition ${
+                shownTab === "nonstandard"
+                  ? "bg-warning-500 text-white shadow-theme-xs hover:bg-warning-600"
+                  : "border border-warning-300 bg-warning-50 text-warning-700 hover:bg-warning-100 dark:border-warning-500/40 dark:bg-warning-500/10 dark:text-warning-300"
+              }`}
+            >
+              <LuCalendarRange className="h-4 w-4" />
+              Vanstandardni period
+            </button>
             {/* Dugmad biraju period specifikacije; smeštaj za period ide sam za njim (samo informacija) */}
             <div className="flex flex-wrap items-center gap-2">
               <Button size="xs" variant="outline" startIcon={<LuCalendarClock className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("manual")} title="Ručno unesite datume perioda specifikacije">

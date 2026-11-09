@@ -57,7 +57,20 @@ describe("stavke specifikacije", () => {
         { _id: "b", name: "CRP", price: 600 },
       ],
     });
-    expect(itemDisplayName(combo)).toBe("KKS + CRP = 450 + 600");
+    expect(itemDisplayName(combo)).toBe("Upalni - KKS+CRP = 450+600");
     expect(itemDisplayName(item({ name: "Andol" }))).toBe("Andol");
+  });
+
+  it("kombinacija: analiza bez cene ne stavlja 0 na početak; decimalne cene sa zarezom", () => {
+    const combo = item({
+      category: "combination",
+      name: "6-Lab analize i patronaža",
+      analyses: [
+        { _id: "v", name: "Vađenje krvi", price: 0 },
+        { _id: "a", name: "KKS", price: 420 },
+        { _id: "b", name: "CRP", price: 190.5 },
+      ],
+    });
+    expect(itemDisplayName(combo)).toBe("6-Lab analize i patronaža - Vađenje krvi+KKS+CRP = 420+190,50");
   });
 });

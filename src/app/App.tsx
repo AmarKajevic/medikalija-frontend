@@ -34,6 +34,7 @@ const FacilitySettingsPage = lazy(pages.FacilitySettingsPage);
 const LodgingPricesPage = lazy(pages.LodgingPricesPage);
 const PhysioPage = lazy(pages.PhysioPage);
 const PhysioPricesPage = lazy(pages.PhysioPricesPage);
+const ProfessionalServicesPage = lazy(pages.ProfessionalServicesPage);
 const CarePage = lazy(pages.CarePage);
 const ApprovalsPage = lazy(pages.ApprovalsPage);
 const CareTasksPage = lazy(pages.CareTasksPage);
@@ -127,6 +128,7 @@ export default function App() {
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
             <Route path="/lodging-prices" element={admins(<LodgingPricesPage />)} />
             <Route path="/physio-prices" element={admins(<PhysioPricesPage />)} />
+            <Route path="/professional-services" element={admins(<ProfessionalServicesPage />)} />
             <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
             <Route path="/care-tasks" element={managers(<CareTasksPage />)} />

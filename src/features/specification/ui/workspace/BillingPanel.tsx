@@ -4,7 +4,7 @@ import { Input, Select } from "@shared/ui/form/controls";
 import Button from "@shared/ui/button/Button";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import type { BillingState } from "@features/specification/hooks/useBillingState";
-import { useLodgingPrices, type LodgingPrice } from "@features/lodging/model";
+import { useLodgingNotes, useLodgingPrices, type LodgingPrice } from "@features/lodging/model";
 import { useAuth } from "@app/providers/AuthContext";
 import { paths } from "@app/paths";
 
@@ -109,16 +109,19 @@ function OptionalAmount({
 }
 
 export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false, onSaved }: Props) {
-  const ids = { debt: useId(), lodging: useId(), early: useId() };
+  const ids = { debt: useId(), lodging: useId(), early: useId(), note: useId() };
   const { fields, result, dirty, saving, saveBilling } = billing;
   const { user } = useAuth();
   const { data: prices = [] } = useLodgingPrices();
+  const { data: notes = [] } = useLodgingNotes();
+  // Sačuvana napomena koja je u međuvremenu obrisana iz liste ostaje vidljiva kao opcija
+  const noteKnown = notes.some((n) => n.text === fields.earlyNote);
 
   const rows: Array<[string, string, string, string]> = [
     ["Lekovi, artikli, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
     ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
     ...(fields.includeLodging ? [[`Smeštaj za naredni period${fields.lodgingOption ? ` · ${fields.lodgingOption}` : ""}`, nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
-    ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
+    ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, fields.earlyNote || "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
   ];
 
   return (
@@ -168,6 +171,27 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
           choice={prices.length || fields.earlyOption ? { prices, option: fields.earlyOption, onChoose: fields.chooseEarly } : undefined}
         />
       </div>
+
+      {fields.includeEarly && (
+        <div className="max-w-xl">
+          <label htmlFor={ids.note} className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Napomena uz vanstandardni smeštaj
+          </label>
+          <Select id={ids.note} value={fields.earlyNote} onChange={(e) => fields.setEarlyNote(e.target.value)}>
+            <option value="">Bez napomene</option>
+            {notes.map((n) => (
+              <option key={n._id} value={n.text}>
+                {n.text}
+              </option>
+            ))}
+            {fields.earlyNote && !noteKnown && <option value={fields.earlyNote}>{fields.earlyNote} (sačuvano)</option>}
+          </Select>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Štampa se u istom redu sa smeštajem.
+            {notes.length === 0 && (user?.role === "admin" ? " Napomene dodajete u „Cene smeštaja”." : " Napomene dodaje admin u „Cene smeštaja”.")}
+          </p>
+        </div>
+      )}
 
       <div className="relative overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full min-w-[480px] text-sm">

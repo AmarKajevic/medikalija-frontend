@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@shared/types/index";
-import { api, refreshSession, setAccessToken, setOnAuthFailure } from "@shared/api/api";
+import { api, refreshSession, RefreshUnavailableError, setAccessToken, setOnAuthFailure, type SessionResult } from "@shared/api/api";
 import { SplashScreen } from "@widgets/shell/BrandMark";
 
 interface AuthContextType {
@@ -40,7 +40,17 @@ function AuthProvider({ children }: AuthProviderProps) {
   }, [queryClient]);
 
   const restore = useCallback(async () => {
-    const session = await refreshSession();
+    // Pri pokretanju: mreža ili server mogu kratko da ne odgovore — nekoliko pokušaja pre ekrana za prijavu
+    let session: SessionResult | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        session = await refreshSession();
+        break;
+      } catch (err) {
+        if (!(err instanceof RefreshUnavailableError) || attempt === 2) break;
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
+    }
     if (session) {
       setToken(session.accessToken);
       setUser(session.user);

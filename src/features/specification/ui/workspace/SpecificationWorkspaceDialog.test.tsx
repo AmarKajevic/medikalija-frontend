@@ -76,7 +76,7 @@ describe("SpecificationWorkspaceDialog", () => {
     expect(screen.getByText("radni prostor: active active")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Tekući period/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("tab", { name: /Period specifikacije/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Vanstandardni period/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Vanstandardni period/ })).toBeInTheDocument();
   });
 });
 
@@ -96,12 +96,15 @@ describe("izbor perioda specifikacije pored kartica", () => {
 });
 
 describe("vanstandardni period", () => {
-  it("kartica posle perioda specifikacije: izabran period se otvara kao vanstandardni", async () => {
+  it("posebno dugme (ne kartica): izabran period se otvara kao vanstandardni", async () => {
     data.history = [spec("vanstd", "2026-10-10", "2026-10-15")];
     const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
-    const tabs = (await screen.findAllByRole("tab")).map((t) => t.textContent);
-    expect(tabs.findIndex((t) => t?.startsWith("Vanstandardni"))).toBe(tabs.findIndex((t) => t?.startsWith("Period specifikacije")) + 1);
-    await user.click(screen.getByRole("tab", { name: /Vanstandardni period/ }));
+    await screen.findAllByRole("tab");
+    expect(screen.queryByRole("tab", { name: /Vanstandardni/ })).not.toBeInTheDocument();
+    const button = screen.getByRole("button", { name: /Vanstandardni period/ });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "izaberi vanstandardni" }));
     expect(await screen.findByText("radni prostor: nonstandard vanstd")).toBeInTheDocument();
   });

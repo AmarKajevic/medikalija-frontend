@@ -25,8 +25,11 @@ vi.mock("@features/nurse-entries/ui/EntryReview", () => ({ default: () => <p>pre
 vi.mock("./PeriodNotes", () => ({ default: ({ onAddAsCost }: { onAddAsCost?: (l: string) => void }) => <button type="button" onClick={() => onAddAsCost?.("Prevoz do stomatologa")}>dodaj iz beleške</button> }));
 vi.mock("./PeriodSwitcher", () => ({ default: () => <span>period</span> }));
 vi.mock("@app/providers/AuthContext", () => ({ useAuth: () => ({ user: { role: "admin" } }) }));
-const lodging = vi.hoisted(() => ({ prices: [] as Array<{ _id: string; name: string; days: number; priceEUR: number; active: boolean }> }));
-vi.mock("@features/lodging/model", () => ({ useLodgingPrices: () => ({ data: lodging.prices }) }));
+const lodging = vi.hoisted(() => ({
+  prices: [] as Array<{ _id: string; name: string; days: number; priceEUR: number; active: boolean }>,
+  notes: [] as Array<{ _id: string; text: string }>,
+}));
+vi.mock("@features/lodging/model", () => ({ useLodgingPrices: () => ({ data: lodging.prices }), useLodgingNotes: () => ({ data: lodging.notes }) }));
 vi.mock("./AddItemPanel", () => ({ default: ({ preset }: { preset?: { kind: string; label?: string } | null }) => <p>forma za dodavanje{preset ? `: ${preset.kind} ${preset.label}` : ""}</p> }));
 
 import SpecificationWorkspace from "./SpecificationWorkspace";
@@ -82,7 +85,7 @@ describe("SpecificationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Zatvori" }));
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "" });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "", earlyLodgingNote: "" });
     expect(screen.getByRole("button", { name: "Štampaj specifikaciju" })).toBeInTheDocument();
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });
@@ -198,6 +201,21 @@ describe("SpecificationWorkspace", () => {
       expect.objectContaining({ nextLodgingEUR: 900, nextLodgingOption: "30 dana", includeLodging: true, earlyLodgingEUR: 50, earlyLodgingOption: "", includeEarlyLodging: true })
     );
     lodging.prices = [];
+  });
+
+  it("napomena uz vanstandardni smeštaj: bira se iz liste, čuva se i vidi u listi stavki", async () => {
+    lodging.notes = [{ _id: "n1", text: "Smeštaj od prijema do početka perioda" }];
+    save.mutateAsync.mockResolvedValue({});
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
+    expect(screen.queryByLabelText("Napomena uz vanstandardni smeštaj")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("switch", { name: "Naplati: Vanstandardni period smeštaja" }));
+    await user.type(screen.getByLabelText("Vanstandardni period smeštaja (EUR)"), "120");
+    await user.selectOptions(screen.getByLabelText("Napomena uz vanstandardni smeštaj"), "Smeštaj od prijema do početka perioda");
+    await user.click(screen.getByRole("button", { name: "Sačuvaj obračun" }));
+    expect(save.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ includeEarlyLodging: true, earlyLodgingEUR: 120, earlyLodgingNote: "Smeštaj od prijema do početka perioda" }));
+    expect(screen.getByText("Smeštaj od prijema do početka perioda")).toBeInTheDocument();
+    lodging.notes = [];
   });
 
   it("kurs evra je uvek vidljiv u zaglavlju (od prvog koraka); bez kursa pregled upozorava", async () => {

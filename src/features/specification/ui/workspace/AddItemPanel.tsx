@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useState } from "react";
-import { LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
+import { LuBriefcaseMedical, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
 import ConsumeItemForm from "./forms/ConsumeItemForm";
 import AddCombinationForm from "./forms/AddCombinationForm";
 import AddExtraCostForm from "./forms/AddExtraCostForm";
+import AddProfessionalServiceForm from "./forms/AddProfessionalServiceForm";
 import CareTaskPicker from "@features/nurse-entries/ui/CareTaskPicker";
 
-export type Kind = "medicine" | "article" | "combination" | "care" | "extra";
+export type Kind = "medicine" | "article" | "professional" | "combination" | "care" | "extra";
 
 /** Spolja zadat izbor (npr. "Dodaj kao trošak" iz učinka sestre); nonce ponavlja isti izbor */
 export interface AddPreset {
@@ -17,6 +18,7 @@ export interface AddPreset {
 const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode }> = [
   { value: "medicine", label: "Lek", hint: "Tablete, kapi, ampule", icon: <LuPill /> },
   { value: "article", label: "Artikal", hint: "Pelene, rukavice, materijal", icon: <LuPackage /> },
+  { value: "professional", label: "Stručne usluge", hint: "Iz cenovnika, sa cenom", icon: <LuBriefcaseMedical /> },
   { value: "combination", label: "Analize", hint: "Laboratorija", icon: <LuFlaskConical /> },
   { value: "care", label: "Nega", hint: "Kupanje, previjanje, presvlačenje", icon: <LuHeartHandshake /> },
   { value: "extra", label: "Drugi trošak", hint: "Frizer, prevoz, pedikir", icon: <LuReceipt /> },
@@ -64,6 +66,7 @@ export default function AddItemPanel({ specId, patientId, preset }: { specId: st
 
       {kind === "medicine" && <ConsumeItemForm key="medicine" kind="medicine" patientId={patientId} specificationId={specId} />}
       {kind === "article" && <ConsumeItemForm key="article" kind="article" patientId={patientId} specificationId={specId} />}
+      {kind === "professional" && <AddProfessionalServiceForm patientId={patientId} specificationId={specId} />}
       {kind === "combination" && <AddCombinationForm patientId={patientId} specificationId={specId} />}
       {kind === "care" && <CareTaskPicker key="care" patientId={patientId} specificationId={specId} />}
       {kind === "extra" && (

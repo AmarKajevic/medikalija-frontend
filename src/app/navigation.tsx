@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { LuActivity, LuArchive, LuBedDouble, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuHouse, LuLayers, LuListChecks, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
+import { LuActivity, LuArchive, LuBriefcaseMedical, LuBedDouble, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuHouse, LuLayers, LuListChecks, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
 import { CARE_ROLES, MANAGER_ROLES, paths, Role, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 
 export interface NavItem {
@@ -64,6 +64,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Osoblje", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES },
       { label: "Cene smeštaja", to: paths.lodgingPrices, icon: <LuBedDouble />, roles: ["admin"] },
       { label: "Cene fizioterapije", to: paths.physioPrices, icon: <LuActivity />, roles: ["admin"] },
+      { label: "Stručne usluge", to: paths.professionalServices, icon: <LuBriefcaseMedical />, roles: ["admin"] },
       { label: "Podešavanja", to: paths.settings, icon: <LuSettings />, roles: ["admin"] },
     ],
   },
