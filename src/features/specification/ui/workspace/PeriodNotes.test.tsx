@@ -42,6 +42,36 @@ describe("PeriodNotes", () => {
     expect(screen.queryByRole("button", { name: /Dodaj kao trošak/ })).not.toBeInTheDocument(); // zatvoren period / bez prava
   });
 
+  it("sve na jednom mestu: učinak, unosi sestara i fizioterapija (i ono što se ne naplaćuje)", async () => {
+    const fizio = { _id: "f1", name: "Fica", lastName: "Fizio", role: "physiotherapist" };
+    const entry = (id: string, over: object) => ({ _id: id, patient: "p1", amount: 1, note: "", performedAt: new Date(2026, 10, 4, 11, 0).toISOString(), createdBy: sestra, ...over });
+    api.get.mockImplementation(async (url: string) =>
+      url.startsWith("/api/diagnosis")
+        ? { data: { diagnosis: [{ _id: "d1", description: "Izmeren pritisak", createdAt: new Date(2026, 10, 5, 8, 0).toISOString(), createdBy: sestra }] } }
+        : {
+            data: {
+              entries: [
+                entry("e1", { type: "care", name: "Kupanje", status: "accepted" }),
+                entry("e2", { type: "physio", name: "Grupna fizikalna terapija", status: "logged", createdBy: fizio }),
+                entry("e3", { type: "physio", name: "Individualna aktivna fizikalna terapija (vanredna)", status: "pending", createdBy: fizio }),
+              ],
+            },
+          }
+    );
+    const { user } = renderWithProviders(<PeriodNotes specification={spec} patientId="p1" />);
+    expect(await screen.findByRole("tab", { name: "Sve (4)" })).toBeInTheDocument();
+    expect(screen.getByText("Izmeren pritisak")).toBeInTheDocument();
+    expect(screen.getByText("Kupanje")).toBeInTheDocument();
+    expect(screen.getByText("Redovna · ne naplaćuje se")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Unosi sestara (1)" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Fizioterapija (2)" }));
+    expect(screen.queryByText("Kupanje")).not.toBeInTheDocument();
+    expect(screen.queryByText("Izmeren pritisak")).not.toBeInTheDocument();
+    expect(screen.getByText("Grupna fizikalna terapija")).toBeInTheDocument();
+    expect(screen.getByText("Čeka odobrenje")).toBeInTheDocument();
+  });
+
   it("'Dodaj kao trošak' šalje prvi red beleške", async () => {
     const onAdd = vi.fn();
     const { user } = renderWithProviders(<PeriodNotes specification={spec} patientId="p1" onAddAsCost={onAdd} />);

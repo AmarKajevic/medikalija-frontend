@@ -123,10 +123,10 @@ describe("SpecificationWorkspace", () => {
       { _id: "e2", performedAt: "2026-11-06T10:00:00.000Z" },
     ];
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
-    expect(screen.getByText("Unosi sestara čekaju odobrenje (2)")).toBeInTheDocument();
+    expect(screen.getByText("Unosi osoblja čekaju odobrenje (2)")).toBeInTheDocument();
     expect(screen.getByText("pregled unosa sestara")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Pregled i štampa/ }));
-    expect(screen.getByText(/2 unosa sestara još čeka/)).toBeInTheDocument();
+    expect(screen.getByText(/2 unosa osoblja još čeka/)).toBeInTheDocument();
   });
 
   it("dug i smeštaj su opcioni: isključeno ne ulazi u zbir ni u pregled", async () => {
@@ -156,7 +156,8 @@ describe("SpecificationWorkspace", () => {
     );
     expect(screen.getByText("Period specifikacije")).toBeInTheDocument();
     expect(screen.queryByText("period")).not.toBeInTheDocument(); // menja se samo aktivan period
-    expect(screen.getByText("Unosi sestara čekaju odobrenje (1)")).toBeInTheDocument();
+    expect(screen.getByText("Unosi osoblja čekaju odobrenje (1)")).toBeInTheDocument();
+    expect(screen.getByText(/Još 1 unos čeka odobrenje u drugom periodu/)).toBeInTheDocument(); // 2.12. pada u tekući
     expect(screen.getByText("forma za dodavanje")).toBeInTheDocument(); // dodavanje je moguće
   });
 

@@ -26,7 +26,7 @@ const AnalysesPage = lazy(pages.AnalysesPage);
 const CombinationsPage = lazy(pages.CombinationsPage);
 const DiagnosisTemplatesPage = lazy(pages.DiagnosisTemplatesPage);
 const UsersPage = lazy(pages.UsersPage);
-const NurseActivityPage = lazy(pages.NurseActivityPage);
+const ActivityPage = lazy(pages.ActivityPage);
 const NotificationsPage = lazy(pages.NotificationsPage);
 const CalendarPage = lazy(pages.CalendarPage);
 const FacilitySettingsPage = lazy(pages.FacilitySettingsPage);
@@ -67,7 +67,8 @@ const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
   ["/add-diagnosisTemplate", paths.diagnosisTemplates],
   ["/users-list", paths.users],
   ["/signup", paths.users],
-  ["/nurse-actions", paths.nurseActivity],
+  ["/nurse-actions", paths.activity],
+  ["/nurse-activity", paths.activity],
   ["/adding-to-reserve-list", paths.reserve],
   ["/reserve-list", paths.reserve],
   ["/patient-medicines", paths.familyStock],
@@ -119,7 +120,7 @@ export default function App() {
             <Route path="/diagnosis-templates" element={managers(<DiagnosisTemplatesPage />)} />
 
             <Route path="/users" element={managers(<UsersPage />)} />
-            <Route path="/nurse-activity" element={managers(<NurseActivityPage />)} />
+            <Route path="/activity" element={managers(<ActivityPage />)} />
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />

@@ -24,7 +24,7 @@ export const paths = {
   diagnosisTemplates: "/diagnosis-templates",
 
   users: "/users",
-  nurseActivity: "/nurse-activity",
+  activity: "/activity",
   notifications: "/notifications",
   calendar: "/calendar",
   settings: "/settings",

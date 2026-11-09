@@ -15,7 +15,7 @@ interface Props {
   onEditStep: (step: Step) => void;
   /** Otvara smeštaj i dug (dijalog u prvom koraku) */
   onEditBilling: () => void;
-  /** Unosi sestara koji još nisu pregledani (neće biti u PDF-u) */
+  /** Unosi sestara i vanredne fizioterapije koji još nisu pregledani (neće biti u PDF-u) */
   pendingCount?: number;
 }
 
@@ -73,7 +73,7 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
             </Button>
           }
         >
-          {pendingCount === 1 ? "1 unos sestre još čeka" : `${pendingCount} unosa sestara još čeka`} odobrenje i nije u specifikaciji.
+          {pendingCount === 1 ? "1 unos osoblja još čeka" : `${pendingCount} unosa osoblja još čeka`} odobrenje i nije u specifikaciji.
         </Warning>
       )}
       {dirty && (
