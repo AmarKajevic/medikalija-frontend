@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
-import { LuBell, LuCheckCheck, LuKeyRound, LuLogOut, LuMonitor, LuMoon, LuSun } from "react-icons/lu";
+import { LuBell, LuCheckCheck, LuKeyRound, LuLaptop, LuLogOut, LuMonitor, LuMoon, LuSun } from "react-icons/lu";
 import ChangePasswordDialog from "@features/auth/ui/ChangePasswordDialog";
+import SessionsDialog from "@features/auth/ui/SessionsDialog";
 import { useAuth } from "@app/providers/AuthContext";
 import { ThemePreference, useTheme } from "@app/providers/ThemeContext";
 import { isManager, paths } from "@app/paths";
@@ -110,6 +111,7 @@ export function UserMenu() {
   const { preference, setPreference } = useTheme();
   const navigate = useNavigate();
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
 
   return (
     <>
@@ -170,6 +172,16 @@ export function UserMenu() {
           </button>
           <button
             type="button"
+            onClick={() => {
+              close();
+              setSessionsOpen(true);
+            }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5"
+          >
+            <LuLaptop className="h-4 w-4 text-gray-400" /> Prijavljeni uređaji
+          </button>
+          <button
+            type="button"
             onClick={async () => {
               close();
               await logout();
@@ -183,6 +195,7 @@ export function UserMenu() {
       )}
     </Popover>
     <ChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
+    <SessionsDialog open={sessionsOpen} onClose={() => setSessionsOpen(false)} />
     </>
   );
 }

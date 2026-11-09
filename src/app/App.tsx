@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { pages } from "@app/routeLoaders";
-import { BrowserRouter, Outlet, Route, Routes } from "react-router";
+import { BrowserRouter, Outlet, Route, Routes, useLocation } from "react-router";
+import ErrorBoundary from "@shared/ui/feedback/ErrorBoundary";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
 import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, PERIOD_SCHEDULE_ROLES, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
@@ -149,5 +150,10 @@ export default function App() {
 
 // Suspense granica unutar okvira: meni i gornja traka ostaju dok se stranica učitava
 function OutletBoundary() {
-  return <Outlet />;
+  const { pathname } = useLocation();
+  return (
+    <ErrorBoundary resetKey={pathname}>
+      <Outlet />
+    </ErrorBoundary>
+  );
 }

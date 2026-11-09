@@ -8,6 +8,10 @@ import { ThemeProvider } from "@app/providers/ThemeContext";
 import ScriptProvider from "@app/providers/ScriptProvider";
 import AuthProvider from "@app/providers/AuthContext";
 import { ExchangeRateProvider } from "@entities/exchange-rate/model/ExchangeRateContext";
+import ErrorBoundary from "@shared/ui/feedback/ErrorBoundary";
+import { initMonitoring } from "@shared/lib/monitoring";
+
+void initMonitoring();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +21,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <ScriptProvider>
@@ -38,5 +43,6 @@ createRoot(document.getElementById("root")!).render(
         />
       </ThemeProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>
 );
