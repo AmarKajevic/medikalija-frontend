@@ -83,37 +83,37 @@ export function SpecificationDockProvider({ children }: { children: ReactNode })
             <div
               role="region"
               aria-label="Specifikacija u toku"
-              className="fixed bottom-4 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-gray-200 bg-white py-2.5 pl-3 pr-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900 sm:bottom-6 sm:right-6"
+              className="fixed bottom-4 right-4 z-40 flex max-w-[calc(100vw-2rem)] items-center gap-3.5 rounded-2xl border-2 border-brand-500 bg-brand-500 py-3 pl-3.5 pr-2.5 text-white shadow-theme-xl ring-4 ring-brand-500/20 sm:bottom-6 sm:right-6"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
-                <LuClipboardList className="h-5 w-5" />
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                <LuClipboardList className="h-6 w-6" />
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Specifikacija u toku</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Specifikacija u toku</p>
                 <Link
                   to={paths.patient(active.patientId)}
                   title="Profil pacijenta"
-                  className="flex items-center gap-1 truncate text-sm font-semibold text-gray-900 hover:text-brand-600 dark:text-white dark:hover:text-brand-400"
+                  className="flex items-center gap-1 truncate text-base font-semibold text-white hover:underline"
                 >
                   <span className="truncate">{active.patientName}</span>
-                  <LuArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  <LuArrowUpRight className="h-4 w-4 shrink-0 opacity-80" />
                 </Link>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="ml-1 h-9 shrink-0 rounded-lg bg-brand-500 px-3 text-sm font-medium text-white transition hover:bg-brand-600"
+                className="ml-1 h-11 shrink-0 rounded-xl bg-white px-5 text-base font-semibold text-brand-700 shadow-theme-xs transition hover:bg-brand-50"
               >
-                Nastavi
+                Nastavi specifikaciju
               </button>
               <button
                 type="button"
                 onClick={() => setDocked(null)}
                 aria-label="Zatvori specifikaciju u toku"
                 title="Zatvori (sačuvano ostaje sačuvano)"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-white"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/15 hover:text-white"
               >
-                <LuX className="h-4 w-4" />
+                <LuX className="h-5 w-5" />
               </button>
             </div>
           )}

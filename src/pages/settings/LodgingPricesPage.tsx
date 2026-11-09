@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useId, useState } from "react";
-import { LuArchiveRestore, LuBedDouble, LuEllipsis, LuEyeOff, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuArchiveRestore, LuBedDouble, LuCheck, LuEllipsis, LuEyeOff, LuNotebookPen, LuPencil, LuPlus, LuTrash2, LuX } from "react-icons/lu";
 import PageHeader from "@shared/ui/page/PageHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
@@ -11,7 +11,18 @@ import { Input } from "@shared/ui/form/controls";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import { formatEUR } from "@shared/lib/format";
-import { LodgingPrice, useDeleteLodgingPrice, useLodgingPrices, useSaveLodgingPrice } from "@features/lodging/model";
+import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
+import EmptyState from "@shared/ui/feedback/EmptyState";
+import {
+  LodgingNote,
+  LodgingPrice,
+  useDeleteLodgingNote,
+  useDeleteLodgingPrice,
+  useLodgingNotes,
+  useLodgingPrices,
+  useSaveLodgingNote,
+  useSaveLodgingPrice,
+} from "@features/lodging/model";
 
 type DialogState = { type: "edit"; price: LodgingPrice | null } | { type: "delete"; price: LodgingPrice } | null;
 
@@ -109,6 +120,8 @@ export default function LodgingPricesPage() {
           }}
         />
       )}
+
+      <LodgingNotesSection />
 
       <PriceDialog open={dialog?.type === "edit"} price={dialog?.type === "edit" ? dialog.price : null} onClose={() => setDialog(null)} />
 
@@ -217,5 +230,118 @@ function PriceDialog({ open, price, onClose }: { open: boolean; price: LodgingPr
         </Field>
       </form>
     </Dialog>
+  );
+}
+
+// Napomene za vanstandardni period: u obračunu se bira jedna i štampa se u istom redu sa smeštajem
+function LodgingNotesSection() {
+  const { data: notes = [], isLoading, isError, refetch } = useLodgingNotes();
+  const save = useSaveLodgingNote();
+  const remove = useDeleteLodgingNote();
+  const newId = useId();
+  const [text, setText] = useState("");
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  const [deleting, setDeleting] = useState<LodgingNote | null>(null);
+
+  const add = (e: FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return notify.error("Upišite tekst napomene.");
+    save.mutate(
+      { text: text.trim() },
+      {
+        onSuccess: () => {
+          notify.success("Napomena je dodata.");
+          setText("");
+        },
+        onError: (err) => notify.error(err),
+      }
+    );
+  };
+  const saveEdit = () => {
+    if (!editing || !editing.text.trim()) return notify.error("Upišite tekst napomene.");
+    save.mutate({ id: editing.id, text: editing.text.trim() }, { onSuccess: () => setEditing(null), onError: (err) => notify.error(err) });
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader
+        icon={<LuNotebookPen />}
+        title="Napomene za vanstandardni period"
+        description="U obračunu specifikacije bira se jedna napomena uz vanstandardni smeštaj; štampa se u istom redu kao smeštaj za period."
+      />
+      <CardBody className="space-y-4">
+        <form onSubmit={add} className="flex flex-wrap items-end gap-2">
+          <div className="min-w-64 flex-1">
+            <label htmlFor={newId} className="sr-only">
+              Nova napomena
+            </label>
+            <Input id={newId} value={text} onChange={(e) => setText(e.target.value)} placeholder="npr. Smeštaj od dana prijema do početka perioda" maxLength={300} />
+          </div>
+          <Button type="submit" size="sm" startIcon={<LuPlus className="h-4 w-4" />} loading={save.isPending && !editing}>
+            Dodaj napomenu
+          </Button>
+        </form>
+
+        {isError ? (
+          <ErrorState message="Napomene nisu učitane." onRetry={() => refetch()} />
+        ) : isLoading ? null : notes.length === 0 ? (
+          <EmptyState compact icon={<LuNotebookPen />} title="Još nema napomena" description="Dodajte tekst koji se često piše uz vanstandardni smeštaj." />
+        ) : (
+          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+            {notes.map((n) => (
+              <li key={n._id} className="flex items-center gap-2 px-4 py-2.5">
+                {editing?.id === n._id ? (
+                  <>
+                    <Input
+                      aria-label="Izmena napomene"
+                      value={editing.text}
+                      onChange={(e) => setEditing({ id: n._id, text: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                      maxLength={300}
+                      autoFocus
+                    />
+                    <Button size="xs" startIcon={<LuCheck className="h-3.5 w-3.5" />} loading={save.isPending} onClick={saveEdit}>
+                      Sačuvaj
+                    </Button>
+                    <button type="button" onClick={() => setEditing(null)} aria-label="Otkaži izmenu" className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">
+                      <LuX className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="min-w-0 flex-1 text-sm text-gray-800 dark:text-white/90">{n.text}</span>
+                    <button type="button" onClick={() => setEditing({ id: n._id, text: n.text })} aria-label={`Izmeni napomenu ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5">
+                      <LuPencil className="h-4 w-4" />
+                    </button>
+                    <button type="button" onClick={() => setDeleting(n)} aria-label={`Obriši napomenu ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10">
+                      <LuTrash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardBody>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        title="Obrisati napomenu?"
+        description="Već sačuvani obračuni zadržavaju tekst napomene."
+        confirmText="Obriši"
+        loading={remove.isPending}
+        onConfirm={() =>
+          deleting &&
+          remove.mutate(deleting._id, {
+            onSuccess: (res) => {
+              notify.success(res.message);
+              setDeleting(null);
+            },
+            onError: (err) => notify.error(err),
+          })
+        }
+      />
+    </Card>
   );
 }

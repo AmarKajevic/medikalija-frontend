@@ -174,9 +174,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         ) : isNonStandard ? (
           <>
             <Badge size="sm" color="warning">Vanstandardni period</Badge>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDay(spec.startDate)} – {formatDay(spec.endDate)} · stavke i obračun idu u ovaj period
+            <span className="rounded-md bg-warning-100 px-2 py-0.5 text-sm font-semibold text-warning-800 dark:bg-warning-500/20 dark:text-warning-200">
+              {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
             </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">stavke i obračun idu u ovaj period</span>
           </>
         ) : isChosen ? (
           <>

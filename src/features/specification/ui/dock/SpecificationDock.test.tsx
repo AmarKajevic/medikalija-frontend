@@ -56,7 +56,7 @@ describe("SpecificationDock", () => {
     expect(card).toHaveTextContent("Milica Jovanović");
     expect(screen.getByText("u memoriji: Milica Jovanović")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Nastavi" }));
+    await user.click(screen.getByRole("button", { name: "Nastavi specifikaciju" }));
     expect(screen.getByRole("dialog", { name: "Specifikacija" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Zatvori" }));

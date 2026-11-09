@@ -42,6 +42,8 @@ interface GeneratePDFParams {
   /** Nazivi izabranih cena smeštaja (npr. "30 dana") */
   lodgingOption?: string;
   earlyLodgingOption?: string;
+  /** Napomena uz vanstandardni smeštaj (u istom redu) */
+  earlyLodgingNote?: string;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
   /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
@@ -70,8 +72,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     includeDebt = debtEUR > 0,
     includeLodging = lodgingEUR > 0,
     includeEarlyLodging = earlyLodgingEUR > 0,
-    lodgingOption = "",
-    earlyLodgingOption = "",
+    earlyLodgingNote = "",
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
@@ -96,10 +97,10 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       ? [[{ text: "Dug iz prethodnog perioda" }, { text: money.format(debtRSD), alignment: "right" }, { text: money.format(debtEUR), alignment: "right" }]]
       : []),
     ...(includeLodging
-      ? [[{ text: lodgingOption ? `Smeštaj za naredni period – ${lodgingOption} (${nextPeriodLabel})` : `Smeštaj za narednih 30 dana (${nextPeriodLabel})` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
+      ? [[{ text: `Smeštaj za period ${nextPeriodLabel}` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
       : []),
     ...(includeEarlyLodging
-      ? [[{ text: earlyLodgingOption ? `Vanstandardni period smeštaja – ${earlyLodgingOption}` : "Vanstandardni period smeštaja" }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
+      ? [[{ text: `Smeštaj za period${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}` }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
       : []),
   ];
   const extraTitles = [includeDebt && "Dug", includeLodging && "Smeštaj", includeEarlyLodging && "Vanstandardni period smeštaja"].filter(Boolean);

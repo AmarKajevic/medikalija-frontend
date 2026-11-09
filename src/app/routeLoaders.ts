@@ -24,6 +24,7 @@ export const pages = {
   LodgingPricesPage: () => import("@pages/settings/LodgingPricesPage"),
   PhysioPage: () => import("@pages/physio/PhysioPage"),
   PhysioPricesPage: () => import("@pages/settings/PhysioPricesPage"),
+  ProfessionalServicesPage: () => import("@pages/settings/ProfessionalServicesPage"),
   CarePage: () => import("@pages/care/CarePage"),
   ApprovalsPage: () => import("@pages/care/ApprovalsPage"),
   CareTasksPage: () => import("@pages/care/CareTasksPage"),
@@ -57,6 +58,7 @@ const BY_PATH: Record<string, () => Promise<unknown>> = {
   [paths.social]: pages.SocialPage,
   [paths.physio]: pages.PhysioPage,
   [paths.physioPrices]: pages.PhysioPricesPage,
+  [paths.professionalServices]: pages.ProfessionalServicesPage,
 };
 
 const started = new Set<string>();
