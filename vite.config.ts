@@ -1,13 +1,20 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
+
+  // Lokalno: /api ide na lokalni API (isti sajt kao u produkciji, gde to radi vercel.json)
+  server: {
+    proxy: {
+      "/api": { target: loadEnv(mode, process.cwd(), "").VITE_API_PROXY || "http://localhost:5000", changeOrigin: true },
+    },
+  },
 
   resolve: {
     alias: {
@@ -43,4 +50,4 @@ export default defineConfig({
     // Rezultati ne smeju da zavise od zone računara (CI je UTC, kancelarija Beograd)
     env: { TZ: "Europe/Belgrade" },
   },
-});
+}));

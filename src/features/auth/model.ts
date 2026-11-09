@@ -23,3 +23,10 @@ export const serverMessage = (err: unknown, fallback: string) => {
 };
 
 export const PASSWORD_MIN = 10;
+
+/** "Chrome · Windows" iz User-Agent zaglavlja (dovoljno da se uređaj prepozna) */
+export function describeDevice(ua: string): { label: string; mobile: boolean } {
+  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Browser";
+  const os = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "";
+  return { label: ua ? [browser, os].filter(Boolean).join(" · ") : "Nepoznat uređaj", mobile: /Android|iPhone|iPad|Mobile/.test(ua) };
+}
