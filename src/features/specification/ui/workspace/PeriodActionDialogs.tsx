@@ -7,8 +7,7 @@ import DateInput from "@shared/ui/form/DateInput";
 import { notify } from "@shared/lib/notify";
 import { formatDay } from "@shared/lib/calendarDay";
 import { formatRSD } from "@shared/lib/format";
-import { useActivateSpecificationPeriod } from "@features/specification/hooks/useActivateSpecificationPeriod";
-import { useActivateExistingSpecification } from "@features/specification/hooks/useActivateExistingSpecification";
+import { useSetBillingPeriod } from "@features/specification/hooks/useSetBillingPeriod";
 import { useSelectablePeriods } from "@features/specification/hooks/usePastPeriods";
 import type { SelectablePeriod } from "@features/specification/api/specificationApi";
 import { Specification } from "@features/specification/types/types";
@@ -20,23 +19,23 @@ interface Props {
   patientId: string;
   open: PeriodAction | null;
   onClose: () => void;
-  /** Posle aktiviranja (npr. prozor specifikacije prelazi na "Smeštaj za period") */
-  onActivated?: (spec: Specification) => void;
+  /** Posle izbora (npr. prozor specifikacije prelazi na period specifikacije) */
+  onActivated?: (billing: Specification) => void;
 }
 
-// Ručni izbor perioda (Od/Do) i promena perioda (raniji, današnji ili unapred) — oba postavljaju aktivan period
-// (smeštaj za period). Koriste ih meni perioda i dugmad u prozoru specifikacije.
+// Ručni izbor perioda (Od/Do) i promena perioda — oba biraju PERIOD SPECIFIKACIJE.
+// Smeštaj za period se ne bira: to je uvek period posle izabranog (naplaćuje se unapred).
 export default function PeriodActionDialogs({ patientId, open, onClose, onActivated }: Props) {
   const ids = { start: useId(), end: useId() };
-  const manual = useActivateSpecificationPeriod(patientId);
-  const existing = useActivateExistingSpecification(patientId);
-  const { data: periods = [] } = useSelectablePeriods(open === "history" ? patientId : "");
-  const currentPeriod = periods.find((p) => p.isCurrent);
-  // Posle današnjeg (po serveru, ne po satu računara)
-  const isAhead = (p: SelectablePeriod) => !!currentPeriod && p.startDate > currentPeriod.startDate;
+  const choose = useSetBillingPeriod(patientId);
+  const { data: all = [] } = useSelectablePeriods(open === "history" ? patientId : "");
+  const currentPeriod = all.find((p) => p.isCurrent);
+  // Period specifikacije ne može biti u budućnosti: najkasnije današnji (smeštaj tada ide unapred)
+  const periods = currentPeriod ? all.filter((p) => p.startDate <= currentPeriod.startDate) : all;
+  // Podrazumevano: period specifikacije je onaj pre današnjeg (lista je od najnovijeg)
+  const defaultBilling = currentPeriod ? periods[periods.indexOf(currentPeriod) + 1] : undefined;
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const busy = manual.isPending || existing.isPending;
 
   useEffect(() => {
     if (open !== "manual") return;
@@ -45,34 +44,34 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
   }, [open]);
 
   const done = {
-    onSuccess: (spec: Specification) => {
-      notify.success(`Smeštaj za period: ${formatDay(spec.startDate)} – ${formatDay(spec.endDate)}`);
+    onSuccess: ({ billing, active }: { billing: Specification; active: Specification }) => {
+      notify.success(
+        `Period specifikacije: ${formatDay(billing.startDate)} – ${formatDay(billing.endDate)}. Smeštaj za period: ${formatDay(active.startDate)} – ${formatDay(active.endDate)}.`
+      );
       onClose();
-      onActivated?.(spec);
+      onActivated?.(billing);
     },
     onError: (e: unknown) => notify.error(e),
   };
-  // Neotvaran period (bez zapisa) se pravi pri aktiviranju
-  const activatePeriod = (p: SelectablePeriod) => {
-    if (p.specificationId) existing.mutate(p.specificationId, done);
-    else manual.mutate({ startDate: p.startDate.slice(0, 10), endDate: p.endDate.slice(0, 10) }, done);
-  };
+  // Neotvaran period (bez zapisa) se pravi pri izboru
+  const pick = (p: SelectablePeriod) =>
+    choose.mutate(p.specificationId ? { specificationId: p.specificationId } : { startDate: p.startDate.slice(0, 10), endDate: p.endDate.slice(0, 10) }, done);
 
   return (
     <>
       <Dialog
         open={open === "manual"}
         onClose={onClose}
-        title="Ručni izbor perioda"
-        description="Koristite ako period nije napravljen na vreme. Postaje smeštaj za period — nove stavke idu u njega."
+        title="Ručni izbor perioda specifikacije"
+        description="Datumi perioda za koji se pravi specifikacija. Smeštaj za period se ne menja ručno — to je sledećih 30 dana, od dana posle kraja."
         size="sm"
         footer={
           <>
             <Button variant="outline" size="sm" onClick={onClose}>
               Otkaži
             </Button>
-            <Button size="sm" loading={manual.isPending} disabled={!start || !end || end < start} onClick={() => manual.mutate({ startDate: start, endDate: end }, done)}>
-              Aktiviraj period
+            <Button size="sm" loading={choose.isPending} disabled={!start || !end || end < start} onClick={() => choose.mutate({ startDate: start, endDate: end }, done)}>
+              Postavi period specifikacije
             </Button>
           </>
         }
@@ -90,17 +89,20 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
       <Dialog
         open={open === "history"}
         onClose={onClose}
-        title="Promena perioda"
-        description="Svi periodi od prijema do današnjeg i jedan unapred, od najnovijeg. Aktivirani period postaje smeštaj za period (nove stavke idu u njega)."
+        title="Promena perioda specifikacije"
+        description="Izaberite period za koji se pravi specifikacija (od prijema do današnjeg). Smeštaj za period se pomera sam — period posle izabranog."
         size="md"
       >
-        {currentPeriod && !currentPeriod.isActive && (
+        {defaultBilling && !defaultBilling.isBilling && (
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2.5 dark:bg-brand-500/10">
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              Današnji period: <strong className="font-semibold">{formatDay(currentPeriod.startDate)} – {formatDay(currentPeriod.endDate)}</strong>
+              Uobičajeno (period pre današnjeg):{" "}
+              <strong className="font-semibold">
+                {formatDay(defaultBilling.startDate)} – {formatDay(defaultBilling.endDate)}
+              </strong>
             </p>
-            <Button size="xs" disabled={busy} onClick={() => activatePeriod(currentPeriod)}>
-              Vrati na današnji period
+            <Button size="xs" disabled={choose.isPending} onClick={() => pick(defaultBilling)}>
+              Vrati na uobičajeno
             </Button>
           </div>
         )}
@@ -113,16 +115,16 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
                 <div>
                   <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
                     {formatDay(p.startDate)} – {formatDay(p.endDate)}
-                    {p.isActive && <Badge size="sm" color="success">Aktivan</Badge>}
+                    {p.isBilling && <Badge size="sm" color="warning">Period specifikacije</Badge>}
+                    {p.isActive && <Badge size="sm" color="light">Smeštaj za period</Badge>}
                     {p.isCurrent && <Badge size="sm" color="primary">Današnji</Badge>}
-                    {isAhead(p) && <Badge size="sm" color="light">Unapred</Badge>}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {p.itemsCount ? `${itemsLabel(p.itemsCount)} · ${formatRSD(p.totalPrice)}` : "Bez stavki"}
                   </p>
                 </div>
-                <Button size="xs" variant="outline" disabled={busy || p.isActive} onClick={() => activatePeriod(p)}>
-                  {p.isActive ? "Aktivan" : "Aktiviraj"}
+                <Button size="xs" variant="outline" disabled={choose.isPending || p.isBilling} onClick={() => pick(p)}>
+                  {p.isBilling ? "Izabran" : "Izaberi"}
                 </Button>
               </li>
             ))}

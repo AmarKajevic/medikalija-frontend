@@ -42,9 +42,9 @@ const inPeriod = (spec: Specification, performedAt: string) => {
 
 // "Napravi specifikaciju": specifikacija se pravi za period specifikacije (istekao),
 // vanstandardni period (ručni datumi) ili ručno izabran raniji period. Smeštaj za period
-// (tekući) je samo informacija — za njega se smeštaj naplaćuje unapred; menja se dugmadima
-// "Ručno izaberi period" / "Promeni period". U prvom periodu (još nema isteklog)
-// radi se u tekućem periodu.
+// (tekući) je samo informacija — za njega se smeštaj naplaćuje unapred i ne bira se ručno.
+// "Ručno izaberi period" / "Promeni period" biraju period specifikacije; smeštaj za period
+// je tada sam period posle njega. U prvom periodu (još nema isteklog) radi se u tekućem periodu.
 export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName, keepMounted = false }: Props) {
   const live = open || keepMounted;
   const active = usePatientSpecification(live ? patientId : "");
@@ -144,11 +144,17 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />
-            {/* Smeštaj za period: samo informacija (naplaćuje se unapred); dugmad ga menjaju */}
+            {/* Dugmad biraju period specifikacije; smeštaj za period ide sam za njim (samo informacija) */}
             <div className="flex flex-wrap items-center gap-2">
+              <Button size="xs" variant="outline" startIcon={<LuCalendarClock className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("manual")} title="Ručno unesite datume perioda specifikacije">
+                Ručno izaberi period
+              </Button>
+              <Button size="xs" variant="outline" startIcon={<LuHistory className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("history")} title="Izaberite drugi period specifikacije">
+                Promeni period
+              </Button>
               <span
                 className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2.5 py-1.5 text-xs text-gray-600 dark:bg-white/[0.04] dark:text-gray-300"
-                title="Za ovaj period se smeštaj naplaćuje unapred (u obračunu: smeštaj za naredni period)"
+                title="Period posle perioda specifikacije — smeštaj se za njega naplaćuje unapred. Ne menja se ručno."
               >
                 <LuBedDouble className="h-3.5 w-3.5 text-gray-400" />
                 Smeštaj za period:
@@ -157,12 +163,6 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
                 </strong>
                 <span className="text-gray-400">· naplaćuje se unapred</span>
               </span>
-              <Button size="xs" variant="outline" startIcon={<LuCalendarClock className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("manual")}>
-                Ručno izaberi period
-              </Button>
-              <Button size="xs" variant="outline" startIcon={<LuHistory className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("history")}>
-                Promeni period
-              </Button>
             </div>
           </div>
           <PeriodActionDialogs patientId={patientId} open={periodAction} onClose={() => setPeriodAction(null)} onActivated={() => setTab("billing")} />
