@@ -94,6 +94,15 @@ export const fetchPastPeriods = async (patientId: string): Promise<PastPeriod[]>
   return data.periods ?? [];
 };
 
+/** Period za izbor aktivnog: raniji, aktivan, današnji i jedan unapred */
+export type SelectablePeriod = PastPeriod & { isActive: boolean; isCurrent: boolean };
+
+// Svi periodi među kojima se bira aktivan (od prijema do današnjeg i jedan unapred), od najnovijeg
+export const fetchSelectablePeriods = async (patientId: string): Promise<SelectablePeriod[]> => {
+  const { data } = await api.get(`/api/specification/${patientId}/periods`);
+  return data.periods ?? [];
+};
+
 // Otvara raniji period za rad (pravi zapis ako ne postoji), aktivan period se ne menja
 export const openPastPeriod = async (patientId: string, startDate: string, endDate: string): Promise<Specification> => {
   const { data } = await api.post(`/api/specification/${patientId}/periods`, { startDate, endDate });

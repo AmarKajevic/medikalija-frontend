@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchPastPeriods, openPastPeriod, type PastPeriod } from "@features/specification/api/specificationApi";
+import { fetchPastPeriods, fetchSelectablePeriods, openPastPeriod, type PastPeriod } from "@features/specification/api/specificationApi";
 import { specKeys } from "@features/specification/lib/queries";
 
 /** Svi raniji periodi pacijenta (od prijema), od najnovijeg */
@@ -7,6 +7,14 @@ export const usePastPeriods = (patientId: string) =>
   useQuery({
     queryKey: specKeys.past(patientId),
     queryFn: () => fetchPastPeriods(patientId),
+    enabled: !!patientId,
+  });
+
+/** Periodi za izbor aktivnog: i kasniji od aktivnog, da se posle povratka može napred */
+export const useSelectablePeriods = (patientId: string) =>
+  useQuery({
+    queryKey: specKeys.selectable(patientId),
+    queryFn: () => fetchSelectablePeriods(patientId),
     enabled: !!patientId,
   });
 

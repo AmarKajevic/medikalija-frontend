@@ -4,12 +4,16 @@ import { screen } from "@testing-library/react";
 import { renderWithProviders } from "../../../../test/render";
 import type { Specification } from "@features/specification/types/types";
 
-const data = vi.hoisted(() => ({ active: null as unknown, billing: null as unknown, history: [] as unknown[], past: [] as unknown[], openPeriod: null as unknown }));
+const data = vi.hoisted(() => ({ active: null as unknown, billing: null as unknown, history: [] as unknown[], past: [] as unknown[], periods: [] as unknown[], openPeriod: null as unknown, activateExisting: null as unknown }));
 vi.mock("@features/specification/hooks/usePatientSpecification", () => ({ usePatientSpecification: () => ({ data: data.active, isLoading: false }) }));
 vi.mock("@features/specification/hooks/useBillingPeriodSpecification", () => ({ useBillingPeriodSpecification: () => ({ data: data.billing, isLoading: false }) }));
 vi.mock("@features/specification/hooks/usePastPeriods", () => ({
   usePastPeriods: () => ({ data: data.past }),
+  useSelectablePeriods: () => ({ data: data.periods }),
   useOpenPastPeriod: () => ({ mutate: data.openPeriod, isPending: false }),
+}));
+vi.mock("@features/specification/hooks/useActivateExistingSpecification", () => ({
+  useActivateExistingSpecification: () => ({ mutate: data.activateExisting, isPending: false }),
 }));
 vi.mock("@features/specification/hooks/useSpecification", () => ({
   useSpecification: (id: string) => ({ data: (data.history as Specification[]).find((s) => s._id === id), isLoading: false }),
@@ -36,7 +40,9 @@ beforeEach(() => {
   data.billing = spec("billing", "2026-09-26", "2026-10-25");
   data.history = [];
   data.past = [];
+  data.periods = [];
   data.openPeriod = vi.fn();
+  data.activateExisting = vi.fn();
 });
 
 const past = (start: string, end: string, specificationId: string | null, itemsCount = 0) => ({
@@ -45,6 +51,12 @@ const past = (start: string, end: string, specificationId: string | null, itemsC
   specificationId,
   itemsCount,
   totalPrice: 0,
+});
+
+const period = (start: string, end: string, specificationId: string | null, flags: { isActive?: boolean; isCurrent?: boolean; itemsCount?: number } = {}) => ({
+  ...past(start, end, specificationId, flags.itemsCount ?? 0),
+  isActive: !!flags.isActive,
+  isCurrent: !!flags.isCurrent,
 });
 
 describe("SpecificationWorkspaceDialog", () => {
@@ -68,15 +80,15 @@ describe("SpecificationWorkspaceDialog", () => {
 });
 
 describe("izbor smeštaja za period pored kartica", () => {
-  it("ručni izbor i povratak na raniji period su odmah dostupni", async () => {
-    data.past = [past("2026-09-26", "2026-10-25", "billing", 2)];
+  it("ručni izbor i promena perioda su odmah dostupni", async () => {
+    data.periods = [period("2026-09-26", "2026-10-25", "billing", { itemsCount: 2 })];
     const { user } = renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     await screen.findByText("radni prostor: billing billing");
     await user.click(screen.getByRole("button", { name: "Ručno izaberi period" }));
     expect(screen.getByRole("dialog", { name: "Ručni izbor perioda" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Otkaži" }));
-    await user.click(screen.getByRole("button", { name: "Vrati se na raniji period" }));
-    const dlg = screen.getByRole("dialog", { name: "Raniji periodi" });
+    await user.click(screen.getByRole("button", { name: "Promeni period" }));
+    const dlg = screen.getByRole("dialog", { name: "Promena perioda" });
     expect(dlg).toHaveTextContent("26.09.2026. – 25.10.2026.");
     expect(dlg).toHaveTextContent("2 stavke");
   });
@@ -128,21 +140,44 @@ describe("ručno biranje perioda", () => {
   });
 });
 
-describe("Raniji periodi", () => {
-  it("svi periodi od prijema, od najnovijeg; neotvaran se aktivira po datumima", async () => {
-    data.past = [
-      past("2026-09-26", "2026-10-25", "prethodni", 1),
-      past("2026-08-27", "2026-09-25", null),
-      past("2026-07-28", "2026-08-26", "star", 12),
+describe("Promena perioda", () => {
+  it("svi periodi od najnovijeg, sa oznakama aktivnog, današnjeg i perioda unapred", async () => {
+    data.periods = [
+      period("2026-11-25", "2026-12-24", null),
+      period("2026-10-26", "2026-11-24", "active", { isActive: true, isCurrent: true }),
+      period("2026-09-26", "2026-10-25", "prethodni", { itemsCount: 1 }),
+      period("2026-08-27", "2026-09-25", null),
+      period("2026-07-28", "2026-08-26", "star", { itemsCount: 12 }),
     ];
     const { user } = renderWithProviders(<PeriodSwitcher patientId="p1" activeSpecification={data.active as Specification} />);
     await user.click(screen.getByRole("button", { name: /26\.10\.2026\./ }));
-    await user.click(screen.getByRole("menuitem", { name: /raniji period/ }));
+    await user.click(screen.getByRole("menuitem", { name: /Promeni period/ }));
     const items = screen.getAllByRole("listitem").map((li) => li.textContent);
-    expect(items).toHaveLength(3);
-    expect(items[0]).toContain("26.09.2026.");
-    expect(items[0]).toContain("1 stavka");
-    expect(items[1]).toContain("Bez stavki");
-    expect(items[2]).toContain("12 stavki");
+    expect(items).toHaveLength(5);
+    expect(items[0]).toContain("Unapred");
+    expect(items[1]).toContain("Aktivan");
+    expect(items[1]).toContain("Današnji");
+    expect(items[2]).toContain("1 stavka");
+    expect(items[3]).toContain("Bez stavki");
+    expect(items[4]).toContain("12 stavki");
+    // Već je na današnjem periodu: nema prečice
+    expect(screen.queryByRole("button", { name: "Vrati na današnji period" })).not.toBeInTheDocument();
+  });
+
+  it("posle povratka na raniji period mogu se izabrati kasniji i današnji period", async () => {
+    data.active = spec("star", "2026-07-28", "2026-08-26", true);
+    data.periods = [
+      period("2026-11-25", "2026-12-24", null),
+      period("2026-10-26", "2026-11-24", "danas", { isCurrent: true }),
+      period("2026-09-26", "2026-10-25", "prethodni"),
+      period("2026-08-27", "2026-09-25", null),
+      period("2026-07-28", "2026-08-26", "star", { isActive: true }),
+    ];
+    const { user } = renderWithProviders(<PeriodSwitcher patientId="p1" activeSpecification={data.active as Specification} />);
+    await user.click(screen.getByRole("button", { name: /28\.07\.2026\./ }));
+    await user.click(screen.getByRole("menuitem", { name: /Promeni period/ }));
+    expect(screen.getByRole("button", { name: "Aktivan" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Vrati na današnji period" }));
+    expect(data.activateExisting).toHaveBeenCalledWith("danas", expect.anything());
   });
 });

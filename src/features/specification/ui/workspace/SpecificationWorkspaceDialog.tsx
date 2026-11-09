@@ -43,7 +43,7 @@ const inPeriod = (spec: Specification, performedAt: string) => {
 // "Napravi specifikaciju": specifikacija se pravi za period specifikacije (istekao),
 // vanstandardni period (ručni datumi) ili ručno izabran raniji period. Smeštaj za period
 // (tekući) je samo informacija — za njega se smeštaj naplaćuje unapred; menja se dugmadima
-// "Ručno izaberi period" / "Vrati se na raniji period". U prvom periodu (još nema isteklog)
+// "Ručno izaberi period" / "Promeni period". U prvom periodu (još nema isteklog)
 // radi se u tekućem periodu.
 export default function SpecificationWorkspaceDialog({ open, onClose, patientId, patientName, keepMounted = false }: Props) {
   const live = open || keepMounted;
@@ -57,7 +57,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
   const [opened, setOpened] = useState<Record<string, string>>({});
   const tried = useRef(new Set<string>());
   const [nonStandardId, setNonStandardId] = useState("");
-  // Ručni izbor perioda / povratak na raniji: menjaju smeštaj za period (aktivan period)
+  // Ručni izbor perioda / promena perioda: menjaju smeštaj za period (aktivan period)
   const [periodAction, setPeriodAction] = useState<PeriodAction | null>(null);
   const nonStandard = useSpecification(tab === "nonstandard" ? nonStandardId : "");
 
@@ -161,7 +161,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
                 Ručno izaberi period
               </Button>
               <Button size="xs" variant="outline" startIcon={<LuHistory className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("history")}>
-                Vrati se na raniji period
+                Promeni period
               </Button>
             </div>
           </div>

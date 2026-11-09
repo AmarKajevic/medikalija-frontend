@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
+import Badge from "@shared/ui/badge/Badge";
 import Field from "@shared/ui/form/Field";
 import DateInput from "@shared/ui/form/DateInput";
 import { notify } from "@shared/lib/notify";
@@ -8,8 +9,8 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { formatRSD } from "@shared/lib/format";
 import { useActivateSpecificationPeriod } from "@features/specification/hooks/useActivateSpecificationPeriod";
 import { useActivateExistingSpecification } from "@features/specification/hooks/useActivateExistingSpecification";
-import { usePastPeriods } from "@features/specification/hooks/usePastPeriods";
-import type { PastPeriod } from "@features/specification/api/specificationApi";
+import { useSelectablePeriods } from "@features/specification/hooks/usePastPeriods";
+import type { SelectablePeriod } from "@features/specification/api/specificationApi";
 import { Specification } from "@features/specification/types/types";
 import { itemsLabel } from "@features/specification/lib/itemsLabel";
 
@@ -23,13 +24,16 @@ interface Props {
   onActivated?: (spec: Specification) => void;
 }
 
-// Ručni izbor perioda (Od/Do) i povratak na raniji period — oba postavljaju aktivan period
+// Ručni izbor perioda (Od/Do) i promena perioda (raniji, današnji ili unapred) — oba postavljaju aktivan period
 // (smeštaj za period). Koriste ih meni perioda i dugmad u prozoru specifikacije.
 export default function PeriodActionDialogs({ patientId, open, onClose, onActivated }: Props) {
   const ids = { start: useId(), end: useId() };
   const manual = useActivateSpecificationPeriod(patientId);
   const existing = useActivateExistingSpecification(patientId);
-  const { data: pastPeriods = [] } = usePastPeriods(open === "history" ? patientId : "");
+  const { data: periods = [] } = useSelectablePeriods(open === "history" ? patientId : "");
+  const currentPeriod = periods.find((p) => p.isCurrent);
+  // Posle današnjeg (po serveru, ne po satu računara)
+  const isAhead = (p: SelectablePeriod) => !!currentPeriod && p.startDate > currentPeriod.startDate;
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const busy = manual.isPending || existing.isPending;
@@ -48,8 +52,8 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
     },
     onError: (e: unknown) => notify.error(e),
   };
-  // Svi periodi od prijema do aktivnog (od najnovijeg); neotvaran period se pravi pri aktiviranju
-  const activatePast = (p: PastPeriod) => {
+  // Neotvaran period (bez zapisa) se pravi pri aktiviranju
+  const activatePeriod = (p: SelectablePeriod) => {
     if (p.specificationId) existing.mutate(p.specificationId, done);
     else manual.mutate({ startDate: p.startDate.slice(0, 10), endDate: p.endDate.slice(0, 10) }, done);
   };
@@ -86,26 +90,39 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
       <Dialog
         open={open === "history"}
         onClose={onClose}
-        title="Raniji periodi"
-        description="Svi periodi od prijema do trenutnog, od najnovijeg. Aktivirani period postaje smeštaj za period (nove stavke idu u njega)."
+        title="Promena perioda"
+        description="Svi periodi od prijema do današnjeg i jedan unapred, od najnovijeg. Aktivirani period postaje smeštaj za period (nove stavke idu u njega)."
         size="md"
       >
-        {pastPeriods.length === 0 ? (
-          <p className="py-4 text-center text-sm text-gray-500">Nema ranijih perioda — pacijent je u prvom periodu.</p>
+        {currentPeriod && !currentPeriod.isActive && (
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2.5 dark:bg-brand-500/10">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              Današnji period: <strong className="font-semibold">{formatDay(currentPeriod.startDate)} – {formatDay(currentPeriod.endDate)}</strong>
+            </p>
+            <Button size="xs" disabled={busy} onClick={() => activatePeriod(currentPeriod)}>
+              Vrati na današnji period
+            </Button>
+          </div>
+        )}
+        {periods.length === 0 ? (
+          <p className="py-4 text-center text-sm text-gray-500">Nema drugih perioda.</p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {pastPeriods.map((p) => (
-              <li key={p.startDate} className="flex items-center justify-between gap-3 py-3">
+            {periods.map((p) => (
+              <li key={`${p.startDate}-${p.endDate}`} className="flex items-center justify-between gap-3 py-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
                     {formatDay(p.startDate)} – {formatDay(p.endDate)}
+                    {p.isActive && <Badge size="sm" color="success">Aktivan</Badge>}
+                    {p.isCurrent && <Badge size="sm" color="primary">Današnji</Badge>}
+                    {isAhead(p) && <Badge size="sm" color="light">Unapred</Badge>}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {p.itemsCount ? `${itemsLabel(p.itemsCount)} · ${formatRSD(p.totalPrice)}` : "Bez stavki"}
                   </p>
                 </div>
-                <Button size="xs" variant="outline" disabled={busy} onClick={() => activatePast(p)}>
-                  Aktiviraj
+                <Button size="xs" variant="outline" disabled={busy || p.isActive} onClick={() => activatePeriod(p)}>
+                  {p.isActive ? "Aktivan" : "Aktiviraj"}
                 </Button>
               </li>
             ))}

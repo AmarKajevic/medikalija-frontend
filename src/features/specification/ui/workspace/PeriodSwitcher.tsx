@@ -12,7 +12,7 @@ interface Props {
   activeSpecification: Specification;
 }
 
-// Meni aktivnog perioda: sledeći period, ručni izbor, povratak na raniji
+// Meni aktivnog perioda: sledeći period, ručni izbor, promena perioda (napred ili nazad)
 export default function PeriodSwitcher({ patientId, activeSpecification }: Props) {
   const next = useActivateNextSpecificationPeriod(patientId);
   const [dialog, setDialog] = useState<PeriodAction | null>(null);
@@ -47,7 +47,7 @@ export default function PeriodSwitcher({ patientId, activeSpecification }: Props
               }),
           },
           { label: "Ručno izaberi period…", icon: <LuCalendarClock />, onClick: () => setDialog("manual") },
-          { label: "Vrati se na raniji period…", icon: <LuHistory />, onClick: () => setDialog("history") },
+          { label: "Promeni period…", icon: <LuHistory />, onClick: () => setDialog("history") },
         ]}
       />
       <PeriodActionDialogs patientId={patientId} open={dialog} onClose={() => setDialog(null)} />
