@@ -53,6 +53,8 @@ export const CARE_ROLES: Role[] = ["admin", "main-nurse", "nurse"];
 export const CLINICAL_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
 /** Zakazuju u kalendaru (uprava menja sve termine, ostali samo svoje) */
 export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist"];
+/** Raspored obračunskih perioda (samo datumi, bez cena) */
+export const PERIOD_SCHEDULE_ROLES: Role[] = ["admin", "main-nurse", "social-worker"];
 /** Fizikalna terapija: fizioterapeut beleži, uprava pregleda i odobrava vanredne */
 export const PHYSIO_ROLES: Role[] = ["admin", "main-nurse", "physiotherapist"];
 /** Socijalni karton: čitaju */
