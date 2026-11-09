@@ -3,7 +3,7 @@ import { pages } from "@app/routeLoaders";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
-import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, PERIOD_SCHEDULE_ROLES, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
 import AcceptLinkPage from "@pages/auth/AcceptLinkPage";
@@ -104,7 +104,7 @@ export default function App() {
             <Route path="/patients" element={staff(<PatientsPage />)} />
             <Route path="/patients/:patientId" element={staff(<PatientPage />)} />
             <Route path="/patients/:patientId/specifications" element={managers(<PatientSpecificationsPage />)} />
-            <Route path="/patients/:patientId/schedule" element={managers(<PatientSchedulePage />)} />
+            <Route path="/patients/:patientId/schedule" element={<RequireRole roles={PERIOD_SCHEDULE_ROLES}><PatientSchedulePage /></RequireRole>} />
             <Route path="/specifications/:specificationId" element={managers(<SpecificationPage />)} />
 
             <Route path="/medicines" element={managers(<InventoryListPage kind="medicine" />)} />

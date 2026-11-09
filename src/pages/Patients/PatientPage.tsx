@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { LuClipboardCheck, LuFilePlus, LuPlus } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PERIOD_SCHEDULE_ROLES, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
 import usePatient, { type Patient } from "@entities/patient/hooks/usePatient";
 import { Breadcrumbs } from "@shared/ui/page/PageHeader";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
@@ -148,6 +148,7 @@ export default function PatientPage() {
       <PatientHeader
         patient={patient}
         canManage={manager}
+        canViewSchedule={hasRole(role, PERIOD_SCHEDULE_ROLES)}
         onOpenSpecification={openSpecification}
         onOpenFamilyStock={hasRole(role, CARE_ROLES) ? () => setDialog("family") : undefined}
         onDischarge={() => setDialog("discharge")}

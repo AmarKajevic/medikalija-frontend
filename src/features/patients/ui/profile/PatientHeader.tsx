@@ -28,6 +28,8 @@ interface Props {
   patient: Patient;
   /** Uprava: specifikacija, otpust, istorija */
   canManage: boolean;
+  /** Raspored perioda (20 godina): uprava i socijalni radnik */
+  canViewSchedule?: boolean;
   onOpenSpecification: () => void;
   /** Porodično stanje (nega); bez njega se stavka ne prikazuje */
   onOpenFamilyStock?: () => void;
@@ -38,19 +40,15 @@ interface Props {
   actions?: ReactNode;
 }
 
-export default function PatientHeader({ patient, canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, onEdit, actions }: Props) {
+export default function PatientHeader({ patient, canManage, canViewSchedule = canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, onEdit, actions }: Props) {
   const discharged = !!patient.dischargeDate;
 
   const menu: ActionMenuItem[] = [
     ...(onOpenFamilyStock ? [{ label: "Porodično stanje", icon: <LuPackageOpen />, onClick: onOpenFamilyStock }] : []),
-    ...(canManage
-      ? [
-          ...(onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
-          { label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) },
-          { label: "Raspored perioda (20 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) },
-          ...(discharged ? [] : [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }]),
-        ]
-      : []),
+    ...(canManage && onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
+    ...(canManage ? [{ label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) }] : []),
+    ...(canViewSchedule ? [{ label: "Raspored perioda (20 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) }] : []),
+    ...(canManage && !discharged ? [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }] : []),
   ];
 
   return (
