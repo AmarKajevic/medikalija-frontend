@@ -13,6 +13,8 @@ interface Props {
   billing: BillingState;
   nextPeriodLabel: string;
   onEditStep: (step: Step) => void;
+  /** Otvara smeštaj i dug (dijalog u prvom koraku) */
+  onEditBilling: () => void;
   /** Unosi sestara koji još nisu pregledani (neće biti u PDF-u) */
   pendingCount?: number;
 }
@@ -47,7 +49,7 @@ const Row = ({ label, value, sub, onEdit }: { label: string; value: string; sub?
 );
 
 // Poslednji korak: sve što ide na papir, sa upozorenjima pre štampe.
-export default function ReviewStep({ specification: spec, billing, nextPeriodLabel, onEditStep, pendingCount = 0 }: Props) {
+export default function ReviewStep({ specification: spec, billing, nextPeriodLabel, onEditStep, onEditBilling, pendingCount = 0 }: Props) {
   const { result, rates, dirty, saving, saveBilling } = billing;
   const ratesMissing = !(rates.lower > 0 && rates.middle > 0);
 
@@ -88,7 +90,7 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
       {ratesMissing && (
         <Warning
           action={
-            <Button size="sm" variant="outline" onClick={() => onEditStep(2)}>
+            <Button size="sm" variant="outline" onClick={() => onEditStep(1)}>
               Unesi kurs
             </Button>
           }
@@ -122,17 +124,17 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
             <Row key={g.key} label={`${g.label} (${g.count})`} value={formatRSD(g.total)} onEdit={() => onEditStep(1)} />
           ))}
           {groups.length > 1 && <Row label="Specifikacija ukupno" value={formatRSD(result.specTotalRSD)} sub={formatEUR(result.specEUR)} />}
-          {result.includeDebt && <Row label="Dug iz prethodnog perioda" value={formatEUR(result.debtEUR)} sub={formatRSD(result.debtRSD)} onEdit={() => onEditStep(2)} />}
+          {result.includeDebt && <Row label="Dug iz prethodnog perioda" value={formatEUR(result.debtEUR)} sub={formatRSD(result.debtRSD)} onEdit={() => onEditBilling()} />}
           {result.includeLodging && (
-            <Row label={`Smeštaj ${nextPeriodLabel}${result.lodgingOption ? ` · ${result.lodgingOption}` : ""}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditStep(2)} />
+            <Row label={`Smeštaj ${nextPeriodLabel}${result.lodgingOption ? ` · ${result.lodgingOption}` : ""}`} value={formatEUR(result.lodgingEUR)} sub={formatRSD(result.lodgingRSD)} onEdit={() => onEditBilling()} />
           )}
           {result.includeEarlyLodging && (
-            <Row label={`Vanstandardni period smeštaja${result.earlyLodgingOption ? ` · ${result.earlyLodgingOption}` : ""}`} value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditStep(2)} />
+            <Row label={`Vanstandardni period smeštaja${result.earlyLodgingOption ? ` · ${result.earlyLodgingOption}` : ""}`} value={formatEUR(result.earlyLodgingEUR)} sub={formatRSD(result.earlyLodgingRSD)} onEdit={() => onEditBilling()} />
           )}
           {!result.includeDebt && !result.includeLodging && !result.includeEarlyLodging && (
             <div className="flex items-center justify-between gap-4 py-2.5 text-sm text-gray-500">
               Bez duga i smeštaja
-              <button type="button" onClick={() => onEditStep(2)} className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
+              <button type="button" onClick={() => onEditBilling()} className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
                 dodaj
               </button>
             </div>

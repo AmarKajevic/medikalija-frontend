@@ -8,7 +8,7 @@ import { Specification } from "@features/specification/types/types";
 const toNumber = (v: string) => Number(v.replace(",", ".")) || 0;
 
 // Stanje obračuna (dug, smeštaj, vanstandardni period smeštaja, kursevi). Živi iznad koraka čarobnjaka, pa se
-// unete vrednosti i oznaka "nesačuvano" ne gube pri prelasku sa koraka na korak.
+// unete vrednosti i oznaka "nesačuvano" ne gube kad se dijalog smeštaja zatvori ili pređe na pregled.
 export function useBillingState(spec: Specification, patientId: string) {
   const { rates, updateRates } = useExchangeRates();
   const save = useSaveBilling(spec._id, patientId);
@@ -74,16 +74,19 @@ export function useBillingState(spec: Specification, patientId: string) {
     }
   };
 
-  /** Čuva dug i smeštaj. Vraća false ako čuvanje nije uspelo. */
-  const saveBilling = async (): Promise<boolean> => {
+  /** Čuva dug i smeštaj. `exclude` odmah isključuje jednu stavku (uklanjanje iz liste). Vraća false ako čuvanje nije uspelo. */
+  const saveBilling = async (exclude?: "debt" | "lodging" | "early"): Promise<boolean> => {
+    if (exclude === "debt") setIncludeDebtRaw(false);
+    if (exclude === "lodging") setIncludeLodgingRaw(false);
+    if (exclude === "early") setIncludeEarlyRaw(false);
     try {
       await save.mutateAsync({
         previousDebtEUR: toNumber(debt),
         nextLodgingEUR: toNumber(lodging),
         earlyLodgingEUR: toNumber(early),
-        includeDebt,
-        includeLodging,
-        includeEarlyLodging: includeEarly,
+        includeDebt: includeDebt && exclude !== "debt",
+        includeLodging: includeLodging && exclude !== "lodging",
+        includeEarlyLodging: includeEarly && exclude !== "early",
         nextLodgingOption: lodgingOption,
         earlyLodgingOption: earlyOption,
       });

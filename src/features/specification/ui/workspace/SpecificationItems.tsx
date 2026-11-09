@@ -22,9 +22,11 @@ interface Props {
   patientId: string;
   /** Zatvorena specifikacija: bez izmene i brisanja */
   readOnly?: boolean;
+  /** Iznad liste već postoji smeštaj ili dug, pa je poruka o praznoj listi kratka */
+  compactEmpty?: boolean;
 }
 
-export default function SpecificationItems({ specification: spec, patientId, readOnly = false }: Props) {
+export default function SpecificationItems({ specification: spec, patientId, readOnly = false, compactEmpty = false }: Props) {
   const remove = useDeleteSpecificationItem(patientId);
   const [pending, setPending] = useState<SpecificationItem | null>(null);
   const [editing, setEditing] = useState<SpecificationItem | null>(null);
@@ -51,8 +53,9 @@ export default function SpecificationItems({ specification: spec, patientId, rea
   if (spec.items.length === 0) {
     return (
       <EmptyState
+        compact={compactEmpty}
         icon={<LuReceipt />}
-        title="Specifikacija je prazna"
+        title={compactEmpty ? "Još nema lekova, artikala ni troškova" : "Specifikacija je prazna"}
         description="Dodajte lekove, artikle, analize ili dodatne troškove iz panela sa leve strane."
       />
     );
