@@ -21,6 +21,8 @@ import PatientReports from "@features/medical-reports/ui/PatientReports";
 import { useSocialNotes } from "@features/social/model";
 import SocialNotesList from "@features/social/ui/SocialNotesList";
 import SocialNoteDialog from "@features/social/ui/SocialNoteDialog";
+import SocialProfileCard from "@features/social/ui/SocialProfileCard";
+import SocialDocumentsCard from "@features/social/ui/SocialDocumentsCard";
 import PatientHeader from "@features/patients/ui/profile/PatientHeader";
 import SpecificationSummaryCard from "@features/patients/ui/profile/SpecificationSummaryCard";
 import PatientActivity from "@features/patients/ui/profile/PatientActivity";
@@ -213,8 +215,13 @@ export default function PatientPage() {
       )}
 
       {tab === "social" && hasRole(role, SOCIAL_READ_ROLES) && (
+        // Socijalni dosije: lični podaci (za dokumente), procene i individualni plan, beleške
         <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
-          <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />
+          <div className="min-w-0 space-y-6">
+            <SocialProfileCard patientId={patient._id} canWrite={canWriteSocial} />
+            <SocialDocumentsCard patientId={patient._id} patientName={patientName} canWrite={canWriteSocial && !discharged} active={!discharged} />
+            <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />
+          </div>
           <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
         </div>
       )}

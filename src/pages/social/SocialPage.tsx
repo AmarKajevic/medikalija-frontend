@@ -16,10 +16,12 @@ import { usePatients } from "@features/patients/hooks/usePatients";
 import { SOCIAL_CATEGORIES, SocialCategory, useSocialNotes } from "@features/social/model";
 import SocialNotesList from "@features/social/ui/SocialNotesList";
 import SocialNoteDialog from "@features/social/ui/SocialNoteDialog";
+import SocialDeadlinesList from "@features/social/ui/SocialDeadlinesList";
+import { daysUntil, useSocialDeadlines } from "@features/social/dossier";
 
-type View = "followups" | "all";
+type View = "followups" | "deadlines" | "all";
 
-// Socijalni rad: podsetnici koji čekaju i sve beleške, po pacijentu i vrsti.
+// Socijalni rad: podsetnici koji čekaju, rokovi za procene i individualne planove, sve beleške.
 export default function SocialPage() {
   const { user } = useAuth();
   const canWrite = hasRole(user?.role, SOCIAL_WRITE_ROLES);
@@ -36,6 +38,8 @@ export default function SocialPage() {
   };
 
   const followups = useSocialNotes({ followUp: "open", limit: 500 });
+  const deadlines = useSocialDeadlines();
+  const dueSoon = (deadlines.data ?? []).filter((d) => daysUntil(d.due) <= 30).length;
   const all = useSocialNotes({ patientId: patientId || undefined, category, limit: 500 }, view === "all");
   const current = view === "followups" ? followups : all;
   const { data: patientsData } = usePatients();
@@ -53,7 +57,7 @@ export default function SocialPage() {
     <>
       <PageHeader
         title="Socijalni karton"
-        description="Razgovori sa korisnicima i porodicom, saradnja sa CSR-om i ustanovama, dokumenta i podsetnici."
+        description="Razgovori sa korisnicima i porodicom, saradnja sa CSR-om i ustanovama, rokovi za procene i individualne planove."
         actions={
           canWrite && (
             <Button startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setCreating(true)}>
@@ -68,6 +72,7 @@ export default function SocialPage() {
           onChange={(v) => setParam("view", v)}
           items={[
             { value: "followups", label: `Podsetnici${followups.data?.length ? ` (${followups.data.length})` : ""}` },
+            { value: "deadlines", label: `Rokovi${dueSoon ? ` (${dueSoon})` : ""}` },
             { value: "all", label: "Sve beleške" },
           ]}
         />
@@ -99,7 +104,11 @@ export default function SocialPage() {
         </p>
       )}
 
-      {current.isError ? (
+      {view === "deadlines" ? (
+        <Card>
+          <SocialDeadlinesList />
+        </Card>
+      ) : current.isError ? (
         <ErrorState message="Beleške nisu učitane." onRetry={() => current.refetch()} />
       ) : (
         <Card>
