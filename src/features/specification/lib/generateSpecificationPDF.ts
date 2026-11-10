@@ -44,6 +44,8 @@ interface GeneratePDFParams {
   earlyLodgingOption?: string;
   /** Napomena uz vanstandardni smeštaj (u istom redu) */
   earlyLodgingNote?: string;
+  /** Datumi vanstandardnog perioda, npr. "01.10.2026. — 05.10.2026." */
+  earlyPeriodLabel?: string;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
   /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
@@ -73,6 +75,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     includeLodging = lodgingEUR > 0,
     includeEarlyLodging = earlyLodgingEUR > 0,
     earlyLodgingNote = "",
+    earlyPeriodLabel = "",
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
@@ -100,7 +103,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       ? [[{ text: `Smeštaj za period ${nextPeriodLabel}` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
       : []),
     ...(includeEarlyLodging
-      ? [[{ text: `Smeštaj za period${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}` }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
+      ? [[{ text: `Smeštaj za period${earlyPeriodLabel ? ` ${earlyPeriodLabel}` : ""}${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}` }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
       : []),
   ];
   const extraRSD = (includeDebt ? debtRSD : 0) + (includeLodging ? lodgingRSD : 0) + (includeEarlyLodging ? earlyLodgingRSD : 0);

@@ -28,6 +28,9 @@ export const saveBilling = async (specId: string, payload: {
   nextLodgingOption?: string;
   earlyLodgingOption?: string;
   earlyLodgingNote?: string;
+  /** "YYYY-MM-DD" ili "" */
+  earlyLodgingStart?: string;
+  earlyLodgingEnd?: string;
 }) => {
   const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
   return data.specification;

@@ -1,6 +1,8 @@
 import { useId, useState } from "react";
 import { Link } from "react-router";
 import { Input, Select } from "@shared/ui/form/controls";
+import Field from "@shared/ui/form/Field";
+import DateInput from "@shared/ui/form/DateInput";
 import Button from "@shared/ui/button/Button";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import type { BillingState } from "@features/specification/hooks/useBillingState";
@@ -109,19 +111,20 @@ function OptionalAmount({
 }
 
 export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false, onSaved }: Props) {
-  const ids = { debt: useId(), lodging: useId(), early: useId(), note: useId() };
+  const ids = { debt: useId(), lodging: useId(), early: useId(), note: useId(), earlyStart: useId(), earlyEnd: useId() };
   const { fields, result, dirty, saving, saveBilling } = billing;
   const { user } = useAuth();
   const { data: prices = [] } = useLodgingPrices();
   const { data: notes = [] } = useLodgingNotes();
   // Sačuvana napomena koja je u međuvremenu obrisana iz liste ostaje vidljiva kao opcija
   const noteKnown = notes.some((n) => n.text === fields.earlyNote);
+  const earlyInvalid = !!fields.earlyStart && !!fields.earlyEnd && fields.earlyEnd < fields.earlyStart;
 
   const rows: Array<[string, string, string, string]> = [
     ["Lekovi, artikli, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
     ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
     ...(fields.includeLodging ? [[`Smeštaj za naredni period${fields.lodgingOption ? ` · ${fields.lodgingOption}` : ""}`, nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
-    ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, fields.earlyNote || "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
+    ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, [result.earlyPeriodLabel, fields.earlyNote].filter(Boolean).join(" · ") || "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
   ];
 
   return (
@@ -171,6 +174,17 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
           choice={prices.length || fields.earlyOption ? { prices, option: fields.earlyOption, onChoose: fields.chooseEarly } : undefined}
         />
       </div>
+
+      {fields.includeEarly && (
+        <div className="grid max-w-xl gap-4 sm:grid-cols-2">
+          <Field label="Vanstandardni period od" htmlFor={ids.earlyStart}>
+            <DateInput id={ids.earlyStart} value={fields.earlyStart} onChange={fields.setEarlyStart} fromYear={2000} />
+          </Field>
+          <Field label="Vanstandardni period do" htmlFor={ids.earlyEnd} error={earlyInvalid ? "Kraj je pre početka." : undefined}>
+            <DateInput id={ids.earlyEnd} value={fields.earlyEnd} onChange={fields.setEarlyEnd} min={fields.earlyStart || undefined} invalid={earlyInvalid} fromYear={2000} />
+          </Field>
+        </div>
+      )}
 
       {fields.includeEarly && (
         <div className="max-w-xl">

@@ -4,8 +4,12 @@ import { useExchangeRates } from "@entities/exchange-rate/model/ExchangeRateCont
 import { computeBilling } from "@features/specification/lib/billing";
 import { useSaveBilling } from "@features/specification/hooks/useSaveBilling";
 import { Specification } from "@features/specification/types/types";
+import { formatDay, toCalendarDay } from "@shared/lib/calendarDay";
 
 const toNumber = (v: string) => Number(v.replace(",", ".")) || 0;
+const toIsoDay = (v?: string) => (v ? toCalendarDay(v).toISOString().slice(0, 10) : "");
+/** "01.10.2026. — 05.10.2026." (ili samo jedan datum ako je drugi prazan) */
+const periodLabel = (start: string, end: string) => [start, end].filter(Boolean).map((d) => formatDay(d)).join(" — ");
 
 // Stanje obračuna (dug, smeštaj, vanstandardni period smeštaja, kursevi). Živi iznad koraka čarobnjaka, pa se
 // unete vrednosti i oznaka "nesačuvano" ne gube kad se dijalog smeštaja zatvori ili pređe na pregled.
@@ -20,6 +24,9 @@ export function useBillingState(spec: Specification, patientId: string) {
   const [earlyOption, setEarlyOptionRaw] = useState("");
   // Napomena uz vanstandardni smeštaj (iz liste koju pravi admin)
   const [earlyNote, setEarlyNoteRaw] = useState("");
+  // Datumi vanstandardnog perioda ("YYYY-MM-DD"), štampaju se u istom redu
+  const [earlyStart, setEarlyStartRaw] = useState("");
+  const [earlyEnd, setEarlyEndRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
   // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
@@ -38,6 +45,8 @@ export function useBillingState(spec: Specification, patientId: string) {
     setLodgingOptionRaw(spec.billing?.nextLodgingOption ?? "");
     setEarlyOptionRaw(spec.billing?.earlyLodgingOption ?? "");
     setEarlyNoteRaw(spec.billing?.earlyLodgingNote ?? "");
+    setEarlyStartRaw(toIsoDay(spec.billing?.earlyLodgingStart));
+    setEarlyEndRaw(toIsoDay(spec.billing?.earlyLodgingEnd));
     setDirty(false);
   }, [
     spec._id,
@@ -50,6 +59,8 @@ export function useBillingState(spec: Specification, patientId: string) {
     spec.billing?.nextLodgingOption,
     spec.billing?.earlyLodgingOption,
     spec.billing?.earlyLodgingNote,
+    spec.billing?.earlyLodgingStart,
+    spec.billing?.earlyLodgingEnd,
   ]);
 
   useEffect(() => {
@@ -94,6 +105,8 @@ export function useBillingState(spec: Specification, patientId: string) {
         nextLodgingOption: lodgingOption,
         earlyLodgingOption: earlyOption,
         earlyLodgingNote: earlyNote,
+        earlyLodgingStart: earlyStart,
+        earlyLodgingEnd: earlyEnd,
       });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
@@ -139,6 +152,16 @@ export function useBillingState(spec: Specification, patientId: string) {
         setEarlyNoteRaw(v);
         setDirty(true);
       },
+      earlyStart,
+      setEarlyStart: (v: string) => {
+        setEarlyStartRaw(v);
+        setDirty(true);
+      },
+      earlyEnd,
+      setEarlyEnd: (v: string) => {
+        setEarlyEndRaw(v);
+        setDirty(true);
+      },
       includeEarly,
       setIncludeEarly: (v: boolean) => {
         setIncludeEarlyRaw(v);
@@ -160,7 +183,7 @@ export function useBillingState(spec: Specification, patientId: string) {
       },
     },
     rates,
-    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption, earlyLodgingNote: earlyNote },
+    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption, earlyLodgingNote: earlyNote, earlyPeriodLabel: periodLabel(earlyStart, earlyEnd) },
     commitRates,
     dirty,
     saving: save.isPending,
