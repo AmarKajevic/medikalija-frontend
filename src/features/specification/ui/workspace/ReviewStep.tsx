@@ -1,12 +1,12 @@
 import { ReactNode } from "react";
 import { LuCircleAlert } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
-import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import { CATEGORY_META, CATEGORY_ORDER, categoryOf } from "@features/specification/lib/items";
 import type { BillingState } from "@features/specification/hooks/useBillingState";
 import { Specification } from "@features/specification/types/types";
 import type { Step } from "./SpecificationWorkspace";
+import PeriodDates from "./PeriodDates";
 
 interface Props {
   specification: Specification;
@@ -33,7 +33,7 @@ function Warning({ children, action }: { children: ReactNode; action?: ReactNode
 
 const Row = ({ label, value, sub, onEdit }: { label: string; value: string; sub?: string; onEdit?: () => void }) => (
   <div className="flex items-baseline justify-between gap-4 py-2.5">
-    <dt className="text-sm text-gray-600 dark:text-gray-400">
+    <dt className="text-base text-gray-600 dark:text-gray-400">
       {label}
       {onEdit && (
         <button type="button" onClick={onEdit} className="ml-2 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
@@ -42,8 +42,8 @@ const Row = ({ label, value, sub, onEdit }: { label: string; value: string; sub?
       )}
     </dt>
     <dd className="text-right tabular-nums">
-      <span className="text-sm font-medium text-gray-900 dark:text-white/90">{value}</span>
-      {sub && <span className="block text-xs text-gray-400">{sub}</span>}
+      <span className="text-base font-medium text-gray-900 dark:text-white/90">{value}</span>
+      {sub && <span className="block text-sm text-gray-400">ili {sub}</span>}
     </dd>
   </div>
 );
@@ -112,11 +112,14 @@ export default function ReviewStep({ specification: spec, billing, nextPeriodLab
 
       <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
         <div className="border-b border-gray-100 px-5 py-6 text-center dark:border-gray-800">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Ukupno za uplatu · period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
+          <p className="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            Ukupno za uplatu · period <PeriodDates start={spec.startDate} end={spec.endDate} />
           </p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-gray-900 dark:text-white">{formatRSD(result.totalRSD)}</p>
-          <p className="mt-0.5 text-lg font-medium tabular-nums text-gray-500 dark:text-gray-400">{formatEUR(result.totalEUR)}</p>
+          <p className="mt-0.5 text-lg font-medium tabular-nums text-gray-500 dark:text-gray-400">
+            <span className="mr-1.5 text-sm font-normal">ili</span>
+            {formatEUR(result.totalEUR)}
+          </p>
         </div>
 
         <dl className="divide-y divide-gray-100 px-5 pb-2 dark:divide-gray-800">

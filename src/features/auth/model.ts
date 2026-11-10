@@ -22,7 +22,7 @@ export const serverMessage = (err: unknown, fallback: string) => {
   return res?.data?.message || res?.data?.error || fallback;
 };
 
-export const PASSWORD_MIN = 10;
+export const PASSWORD_MIN = 6;
 
 /** "Chrome · Windows" iz User-Agent zaglavlja (dovoljno da se uređaj prepozna) */
 export function describeDevice(ua: string): { label: string; mobile: boolean } {

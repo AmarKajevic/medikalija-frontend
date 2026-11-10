@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LuPencil, LuReceipt, LuTrash2 } from "react-icons/lu";
 import { CATEGORY_META, CATEGORY_ORDER, categoryOf } from "@features/specification/lib/items";
 import { Specification, SpecificationItem } from "@features/specification/types/types";
@@ -26,10 +26,32 @@ interface Props {
   compactEmpty?: boolean;
 }
 
+// Upravo dodate ili promenjene stavke (po id-ju i količini) — kratko se ističu i dovode u vidno polje
+function useJustChanged(items: SpecificationItem[]) {
+  const seen = useRef<Map<string, number> | null>(null);
+  const [changed, setChanged] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const now = new Map(items.map((i) => [i._id, Number(i.amount ?? 1)]));
+    const before = seen.current;
+    seen.current = now;
+    if (!before) return; // prvo učitavanje nije "dodavanje"
+    const fresh = [...now].filter(([id, amount]) => before.get(id) !== amount).map(([id]) => id);
+    if (fresh.length === 0) return;
+    setChanged(new Set(fresh));
+    document.getElementById(`spec-item-${fresh[0]}`)?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+    const t = setTimeout(() => setChanged(new Set()), 2500);
+    return () => clearTimeout(t);
+  }, [items]);
+
+  return changed;
+}
+
 export default function SpecificationItems({ specification: spec, patientId, readOnly = false, compactEmpty = false }: Props) {
   const remove = useDeleteSpecificationItem(patientId);
   const [pending, setPending] = useState<SpecificationItem | null>(null);
   const [editing, setEditing] = useState<SpecificationItem | null>(null);
+  const justChanged = useJustChanged(spec.items);
 
   const groups = CATEGORY_ORDER.map((key) => {
     const items = spec.items.filter((i) => categoryOf(i) === key);
@@ -69,7 +91,7 @@ export default function SpecificationItems({ specification: spec, patientId, rea
           return (
             <section key={g.key} className="py-3 first:pt-0">
               <header className="mb-1 flex items-center justify-between px-1">
-                <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <span className="text-sm">{meta.icon}</span>
                   {meta.label}
                   <span className="font-normal normal-case tracking-normal text-gray-400">({g.items.length})</span>
@@ -81,10 +103,14 @@ export default function SpecificationItems({ specification: spec, patientId, rea
                 {g.items.map((item) => (
                   <li
                     key={item._id}
-                    className="group flex items-center gap-3 rounded-lg px-1 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                    id={`spec-item-${item._id}`}
+                    data-just-added={justChanged.has(item._id) || undefined}
+                    className={`group flex items-center gap-3 rounded-lg px-1 py-2 transition-colors duration-700 ${
+                      justChanged.has(item._id) ? "bg-success-50 ring-1 ring-success-200 dark:bg-success-500/10 dark:ring-success-500/30" : "hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                    }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-gray-800 dark:text-white/90">{item.name}</p>
+                      <p className="truncate text-base text-gray-800 dark:text-white/90">{item.name}</p>
                       {item.category === "combination" && item.analyses?.length ? (
                         <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                           {item.analyses.map((a) => a.name).join(", ")}
@@ -92,18 +118,18 @@ export default function SpecificationItems({ specification: spec, patientId, rea
                       ) : null}
                     </div>
                     {readOnly ? (
-                      <span className="w-16 shrink-0 text-right text-sm tabular-nums text-gray-500 dark:text-gray-400">× {formatQty(item.amount ?? 1)}</span>
+                      <span className="w-16 shrink-0 text-right text-base tabular-nums text-gray-500 dark:text-gray-400">× {formatQty(item.amount ?? 1)}</span>
                     ) : (
                     <button
                       type="button"
                       onClick={() => setEditing(item)}
                       title="Izmeni količinu"
-                      className="w-16 shrink-0 rounded-md px-1 py-0.5 text-right text-sm tabular-nums text-gray-500 underline decoration-dotted underline-offset-4 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
+                      className="w-16 shrink-0 rounded-md px-1 py-0.5 text-right text-base tabular-nums text-gray-500 underline decoration-dotted underline-offset-4 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
                     >
                       × {formatQty(item.amount ?? 1)}
                     </button>
                     )}
-                    <span className="w-32 shrink-0 text-right text-sm font-medium tabular-nums text-gray-800 dark:text-white/90">
+                    <span className="w-32 shrink-0 text-right text-base font-medium tabular-nums text-gray-800 dark:text-white/90">
                       {formatRSD(item.price)}
                     </span>
                     {!readOnly && (

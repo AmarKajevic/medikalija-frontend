@@ -15,16 +15,17 @@ export interface AddPreset {
   nonce: number;
 }
 
-const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode }> = [
-  { value: "medicine", label: "Lek", hint: "Tablete, kapi, ampule", icon: <LuPill /> },
-  { value: "article", label: "Artikal", hint: "Pelene, rukavice, materijal", icon: <LuPackage /> },
-  { value: "professional", label: "Stručne usluge", hint: "Iz cenovnika, sa cenom", icon: <LuBriefcaseMedical /> },
-  { value: "combination", label: "Analize", hint: "Laboratorija", icon: <LuFlaskConical /> },
-  { value: "care", label: "Nega", hint: "Kupanje, previjanje, presvlačenje", icon: <LuHeartHandshake /> },
-  { value: "extra", label: "Drugi trošak", hint: "Frizer, prevoz, pedikir", icon: <LuReceipt /> },
+const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode; tone: string }> = [
+  { value: "medicine", label: "Lek", hint: "Tablete, kapi, ampule", icon: <LuPill />, tone: "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400" },
+  { value: "article", label: "Artikal", hint: "Pelene, rukavice, materijal", icon: <LuPackage />, tone: "bg-orange-100 text-orange-500 dark:bg-orange-500/15 dark:text-orange-300" },
+  { value: "professional", label: "Stručne usluge", hint: "Iz cenovnika, sa cenom", icon: <LuBriefcaseMedical />, tone: "bg-blue-light-50 text-blue-light-600 dark:bg-blue-light-500/15 dark:text-blue-light-400" },
+  { value: "combination", label: "Analize", hint: "Laboratorija", icon: <LuFlaskConical />, tone: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300" },
+  { value: "care", label: "Nega", hint: "Kupanje, previjanje, presvlačenje", icon: <LuHeartHandshake />, tone: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300" },
+  { value: "extra", label: "Drugi trošak", hint: "Frizer, prevoz, pedikir", icon: <LuReceipt />, tone: "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400" },
 ];
 
-// Izbor vrste stavke kao velika dugmad sa objašnjenjem umesto sitnih tabova.
+// Izbor vrste stavke: kompaktna dugmad u jednom-dva reda, da forma za dodavanje
+// stane na ekran pored liste dodatog (bez skrolovanja gore-dole).
 export default function AddItemPanel({ specId, patientId, preset }: { specId: string; patientId: string; preset?: AddPreset | null }) {
   const [kind, setKind] = useState<Kind>("medicine");
   useEffect(() => {
@@ -32,8 +33,8 @@ export default function AddItemPanel({ specId, patientId, preset }: { specId: st
   }, [preset]);
 
   return (
-    <div className="space-y-5">
-      <div role="group" aria-label="Šta dodajete" className="grid grid-cols-2 gap-2">
+    <div className="space-y-4">
+      <div role="group" aria-label="Šta dodajete" className="grid grid-cols-3 gap-1.5">
         {KINDS.map((k) => {
           const active = kind === k.value;
           return (
@@ -41,24 +42,16 @@ export default function AddItemPanel({ specId, patientId, preset }: { specId: st
               key={k.value}
               type="button"
               aria-pressed={active}
+              title={k.hint}
               onClick={() => setKind(k.value)}
-              className={`flex items-start gap-3 rounded-xl border p-3 text-left transition focus:outline-hidden focus-visible:ring-3 focus-visible:ring-brand-500/30 ${
+              className={`flex min-w-0 items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition focus:outline-hidden focus-visible:ring-3 focus-visible:ring-brand-500/30 ${
                 active
                   ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400 dark:border-brand-500/60 dark:bg-brand-500/10 dark:ring-brand-500/60"
                   : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/[0.03]"
               }`}
             >
-              <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg ${
-                  active ? "bg-brand-500 text-white" : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
-                }`}
-              >
-                {k.icon}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-gray-900 dark:text-white/90">{k.label}</span>
-                <span className="block text-xs leading-snug text-gray-500 dark:text-gray-400">{k.hint}</span>
-              </span>
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-base ${active ? "bg-brand-500 text-white" : k.tone}`}>{k.icon}</span>
+              <span className="min-w-0 text-sm font-semibold leading-tight text-gray-900 dark:text-white/90">{k.label}</span>
             </button>
           );
         })}
