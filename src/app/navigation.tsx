@@ -27,9 +27,9 @@ export const NAVIGATION: NavGroup[] = [
   {
     items: [
       { label: "Početna", to: paths.home, icon: <LuHouse />, roles: STAFF_ROLES, tone: "text-brand-600 dark:text-brand-400" },
-      { label: "Pacijenti", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true, tone: RED_BLUE },
+      { label: "Korisnici", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true, tone: RED_BLUE },
       { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: CARE_ROLES, tone: "text-pink-500 dark:text-pink-400" },
-      { label: "Fizioterapija", to: paths.physio, icon: <LuActivity />, roles: PHYSIO_ROLES, tone: "text-teal-500 dark:text-teal-400" },
+      { label: "Fizikalna terapija", to: paths.physio, icon: <LuActivity />, roles: PHYSIO_ROLES, tone: "text-teal-500 dark:text-teal-400" },
       { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals", tone: "text-warning-500 dark:text-warning-400" },
       { label: "Aktivnosti", to: paths.activity, icon: <LuUserCheck />, roles: MANAGER_ROLES, tone: "text-violet-500 dark:text-violet-400" },
       { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: STAFF_ROLES, tone: "text-blue-light-600 dark:text-blue-light-400" },
