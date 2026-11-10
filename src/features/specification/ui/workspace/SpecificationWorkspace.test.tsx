@@ -85,7 +85,7 @@ describe("SpecificationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Zatvori" }));
 
     await user.click(screen.getByRole("button", { name: /Dalje: pregled/ }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "", earlyLodgingNote: "" });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "", earlyLodgingNote: "", earlyLodgingStart: "", earlyLodgingEnd: "" });
     expect(screen.getByRole("button", { name: "Štampaj specifikaciju" })).toBeInTheDocument();
     expect(screen.queryByText(/nisu sačuvani/)).not.toBeInTheDocument();
   });
@@ -216,6 +216,19 @@ describe("SpecificationWorkspace", () => {
     expect(save.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ includeEarlyLodging: true, earlyLodgingEUR: 120, earlyLodgingNote: "Smeštaj od prijema do početka perioda" }));
     expect(screen.getByText("Smeštaj od prijema do početka perioda")).toBeInTheDocument();
     lodging.notes = [];
+  });
+
+  it("datumi vanstandardnog perioda: unose se uz smeštaj, čuvaju i vide u listi stavki", async () => {
+    save.mutateAsync.mockResolvedValue({});
+    const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
+    await user.click(screen.getByRole("button", { name: /Dodaj smeštaj/ }));
+    await user.click(screen.getByRole("switch", { name: "Naplati: Vanstandardni period smeštaja" }));
+    await user.type(screen.getByLabelText("Vanstandardni period smeštaja (EUR)"), "50");
+    await user.type(screen.getByLabelText("Vanstandardni period od"), "01102026");
+    await user.type(screen.getByLabelText("Vanstandardni period do"), "05102026");
+    await user.click(screen.getByRole("button", { name: "Sačuvaj obračun" }));
+    expect(save.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ includeEarlyLodging: true, earlyLodgingStart: "2026-10-01", earlyLodgingEnd: "2026-10-05" }));
+    expect(screen.getByText("01.10.2026. — 05.10.2026.")).toBeInTheDocument();
   });
 
   it("kurs evra je uvek vidljiv u zaglavlju (od prvog koraka); bez kursa pregled upozorava", async () => {

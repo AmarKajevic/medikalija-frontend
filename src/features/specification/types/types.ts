@@ -40,6 +40,9 @@ export type Specification = {
     earlyLodgingOption?: string;
     /** Napomena uz vanstandardni smeštaj (štampa se u istom redu) */
     earlyLodgingNote?: string;
+    /** Datumi vanstandardnog perioda (od–do) */
+    earlyLodgingStart?: string;
+    earlyLodgingEnd?: string;
     includeEarlyLodging?: boolean;
     earlyLodgingEUR?: number;
     earlyLodgingRSD?: number;
