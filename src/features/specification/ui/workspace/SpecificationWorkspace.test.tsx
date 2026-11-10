@@ -66,7 +66,10 @@ describe("SpecificationWorkspace", () => {
 
   it("učinak sestre: 'Dodaj kao trošak' otvara trošak sa opisom", async () => {
     const { user } = renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
-    await user.click(screen.getByRole("button", { name: "dodaj iz beleške" }));
+    expect(screen.queryByRole("button", { name: "dodaj iz beleške" })).not.toBeInTheDocument(); // zabeleške su u posebnom prozoru
+    await user.click(screen.getByRole("button", { name: "Zabeleške iz ovog perioda" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Zabeleške iz ovog perioda" })).getByRole("button", { name: "dodaj iz beleške" }));
+    expect(screen.queryByRole("dialog", { name: "Zabeleške iz ovog perioda" })).not.toBeInTheDocument();
     expect(screen.getByText("forma za dodavanje: extra Prevoz do stomatologa")).toBeInTheDocument();
   });
 
