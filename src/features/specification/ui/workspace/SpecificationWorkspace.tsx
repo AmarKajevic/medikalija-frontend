@@ -17,6 +17,7 @@ import SpecificationItems from "./SpecificationItems";
 import { billingRows } from "@features/specification/lib/billingRows";
 import { LodgingButton, LodgingDialog, LodgingRows } from "./LodgingBilling";
 import PeriodSwitcher from "./PeriodSwitcher";
+import PeriodDates from "./PeriodDates";
 import EditPeriodDates from "./EditPeriodDates";
 import ExchangeRateBox from "./ExchangeRateBox";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
@@ -41,6 +42,9 @@ interface Props {
   /** Period za koji se smeštaj naplaćuje unapred (tekući period); bez njega: 30 dana posle kraja */
   lodgingPeriod?: { start: string; end: string };
 }
+
+// Visina kolone u koraku 1: ekran bez zaglavlja dijaloga i donje trake sa ukupnim
+const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto lg:overscroll-contain";
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
   <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
@@ -165,18 +169,15 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       <div className="flex flex-wrap items-center gap-2">
         {isBilling ? (
           <>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
-            </span>
+            <span className="text-base font-medium text-gray-700 dark:text-gray-300">Period</span>
+            <PeriodDates start={spec.startDate} end={spec.endDate} />
             <Badge size="sm" color="warning">Period specifikacije</Badge>
             <span className="text-xs text-gray-500 dark:text-gray-400">Istekao period — ovde se pravi obračun za naplatu.</span>
           </>
         ) : isNonStandard ? (
           <>
             <Badge size="sm" color="warning">Vanstandardni period</Badge>
-            <span className="rounded-md bg-warning-100 px-2 py-0.5 text-sm font-semibold text-warning-800 dark:bg-warning-500/20 dark:text-warning-200">
-              {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
-            </span>
+            <PeriodDates start={spec.startDate} end={spec.endDate} />
             <span className="text-xs text-gray-500 dark:text-gray-400">stavke i obračun idu u ovaj period</span>
           </>
         ) : isChosen ? (
@@ -187,13 +188,12 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         ) : canAdd ? (
           <>
             <PeriodSwitcher patientId={patientId} activeSpecification={spec} />
-            <Badge size="sm" color="success">Smeštaj za period</Badge>
+            <Badge size="sm" color="info">Smeštaj za period</Badge>
           </>
         ) : (
           <>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Period {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
-            </span>
+            <span className="text-base font-medium text-gray-700 dark:text-gray-300">Period</span>
+            <PeriodDates start={spec.startDate} end={spec.endDate} />
             {unlocked ? (
               <Badge size="sm" color="warning">Zatvoren period · izmene na sopstvenu odgovornost</Badge>
             ) : (
@@ -247,8 +247,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         )}
 
         {step === 1 && (
-          <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,400px)_1fr]">
-            <div ref={addPanelRef} className="lg:sticky lg:top-0">
+          // Dodavanje levo i lista dodatog desno staju na ekran zajedno (svaka kolona ima svoj skrol),
+          // pa se posle dodavanja odmah vidi nova stavka bez skrolovanja gore-dole
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,420px)_1fr]">
+            <div ref={addPanelRef} className={`lg:sticky lg:top-0 ${COLUMN_SCROLL}`}>
               {editable ? (
                 <Section title="Dodaj u specifikaciju" description="Izaberite šta dodajete, pa popunite polja ispod.">
                   <AddItemPanel specId={spec._id} patientId={patientId} preset={addPreset} />
@@ -267,7 +269,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 </Section>
               )}
             </div>
-            <div className="min-w-0 space-y-5">
+            <div className={`min-w-0 space-y-5 lg:sticky lg:top-0 ${COLUMN_SCROLL}`}>
               <Section
                 title={`Dodato u ovom periodu (${spec.items.length + billingRows(billing, nextPeriodLabel).length})`}
                 description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
@@ -314,7 +316,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </p>
           <p className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white sm:text-base">
             Ukupno: <span className="whitespace-nowrap">{formatRSD(billing.result.totalRSD)}</span>
-            <span className="ml-2 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">{formatEUR(billing.result.totalEUR)}</span>
+            <span className="mx-1.5 text-xs font-normal text-gray-400 sm:text-sm">ili</span>
+            <span className="whitespace-nowrap">{formatEUR(billing.result.totalEUR)}</span>
           </p>
         </div>
         <div className="ml-auto flex gap-2">

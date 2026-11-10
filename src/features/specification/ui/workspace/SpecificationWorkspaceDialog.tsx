@@ -3,6 +3,7 @@ import { LuBedDouble, LuCalendarClock, LuCalendarRange, LuHistory } from "react-
 import Button from "@shared/ui/button/Button";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Tabs from "@shared/ui/tabs/Tabs";
+import PeriodDates from "./PeriodDates";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { formatDay } from "@shared/lib/calendarDay";
@@ -137,9 +138,9 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
             onChange={setTab}
             items={[
               ...(billingSpec
-                ? [{ value: "billing" as const, label: `Period specifikacije · ${formatDay(billingSpec.startDate)} – ${formatDay(billingSpec.endDate)}` }]
+                ? [{ value: "billing" as const, label: "Period specifikacije", suffix: <PeriodDates start={billingSpec.startDate} end={billingSpec.endDate} /> }]
                 : // Prvi period: još nema isteklog, pa se radi u tekućem
-                  [{ value: "active" as const, label: `Tekući period · ${formatDay(active.data.startDate)} – ${formatDay(active.data.endDate)}` }]),
+                  [{ value: "active" as const, label: "Tekući period", suffix: <PeriodDates start={active.data.startDate} end={active.data.endDate} /> }]),
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />
@@ -165,16 +166,17 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               <Button size="xs" variant="outline" startIcon={<LuHistory className="h-3.5 w-3.5" />} onClick={() => setPeriodAction("history")} title="Izaberite drugi period specifikacije">
                 Promeni period
               </Button>
+              {/* Samo informacija (ne klikće se), ali plavo da bude uočljivo */}
               <span
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2.5 py-1.5 text-xs text-gray-600 dark:bg-white/[0.04] dark:text-gray-300"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-light-300 bg-blue-light-50 px-2.5 py-1.5 text-sm text-blue-light-700 shadow-theme-xs dark:border-blue-light-500/40 dark:bg-blue-light-500/15 dark:text-blue-light-300"
                 title="Period posle perioda specifikacije — smeštaj se za njega naplaćuje unapred. Ne menja se ručno."
               >
-                <LuBedDouble className="h-3.5 w-3.5 text-gray-400" />
+                <LuBedDouble className="h-4 w-4" />
                 Smeštaj za period:
-                <strong className="font-semibold text-gray-800 dark:text-white/90">
+                <strong className="font-semibold tabular-nums">
                   {formatDay(active.data.startDate)} – {formatDay(active.data.endDate)}
                 </strong>
-                <span className="text-gray-400">· naplaćuje se unapred</span>
+                <span className="text-xs text-blue-light-600 dark:text-blue-light-400">· naplaćuje se unapred</span>
               </span>
             </div>
           </div>

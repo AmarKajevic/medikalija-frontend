@@ -64,7 +64,7 @@ describe("SpecificationWorkspaceDialog", () => {
   it("specifikacija se pravi za period specifikacije; smeštaj za period je samo informacija", async () => {
     renderWithProviders(<SpecificationWorkspaceDialog open onClose={vi.fn()} patientId="p1" patientName="Petar" />);
     expect(await screen.findByText("radni prostor: billing billing")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Period specifikacije · 26\.09\.2026\. – 25\.10\.2026\./ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /Period specifikacije 26\.09\.2026\. – 25\.10\.2026\./ })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("tab", { name: /Smeštaj za period/ })).not.toBeInTheDocument();
     expect(screen.getByText(/Smeštaj za period:/).parentElement).toHaveTextContent("26.10.2026. – 24.11.2026.");
     expect(screen.getByText(/naplaćuje se unapred/)).toBeInTheDocument();

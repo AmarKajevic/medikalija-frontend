@@ -28,6 +28,15 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
 
   return (
     <nav aria-label="Glavna navigacija" className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+      {/* Prelaz za crveno-plave ikonice (.nav-icon-red-blue u index.css) */}
+      <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="nav-red-blue" gradientUnits="userSpaceOnUse" x1="2" y1="22" x2="22" y2="2">
+            <stop offset="0.45" stopColor="#f04438" />
+            <stop offset="0.55" stopColor="#0086c9" />
+          </linearGradient>
+        </defs>
+      </svg>
       {groups.map((group, gi) => (
         <div key={group.label ?? gi}>
           {group.label &&
@@ -59,11 +68,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
                     }`}
                   >
-                    <span
-                      className={`relative text-[18px] ${
-                        active ? "text-brand-600 dark:text-brand-400" : "text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300"
-                      }`}
-                    >
+                    <span className={`relative text-[18px] ${item.tone}`}>
                       {item.icon}
                       {collapsed && count > 0 && <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-warning-500" aria-hidden="true" />}
                     </span>

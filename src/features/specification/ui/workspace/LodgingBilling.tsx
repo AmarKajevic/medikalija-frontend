@@ -64,12 +64,12 @@ export function LodgingRows({ billing, nextPeriodLabel, onEdit, readOnly }: { bi
         {rows.map((r) => (
           <li key={r.kind} className="group flex items-center gap-3 rounded-lg px-1 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03]">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-gray-800 dark:text-white/90">{r.label}</p>
+              <p className="truncate text-base text-gray-800 dark:text-white/90">{r.label}</p>
               <p className="truncate text-xs text-gray-500 dark:text-gray-400">{r.note}</p>
             </div>
-            <span className="w-32 shrink-0 text-right tabular-nums">
-              <span className="block text-sm font-medium text-gray-800 dark:text-white/90">{formatEUR(r.eur)}</span>
-              <span className="block text-xs text-gray-400">{formatRSD(r.rsd)}</span>
+            <span className="w-36 shrink-0 text-right tabular-nums">
+              <span className="block text-base font-medium text-gray-800 dark:text-white/90">{formatEUR(r.eur)}</span>
+              <span className="block text-xs text-gray-400">ili {formatRSD(r.rsd)}</span>
             </span>
             {!readOnly && (
               <>

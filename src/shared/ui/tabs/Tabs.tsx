@@ -5,6 +5,8 @@ export interface TabItem<T extends string> {
   label: string;
   icon?: ReactNode;
   count?: number;
+  /** Dodatak posle naziva (npr. datumi perioda kao oznaka) */
+  suffix?: ReactNode;
 }
 
 interface TabsProps<T extends string> {
@@ -63,6 +65,7 @@ export default function Tabs<T extends string>({ items, value, onChange, variant
           >
             {item.icon}
             {item.label}
+            {item.suffix}
             {item.count !== undefined && (
               <span
                 className={`rounded-full px-2 py-0.5 text-xs ${

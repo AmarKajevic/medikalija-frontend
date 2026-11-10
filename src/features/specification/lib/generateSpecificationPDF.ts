@@ -113,6 +113,17 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
   const colWidths = ["*", 70, 70];
 
+  // Zbijeni redovi tabela: manje vazduha iznad i ispod teksta u ćeliji
+  const tableLayout = (hLineWidth: (i: number) => number = () => 0.5) => ({
+    hLineWidth,
+    vLineWidth: () => 0.5,
+    hLineColor: () => "#aaa",
+    vLineColor: () => "#aaa",
+    paddingTop: () => 1,
+    paddingBottom: () => 1,
+  });
+  const LINE_GAP = 14; // visina jednog reda teksta
+
   // pdfmake tipovi zahtevaju literalne tipove (npr. alignment: "right") za svaku ćeliju;
   // struktura je proverena ručno, pa se tip dodeljuje jednom na kraju.
   const docDefinition = {
@@ -169,19 +180,15 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
                     : []),
                 ],
               },
-              layout: {
-                hLineWidth: () => 0.5,
-                vLineWidth: () => 0.5,
-                hLineColor: () => "#aaa",
-                vLineColor: () => "#aaa",
-              },
+              layout: tableLayout(),
               margin: [0, 10, 0, 15],
             },
           ]
         : []),
 
       // Tabela 2 – Specifikacija
-     { text: `Specifikacija troškova za period: ${periodText}`,bold:true, alignment: "left", margin: [0, 0, 0, 5] },
+      // Posle naslova razmak visine jednog reda, pa tabela
+      { text: `Specifikacija troškova za period: ${periodText}`, bold: true, alignment: "left", margin: [0, 0, 0, LINE_GAP] },
       {
         table: {
           widths: colWidths,
@@ -203,12 +210,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
             ],
           ],
         },
-        layout: {
-          hLineWidth: () => 0.5,
-          vLineWidth: () => 0.5,
-          hLineColor: () => "#aaa",
-          vLineColor: () => "#aaa",
-        },
+        layout: tableLayout(),
         margin: [0, 0, 0, 15],
       },
 
@@ -236,18 +238,14 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
             ],
           ],
         },
-        layout: {
-          hLineWidth: (i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2),
-          vLineWidth: () => 0.5,
-          hLineColor: () => "#aaa",
-          vLineColor: () => "#aaa",
-        },
+        layout: tableLayout((i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2)),
         margin: [0, 0, 0, 15],
       },
     ],
     footer: facility.bankAccount
       ? { text: `Uplata na račun: ${facility.bankAccount} · ${facility.name}`, fontSize: 8, color: "#666", alignment: "center", margin: [40, 20, 40, 0] }
       : undefined,
+    defaultStyle: { fontSize: 11 },
     styles: {
       facilityName: { fontSize: 13, bold: true },
       patientName: { fontSize: 14, bold: true },
