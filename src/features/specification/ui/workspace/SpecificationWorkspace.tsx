@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuCheck, LuInfo, LuDownload, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
+import { LuCircleAlert, LuDownload, LuEye, LuInfo, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
 import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
@@ -22,14 +22,7 @@ import EditPeriodDates from "./EditPeriodDates";
 import ExchangeRateBox from "./ExchangeRateBox";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
-import ReviewStep from "./ReviewStep";
-
-export type Step = 1 | 2;
-
-const STEPS: Array<{ n: Step; title: string; hint: string }> = [
-  { n: 1, title: "Šta je pacijent dobio", hint: "Stavke, smeštaj i dug" },
-  { n: 2, title: "Pregled i štampa", hint: "Ukupno i PDF" },
-];
+import SpecPreviewDialog from "./SpecPreviewDialog";
 
 interface Props {
   specification: Specification;
@@ -43,8 +36,8 @@ interface Props {
   lodgingPeriod?: { start: string; end: string };
 }
 
-// Visina kolone u koraku 1: ekran bez zaglavlja dijaloga i donje trake sa ukupnim
-const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto lg:overscroll-contain";
+// Visina kolone: ekran bez zaglavlja dijaloga i donje trake sa ukupnim
+const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-13rem)] lg:overflow-y-auto lg:overscroll-contain";
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
   <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
@@ -56,54 +49,9 @@ const Section = ({ title, description, children }: { title: string; description?
   </section>
 );
 
-function Stepper({ step, onChange }: { step: Step; onChange: (s: Step) => void }) {
-  return (
-    <nav aria-label="Koraci">
-      <ol className="grid grid-cols-2 gap-2">
-        {STEPS.map((s) => {
-          const current = s.n === step;
-          const done = s.n < step;
-          return (
-            <li key={s.n}>
-              <button
-                type="button"
-                onClick={() => onChange(s.n)}
-                aria-current={current ? "step" : undefined}
-                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
-                  current
-                    ? "border-brand-300 bg-brand-50 dark:border-brand-500/40 dark:bg-brand-500/10"
-                    : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-white/[0.03]"
-                }`}
-              >
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                    current
-                      ? "bg-brand-500 text-white"
-                      : done
-                        ? "bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
-                        : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
-                  }`}
-                >
-                  {done ? <LuCheck className="h-4 w-4" aria-label="završeno" /> : s.n}
-                </span>
-                <span className="hidden min-w-0 sm:block">
-                  <span className={`block truncate text-sm font-medium ${current ? "text-brand-700 dark:text-brand-300" : "text-gray-800 dark:text-white/90"}`}>
-                    {s.title}
-                  </span>
-                  <span className="block truncate text-xs text-gray-500 dark:text-gray-400">{s.hint}</span>
-                </span>
-                <span className="sr-only sm:hidden">{s.title}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
 export default function SpecificationWorkspace({ specification: spec, patientId, patientName, period = "active", pendingFilter, lodgingPeriod }: Props) {
-  const [step, setStep] = useState<Step>(1);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<"preview" | "download" | "print" | null>(null);
   const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
   const [lodgingOpen, setLodgingOpen] = useState(false);
   const addPanelRef = useRef<HTMLDivElement>(null);
@@ -130,10 +78,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const [unlocked, setUnlocked] = useState(false);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const editable = canAdd || unlocked;
-  const current = STEPS[step - 1]!;
+  const ratesMissing = !(billing.rates.lower > 0 && billing.rates.middle > 0);
 
   // pdfmake sa fontovima je ~1 MB — učitava se tek kad korisnik zatraži PDF
-  const exportPdf = async (mode: "download" | "print") => {
+  const exportPdf = async (mode: "download" | "print" | "preview") => {
     const { generateSpecificationPDF } = await import("@features/specification/lib/generateSpecificationPDF");
     return generateSpecificationPDF({
       mode,
@@ -150,16 +98,23 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       facility,
     });
   };
-  const runExport = (mode: "download" | "print") => exportPdf(mode).catch((err) => notify.error(err, "PDF nije napravljen."));
-
-  // Na pregled se ne ide sa nesačuvanim dugom/smeštajem — čuva se usput
-  const goTo = async (next: Step) => {
-    if (next === 2 && billing.dirty && !(await billing.saveBilling())) return;
-    setStep(next);
+  // Pregled, PDF i štampa idu sa sačuvanim dugom/smeštajem — nesačuvano se čuva usput
+  const runExport = async (mode: "download" | "print" | "preview") => {
+    if (exporting) return;
+    setExporting(mode);
+    try {
+      if (billing.dirty && !(await billing.saveBilling())) return;
+      const url = await exportPdf(mode);
+      if (mode === "preview" && url) setPreviewUrl(url);
+    } catch (err) {
+      notify.error(err, "PDF nije napravljen.");
+    } finally {
+      setExporting(null);
+    }
   };
-  const editLodging = () => {
-    setStep(1);
-    setLodgingOpen(true);
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
   };
 
   return (
@@ -210,15 +165,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         </div>
       </div>
 
-      <div>
-        <Stepper step={step} onChange={(s) => void goTo(s)} />
-        <p className="mt-2 text-sm font-medium text-gray-800 dark:text-white/90 sm:hidden">
-          Korak {step}: {current.title}
-        </p>
-      </div>
-
       <div className="flex-1">
-        {step === 1 && canAdd && pendingCount > 0 && (
+        {canAdd && pendingCount > 0 && (
           <div className="mb-5 rounded-xl border border-warning-200 bg-white shadow-theme-xs dark:border-warning-500/30 dark:bg-gray-900">
             <header className="border-b border-warning-100 bg-warning-50 px-5 py-3.5 dark:border-warning-500/20 dark:bg-warning-500/10">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi osoblja čekaju odobrenje ({pendingCount})</h3>
@@ -232,7 +180,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </div>
         )}
 
-        {step === 1 && canAdd && otherPending > 0 && (
+        {canAdd && otherPending > 0 && (
           <p className="mb-5 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
             <LuInfo className="h-4 w-4 shrink-0 text-gray-400" />
             {otherPending === 1 ? "Još 1 unos čeka" : `Još ${otherPending} unosa čeka`} odobrenje u drugom periodu (po danu kad je urađeno, npr. tekući period) i ne ulazi u ovu specifikaciju.
@@ -246,7 +194,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </p>
         )}
 
-        {step === 1 && (
+        {(
           // Dodavanje levo i lista dodatog desno staju na ekran zajedno (svaka kolona ima svoj skrol),
           // pa se posle dodavanja odmah vidi nova stavka bez skrolovanja gore-dole
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(320px,420px)_1fr]">
@@ -275,6 +223,10 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
               >
                 <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
+                {/* Ispod smeštaja i duga: lekovi, artikli, usluge… (kao na odštampanoj specifikaciji) */}
+                <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">
+                  Specifikacija troškova
+                </h4>
                 <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
               </Section>
               <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={editable ? addAsCost : undefined} />
@@ -282,17 +234,16 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </div>
         )}
 
-        {step === 2 && (
-          <ReviewStep
-            specification={spec}
-            billing={billing}
-            nextPeriodLabel={nextPeriodLabel}
-            onEditStep={setStep}
-            onEditBilling={editLodging}
-            pendingCount={canAdd ? pendingCount : 0}
-          />
-        )}
       </div>
+
+      <SpecPreviewDialog
+        url={previewUrl}
+        onClose={closePreview}
+        onDownload={() => void runExport("download")}
+        onPrint={() => void runExport("print")}
+        busy={exporting}
+        pendingCount={canAdd ? pendingCount : 0}
+      />
 
       <LodgingDialog open={lodgingOpen} onClose={() => setLodgingOpen(false)} billing={billing} nextPeriodLabel={nextPeriodLabel} readOnly={!editable} />
 
@@ -308,38 +259,37 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         confirmText="Razumem, omogući izmene"
       />
 
-      {/* Ukupno je uvek vidljivo, a dugmad vode kroz korake */}
+      {/* Ukupno je uvek vidljivo; pregled, PDF i štampa su uvek pri ruci */}
       <div className="sticky bottom-0 z-10 -mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-white/95 px-4 py-2.5 sm:py-3 shadow-theme-md backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
         <div className="min-w-0" aria-live="polite">
-          <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">
-            Korak {step} od 2 · {current.title}
-          </p>
           <p className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white sm:text-base">
             Ukupno: <span className="whitespace-nowrap">{formatRSD(billing.result.totalRSD)}</span>
             <span className="mx-1.5 text-xs font-normal text-gray-400 sm:text-sm">ili</span>
             <span className="whitespace-nowrap">{formatEUR(billing.result.totalEUR)}</span>
           </p>
+          {canAdd && pendingCount > 0 && (
+            <p className="flex items-center gap-1.5 text-xs text-warning-700 dark:text-warning-400">
+              <LuCircleAlert className="h-3.5 w-3.5 shrink-0" />
+              {pendingCount === 1 ? "1 unos osoblja još čeka odobrenje" : `${pendingCount} unosa osoblja još čeka odobrenje`} — nije u specifikaciji.
+            </p>
+          )}
+          {ratesMissing && (
+            <p className="flex items-center gap-1.5 text-xs text-warning-700 dark:text-warning-400">
+              <LuCircleAlert className="h-3.5 w-3.5 shrink-0" />
+              Kurs evra nije unet, pa iznosi u evrima nisu tačni.
+            </p>
+          )}
         </div>
-        <div className="ml-auto flex gap-2">
-          {step > 1 && (
-            <Button variant="outline" startIcon={<LuArrowLeft className="h-4 w-4" />} onClick={() => setStep(1)}>
-              Nazad
-            </Button>
-          )}
-          {step === 1 ? (
-            <Button endIcon={<LuArrowRight className="h-4 w-4" />} loading={billing.saving} onClick={() => void goTo(2)}>
-              Dalje: pregled
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" startIcon={<LuDownload className="h-4 w-4" />} onClick={() => runExport("download")}>
-                Preuzmi PDF
-              </Button>
-              <Button startIcon={<LuPrinter className="h-4 w-4" />} onClick={() => runExport("print")}>
-                Štampaj specifikaciju
-              </Button>
-            </>
-          )}
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Button variant="outline" startIcon={<LuEye className="h-4 w-4" />} loading={exporting === "preview"} onClick={() => void runExport("preview")}>
+            Pregled specifikacije
+          </Button>
+          <Button variant="outline" startIcon={<LuDownload className="h-4 w-4" />} loading={exporting === "download"} onClick={() => void runExport("download")}>
+            Skini PDF
+          </Button>
+          <Button startIcon={<LuPrinter className="h-4 w-4" />} loading={exporting === "print"} onClick={() => void runExport("print")}>
+            Štampaj
+          </Button>
         </div>
       </div>
     </div>

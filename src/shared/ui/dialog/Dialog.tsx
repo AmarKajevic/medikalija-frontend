@@ -25,7 +25,7 @@ const sizeClasses: Record<DialogSize, string> = {
   md: "max-w-lg",
   lg: "max-w-3xl",
   xl: "max-w-5xl",
-  full: "max-w-[1400px] h-[calc(100dvh-2rem)] sm:h-[calc(100dvh-4rem)]",
+  full: "max-w-[1760px] h-[calc(100dvh-1rem)] sm:h-[calc(100dvh-2rem)]",
 };
 
 // Broj trenutno otvorenih dijaloga, da zatvaranje unutrašnjeg (npr. potvrde
@@ -88,7 +88,7 @@ export default function Dialog({
   if (!open && !keepMounted) return null;
 
   return createPortal(
-    <div className={`fixed inset-0 z-99999 flex items-center justify-center p-2 sm:p-8 ${open ? "" : "hidden"}`} aria-hidden={open ? undefined : true}>
+    <div className={`fixed inset-0 z-99999 flex items-center justify-center p-2 ${size === "full" ? "sm:p-4" : "sm:p-8"} ${open ? "" : "hidden"}`} aria-hidden={open ? undefined : true}>
       <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
 
       <div

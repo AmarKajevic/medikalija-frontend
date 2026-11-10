@@ -48,11 +48,11 @@ interface GeneratePDFParams {
   earlyPeriodLabel?: string;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
-  /** "print" otvara dijalog za štampu umesto preuzimanja fajla */
-  mode?: "download" | "print";
+  /** "print" otvara dijalog za štampu, "preview" vraća adresu PDF-a za pregled u aplikaciji */
+  mode?: "download" | "print" | "preview";
 }
 
-export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
+export const generateSpecificationPDF = async (params: GeneratePDFParams): Promise<string | undefined> => {
   const {
     patientName,
     startDate,
@@ -94,16 +94,21 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   }
   const contactLine = facilityContactLine(facility);
 
+  // Red sa iznosom u RSD "ili" EUR (porodica plaća jedno ili drugo)
+  const moneyRow = (label: string, rsd: number, eur: number, bold = false) => [
+    { text: label, bold },
+    { text: money.format(rsd), bold, alignment: "right" },
+    { text: "ili", fontSize: 10, color: "#666", alignment: "center" },
+    { text: money.format(eur), bold, alignment: "right" },
+  ];
+  const moneyHeader = [{ text: "" }, { text: "RSD", bold: true, alignment: "right" }, { text: "" }, { text: "EUR", bold: true, alignment: "right" }];
+
   // Redovi duga, smeštaja i vanstandardnog perioda smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
   const extraRows = [
-    ...(includeDebt
-      ? [[{ text: "Dug iz prethodnog perioda" }, { text: money.format(debtRSD), alignment: "right" }, { text: money.format(debtEUR), alignment: "right" }]]
-      : []),
-    ...(includeLodging
-      ? [[{ text: `Smeštaj za period ${nextPeriodLabel}` }, { text: money.format(lodgingRSD), alignment: "right" }, { text: money.format(lodgingEUR), alignment: "right" }]]
-      : []),
+    ...(includeDebt ? [moneyRow("Dug iz prethodnog perioda", debtRSD, debtEUR)] : []),
+    ...(includeLodging ? [moneyRow(`Smeštaj za period ${nextPeriodLabel}`, lodgingRSD, lodgingEUR)] : []),
     ...(includeEarlyLodging
-      ? [[{ text: `Smeštaj za period${earlyPeriodLabel ? ` ${earlyPeriodLabel}` : ""}${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}` }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
+      ? [moneyRow(`Smeštaj za period${earlyPeriodLabel ? ` ${earlyPeriodLabel}` : ""}${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}`, earlyLodgingRSD, earlyLodgingEUR)]
       : []),
   ];
   const extraRSD = (includeDebt ? debtRSD : 0) + (includeLodging ? lodgingRSD : 0) + (includeEarlyLodging ? earlyLodgingRSD : 0);
@@ -112,11 +117,13 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   // ✅ ZAJEDNIČKE ŠIRINE KOLONA za sve tri tabele
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
   const colWidths = ["*", 70, 70];
+  // Tabele sa iznosima: RSD | ili | EUR (bez linija oko "ili")
+  const moneyWidths = ["*", 70, 16, 70];
 
   // Zbijeni redovi tabela: manje vazduha iznad i ispod teksta u ćeliji
-  const tableLayout = (hLineWidth: (i: number) => number = () => 0.5) => ({
+  const tableLayout = (hLineWidth: (i: number) => number = () => 0.5, vLineWidth: (i: number) => number = () => 0.5) => ({
     hLineWidth,
-    vLineWidth: () => 0.5,
+    vLineWidth,
     hLineColor: () => "#aaa",
     vLineColor: () => "#aaa",
     paddingTop: () => 1,
@@ -130,28 +137,19 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
     pageSize: "A4",
     pageMargins: [40, 50, 40, 50],
     content: [
-      // Red: logo levo, ime pacijenta desno
+      // Logo i podaci ustanove levo
       {
-        columns: [
-          {
-            width: 250,
-            stack: [
-              logoBase64
-                ? { image: logoBase64, fit: [170, 60], alignment: "left", margin: [0, 0, 0, 4] }
-                : { text: facility.name, style: "facilityName" },
-              logoBase64 ? { text: facility.name, bold: true, fontSize: 9 } : { text: facility.subtitle, fontSize: 9, color: "#555" },
-              contactLine ? { text: contactLine, fontSize: 8, color: "#666", margin: [0, 2, 0, 0] } : { text: "" },
-            ],
-          },
-          {
-            width: "*",
-            text: patientName,
-            style: "patientName",
-            alignment: "right",
-          },
+        stack: [
+          logoBase64
+            ? { image: logoBase64, fit: [170, 60], alignment: "left", margin: [0, 0, 0, 4] }
+            : { text: facility.name, style: "facilityName" },
+          logoBase64 ? { text: facility.name, bold: true, fontSize: 9 } : { text: facility.subtitle, fontSize: 9, color: "#555" },
+          contactLine ? { text: contactLine, fontSize: 8, color: "#666", margin: [0, 2, 0, 0] } : { text: "" },
         ],
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 8],
       },
+      // Ime i prezime pacijenta na sredini
+      { text: patientName, style: "patientName", alignment: "center", margin: [0, 0, 0, 12] },
       // Period (centriran)
       
 
@@ -161,26 +159,14 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
             // Bez naslova: redovi tabele ("Smeštaj za period ...", "Dug iz prethodnog perioda") govore sami
             {
               table: {
-                widths: colWidths,
+                widths: moneyWidths,
                 body: [
-                  [
-                    { text: "", bold: true },
-                    { text: "RSD", bold: true, alignment: "right" },
-                    { text: "EUR", bold: true, alignment: "right" },
-                  ],
+                  moneyHeader,
                   ...extraRows,
-                  ...(extraRows.length > 1
-                    ? [
-                        [
-                          { text: "UKUPNO", bold: true },
-                          { text: money.format(extraRSD), bold: true, alignment: "right" },
-                          { text: money.format(extraEUR), bold: true, alignment: "right" },
-                        ],
-                      ]
-                    : []),
+                  ...(extraRows.length > 1 ? [moneyRow("UKUPNO", extraRSD, extraEUR, true)] : []),
                 ],
               },
-              layout: tableLayout(),
+              layout: tableLayout(undefined, (i) => (i === 2 || i === 3 ? 0 : 0.5)),
               margin: [0, 10, 0, 15],
             },
           ]
@@ -218,27 +204,18 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       { text: "Konačan obračun", style: "subheader", margin: [0, 10, 0, 5] },
       {
         table: {
-          widths: colWidths,
+          widths: moneyWidths,
           body: [
-            [
-              { text: "", bold: true },
-              { text: "RSD", bold: true, alignment: "right" },
-              { text: "EUR", bold: true, alignment: "right" },
-            ],
-            [
-              { text: "Specifikacija troškova " },
-              { text: money.format(specTotalRSD), alignment: "right" },
-              { text: money.format(specEUR), alignment: "right" },
-            ],
+            moneyHeader,
+            moneyRow("Specifikacija troškova", specTotalRSD, specEUR),
             ...extraRows,
-            [
-              { text: "UKUPNO ZA NAPLATU", bold: true },
-              { text: money.format(totalRSD), bold: true, alignment: "right" },
-              { text: money.format(totalEUR), bold: true, alignment: "right" },
-            ],
+            moneyRow("Račun za naplatu (ukupno)", totalRSD, totalEUR, true),
           ],
         },
-        layout: tableLayout((i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2)),
+        layout: tableLayout(
+          (i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2),
+          (i: number) => (i === 2 || i === 3 ? 0 : 0.5)
+        ),
         margin: [0, 0, 0, 15],
       },
     ],
@@ -254,6 +231,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
   } as unknown as TDocumentDefinitions;
 
   const pdf = pdfMake.createPdf(inScript(docDefinition, getScript()));
+  if (mode === "preview") return URL.createObjectURL(await pdf.getBlob());
   if (mode === "print") {
     pdf.print();
   } else {
