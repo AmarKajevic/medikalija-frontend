@@ -100,11 +100,19 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
     { text: money.format(rsd), bold, alignment: "right" },
     { text: money.format(eur), bold, alignment: "right" },
   ];
-  // Zaglavlje "RSD | ili EUR": porodica plaća u jednoj ili drugoj valuti
+  // Zaglavlje "RSD ili EUR" u jednoj ćeliji (bez linije između): porodica plaća u jednoj ili drugoj valuti.
+  // columnGap = razmak između ćelija ispod (4 + 0,5 linija + 4), pa RSD i EUR stoje tačno iznad svojih iznosa.
   const moneyHeader = [
     { text: "" },
-    { text: "RSD", bold: true, alignment: "right" },
-    { columns: [{ text: "ili", width: "auto", color: "#666" }, { text: "EUR", bold: true, alignment: "right" }] },
+    {
+      colSpan: 2,
+      columnGap: 8.5,
+      columns: [
+        { width: "*", text: "RSD", bold: true, alignment: "right" },
+        { width: "*", columns: [{ text: "ili", width: "auto", color: "#666" }, { text: "EUR", bold: true, alignment: "right" }] },
+      ],
+    },
+    {},
   ];
 
   // Redovi duga, smeštaja i vanstandardnog perioda smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
