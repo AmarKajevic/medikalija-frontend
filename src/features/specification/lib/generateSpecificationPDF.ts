@@ -103,15 +103,6 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       ? [[{ text: `Smeštaj za period${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}` }, { text: money.format(earlyLodgingRSD), alignment: "right" }, { text: money.format(earlyLodgingEUR), alignment: "right" }]]
       : []),
   ];
-  const extraTitles = [includeDebt && "Dug", includeLodging && "Smeštaj", includeEarlyLodging && "Vanstandardni period smeštaja"].filter(Boolean);
-  const extraTitle =
-    extraTitles.length > 1
-      ? `${extraTitles.join(" + ")} (EUR/RSD)`
-      : includeDebt
-        ? "Dug iz prethodnog perioda (EUR/RSD)"
-        : includeLodging
-          ? "Smeštaj za naredni period (EUR/RSD)"
-          : "Vanstandardni period smeštaja (EUR/RSD)";
   const extraRSD = (includeDebt ? debtRSD : 0) + (includeLodging ? lodgingRSD : 0) + (includeEarlyLodging ? earlyLodgingRSD : 0);
   const extraEUR = (includeDebt ? debtEUR : 0) + (includeLodging ? lodgingEUR : 0) + (includeEarlyLodging ? earlyLodgingEUR : 0);
 
@@ -153,11 +144,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
       // Tabela 1 – dug i/ili smeštaj (samo ono što je uključeno)
       ...(extraRows.length > 0
         ? [
-            {
-              text: extraTitle,
-              style: "subheader",
-              margin: [0, 10, 0, 5],
-            },
+            // Bez naslova: redovi tabele ("Smeštaj za period ...", "Dug iz prethodnog perioda") govore sami
             {
               table: {
                 widths: colWidths,
@@ -185,7 +172,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams) => {
                 hLineColor: () => "#aaa",
                 vLineColor: () => "#aaa",
               },
-              margin: [0, 0, 0, 15],
+              margin: [0, 10, 0, 15],
             },
           ]
         : []),
