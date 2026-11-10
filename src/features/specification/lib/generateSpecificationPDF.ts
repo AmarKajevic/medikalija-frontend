@@ -97,19 +97,19 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
   // Red sa iznosom u RSD i EUR
   const moneyRow = (label: string, rsd: number, eur: number, bold = false) => [
     { text: label, bold },
-    { text: money.format(rsd), bold, alignment: "right" },
-    { text: money.format(eur), bold, alignment: "right" },
+    { text: money.format(rsd), bold, alignment: "center" },
+    { text: money.format(eur), bold, alignment: "center" },
   ];
   // Zaglavlje "RSD ili EUR" u jednoj ćeliji (bez linije između): porodica plaća u jednoj ili drugoj valuti.
-  // columnGap = razmak između ćelija ispod (4 + 0,5 linija + 4), pa RSD i EUR stoje tačno iznad svojih iznosa.
+  // "ili" je na granici kolona, a RSD i EUR centrirani tačno iznad svojih (centriranih) iznosa.
   const moneyHeader = [
     { text: "" },
     {
       colSpan: 2,
-      columnGap: 8.5,
       columns: [
-        { width: "*", text: "RSD", bold: true, alignment: "right" },
-        { width: "*", columns: [{ text: "ili", width: "auto", color: "#666" }, { text: "EUR", bold: true, alignment: "right" }] },
+        { width: "*", text: "RSD", bold: true, alignment: "center" },
+        { width: "auto", text: "ili", color: "#666" },
+        { width: "*", text: "EUR", bold: true, alignment: "center" },
       ],
     },
     {},
@@ -192,17 +192,17 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
             [
               { text: "NAZIV", bold: true },
               { text: "KOLIČINA", bold: true, alignment: "center" },
-              { text: "RSD", bold: true, alignment: "right" },
+              { text: "RSD", bold: true, alignment: "center" },
             ],
             ...items.map((item) => [
               { text: item.formattedName },
               { text: qtyFmt.format(item.amount), alignment: "center" },
-              { text: money.format(item.price), alignment: "right" },
+              { text: money.format(item.price), alignment: "center" },
             ]),
             [
               { text: "" },
-              { text: "Ukupno", bold: true, alignment: "right" },
-              { text: money.format(specTotalRSD), bold: true, alignment: "right" },
+              { text: "Ukupno", bold: true, alignment: "center" },
+              { text: money.format(specTotalRSD), bold: true, alignment: "center" },
             ],
           ],
         },
