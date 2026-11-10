@@ -15,7 +15,7 @@ export function LodgingButton({ billing, onOpen, readOnly }: { billing: BillingS
     <button
       type="button"
       onClick={onOpen}
-      className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm transition ${
+      className={`flex h-full w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm transition ${
         any
           ? "border-brand-300 bg-brand-50/60 text-brand-700 hover:bg-brand-50 dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-300"
           : "border-dashed border-gray-300 bg-white text-gray-700 hover:border-brand-300 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"

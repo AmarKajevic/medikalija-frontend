@@ -1,8 +1,8 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
-import { LuCircleAlert, LuDownload, LuEye, LuInfo, LuLock, LuLockOpen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
+import { LuCircleAlert, LuDownload, LuEye, LuInfo, LuLock, LuLockOpen, LuNotebookPen, LuPrinter, LuTriangleAlert } from "react-icons/lu";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
-import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
+import Dialog, { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import { notify } from "@shared/lib/notify";
 import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
@@ -36,8 +36,9 @@ interface Props {
   lodgingPeriod?: { start: string; end: string };
 }
 
-// Visina kolone: ekran bez zaglavlja dijaloga i donje trake sa ukupnim
-const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-13rem)] lg:overflow-y-auto lg:overscroll-contain";
+// Visina kolone: ekran bez zaglavlja dijaloga i donje trake sa ukupnim. Kad kolona dođe do
+// kraja (ili vrha), skrol prelazi na glavni prozor specifikacije — zato bez overscroll-contain.
+const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-13rem)] lg:overflow-y-auto";
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
   <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
@@ -54,6 +55,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
   const [exporting, setExporting] = useState<"preview" | "download" | "print" | null>(null);
   const [addPreset, setAddPreset] = useState<AddPreset | null>(null);
   const [lodgingOpen, setLodgingOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const addPanelRef = useRef<HTMLDivElement>(null);
 
   // Iz učinka sestre: otvori "Drugi trošak" sa opisom iz beleške, fokus na iznos
@@ -160,7 +162,21 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         {editable && <EditPeriodDates specification={spec} patientId={patientId} />}
       </div>
         <div className="flex flex-col items-stretch gap-2">
-          <LodgingButton billing={billing} onOpen={() => setLodgingOpen(true)} readOnly={!editable} />
+          <div className="flex items-stretch gap-2">
+            {/* Zabeleške osoblja u posebnom prozoru — ne zauzimaju prostor ispod liste */}
+            <Button
+              variant="outline"
+              startIcon={<LuNotebookPen className="h-4 w-4" />}
+              onClick={() => setNotesOpen(true)}
+              title="Zabeleške iz ovog perioda: sve što je osoblje upisalo"
+              aria-label="Zabeleške iz ovog perioda"
+            >
+              Zabeleške
+            </Button>
+            <div className="min-w-0 flex-1">
+              <LodgingButton billing={billing} onOpen={() => setLodgingOpen(true)} readOnly={!editable} />
+            </div>
+          </div>
           <ExchangeRateBox billing={billing} />
         </div>
       </div>
@@ -229,12 +245,33 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 </h4>
                 <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
               </Section>
-              <PeriodNotes specification={spec} patientId={patientId} onAddAsCost={editable ? addAsCost : undefined} />
             </div>
           </div>
         )}
 
       </div>
+
+      <Dialog
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        size="xl"
+        title="Zabeleške iz ovog perioda"
+        description="Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizioterapija). Proverite da li nešto treba naplatiti."
+      >
+        <PeriodNotes
+          embedded
+          specification={spec}
+          patientId={patientId}
+          onAddAsCost={
+            editable
+              ? (label) => {
+                  setNotesOpen(false);
+                  addAsCost(label);
+                }
+              : undefined
+          }
+        />
+      </Dialog>
 
       <SpecPreviewDialog
         url={previewUrl}

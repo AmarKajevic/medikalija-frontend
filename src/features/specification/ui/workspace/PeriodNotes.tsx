@@ -19,6 +19,8 @@ interface Props {
   patientId: string;
   /** "Dodaj kao trošak": otvara formu za trošak sa opisom iz beleške */
   onAddAsCost?: (label: string) => void;
+  /** U posebnom prozoru: bez okvira i naslova (naslov je u zaglavlju prozora) */
+  embedded?: boolean;
 }
 
 // Lokalna ponoć dana specifikacije ("2026-10-25T00:00:00Z" → 25.10. 00:00 po lokalnom vremenu)
@@ -50,7 +52,7 @@ const statusOf = (e: NurseEntry) =>
 
 // Sve što je osoblje upisalo u periodu specifikacije — i ono što ne ulazi u specifikaciju
 // (učinak rada, redovna fizioterapija). Uprava to vidi dok pravi specifikaciju.
-export default function PeriodNotes({ specification: spec, patientId, onAddAsCost }: Props) {
+export default function PeriodNotes({ specification: spec, patientId, onAddAsCost, embedded = false }: Props) {
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const from = useMemo(() => localDay(spec.startDate).toISOString(), [spec.startDate]);
@@ -83,14 +85,16 @@ export default function PeriodNotes({ specification: spec, patientId, onAddAsCos
   };
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+    <section className={embedded ? "" : "rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900"}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3.5 dark:border-gray-800">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Zabeleške iz ovog perioda</h3>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizioterapija). Proverite da li nešto treba naplatiti.
-          </p>
-        </div>
+        {!embedded && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Zabeleške iz ovog perioda</h3>
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizioterapija). Proverite da li nešto treba naplatiti.
+            </p>
+          </div>
+        )}
         <Tabs
           variant="pills"
           value={tab}

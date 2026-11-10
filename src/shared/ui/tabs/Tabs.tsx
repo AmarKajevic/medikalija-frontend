@@ -15,10 +15,12 @@ interface TabsProps<T extends string> {
   onChange: (value: T) => void;
   /** "underline" za navigaciju kroz sekcije, "pills" za kompaktan izbor (segmentirana kontrola). */
   variant?: "underline" | "pills";
+  /** Horizontalni skrol kad tabovi ne staju u red (podrazumevano); bez njega se samo prelamaju */
+  scrollable?: boolean;
   className?: string;
 }
 
-export default function Tabs<T extends string>({ items, value, onChange, variant = "underline", className = "" }: TabsProps<T>) {
+export default function Tabs<T extends string>({ items, value, onChange, variant = "underline", scrollable = true, className = "" }: TabsProps<T>) {
   if (variant === "pills") {
     return (
       <div role="tablist" className={`grid gap-1 rounded-xl bg-gray-100 p-1 dark:bg-white/[0.04] ${className}`} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
@@ -47,7 +49,7 @@ export default function Tabs<T extends string>({ items, value, onChange, variant
   }
 
   return (
-    <div role="tablist" className={`flex gap-6 overflow-x-auto border-b border-gray-200 dark:border-gray-800 ${className}`}>
+    <div role="tablist" className={`flex gap-6 ${scrollable ? "overflow-x-auto" : "flex-wrap"} border-b border-gray-200 dark:border-gray-800 ${className}`}>
       {items.map((item) => {
         const active = item.value === value;
         return (

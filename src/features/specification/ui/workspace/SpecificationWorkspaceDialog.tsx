@@ -134,6 +134,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Tabs
             className="min-w-0"
+            scrollable={false}
             value={shownTab ?? "active"}
             onChange={setTab}
             items={[

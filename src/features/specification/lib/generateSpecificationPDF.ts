@@ -94,14 +94,18 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
   }
   const contactLine = facilityContactLine(facility);
 
-  // Red sa iznosom u RSD "ili" EUR (porodica plaća jedno ili drugo)
+  // Red sa iznosom u RSD i EUR
   const moneyRow = (label: string, rsd: number, eur: number, bold = false) => [
     { text: label, bold },
     { text: money.format(rsd), bold, alignment: "right" },
-    { text: "ili", fontSize: 10, color: "#666", alignment: "center" },
     { text: money.format(eur), bold, alignment: "right" },
   ];
-  const moneyHeader = [{ text: "" }, { text: "RSD", bold: true, alignment: "right" }, { text: "" }, { text: "EUR", bold: true, alignment: "right" }];
+  // Zaglavlje "RSD | ili EUR": porodica plaća u jednoj ili drugoj valuti
+  const moneyHeader = [
+    { text: "" },
+    { text: "RSD", bold: true, alignment: "right" },
+    { columns: [{ text: "ili", width: "auto", color: "#666" }, { text: "EUR", bold: true, alignment: "right" }] },
+  ];
 
   // Redovi duga, smeštaja i vanstandardnog perioda smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
   const extraRows = [
@@ -117,13 +121,11 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
   // ✅ ZAJEDNIČKE ŠIRINE KOLONA za sve tri tabele
   // Prva kolona fleksibilna, druga fiksna 70, treća fiksna 70 (možeš prilagoditi)
   const colWidths = ["*", 70, 70];
-  // Tabele sa iznosima: RSD | ili | EUR (bez linija oko "ili")
-  const moneyWidths = ["*", 70, 16, 70];
 
   // Zbijeni redovi tabela: manje vazduha iznad i ispod teksta u ćeliji
-  const tableLayout = (hLineWidth: (i: number) => number = () => 0.5, vLineWidth: (i: number) => number = () => 0.5) => ({
+  const tableLayout = (hLineWidth: (i: number) => number = () => 0.5) => ({
     hLineWidth,
-    vLineWidth,
+    vLineWidth: () => 0.5,
     hLineColor: () => "#aaa",
     vLineColor: () => "#aaa",
     paddingTop: () => 1,
@@ -159,14 +161,14 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
             // Bez naslova: redovi tabele ("Smeštaj za period ...", "Dug iz prethodnog perioda") govore sami
             {
               table: {
-                widths: moneyWidths,
+                widths: colWidths,
                 body: [
                   moneyHeader,
                   ...extraRows,
                   ...(extraRows.length > 1 ? [moneyRow("UKUPNO", extraRSD, extraEUR, true)] : []),
                 ],
               },
-              layout: tableLayout(undefined, (i) => (i === 2 || i === 3 ? 0 : 0.5)),
+              layout: tableLayout(),
               margin: [0, 10, 0, 15],
             },
           ]
@@ -204,7 +206,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
       { text: "Konačan obračun", style: "subheader", margin: [0, 10, 0, 5] },
       {
         table: {
-          widths: moneyWidths,
+          widths: colWidths,
           body: [
             moneyHeader,
             moneyRow("Specifikacija troškova", specTotalRSD, specEUR),
@@ -212,10 +214,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
             moneyRow("Račun za naplatu (ukupno)", totalRSD, totalEUR, true),
           ],
         },
-        layout: tableLayout(
-          (i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2),
-          (i: number) => (i === 2 || i === 3 ? 0 : 0.5)
-        ),
+        layout: tableLayout((i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2)),
         margin: [0, 0, 0, 15],
       },
     ],
