@@ -23,6 +23,7 @@ import SocialNotesList from "@features/social/ui/SocialNotesList";
 import SocialNoteDialog from "@features/social/ui/SocialNoteDialog";
 import SocialProfileCard from "@features/social/ui/SocialProfileCard";
 import SocialDocumentsCard from "@features/social/ui/SocialDocumentsCard";
+import FillTemplateCard from "@features/social/ui/FillTemplateCard";
 import PatientHeader from "@features/patients/ui/profile/PatientHeader";
 import SpecificationSummaryCard from "@features/patients/ui/profile/SpecificationSummaryCard";
 import PatientActivity from "@features/patients/ui/profile/PatientActivity";
@@ -146,7 +147,7 @@ export default function PatientPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs items={[{ label: "Pacijenti", to: paths.patients }, { label: patientName }]} />
+      <Breadcrumbs items={[{ label: "Korisnici", to: paths.patients }, { label: patientName }]} />
       <PatientHeader
         patient={patient}
         canManage={manager}
@@ -222,7 +223,10 @@ export default function PatientPage() {
             <SocialDocumentsCard patientId={patient._id} patientName={patientName} canWrite={canWriteSocial && !discharged} active={!discharged} />
             <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />
           </div>
-          <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
+          <div className="space-y-6">
+            <FillTemplateCard patientId={patient._id} patientName={patientName} />
+            <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
+          </div>
         </div>
       )}
 

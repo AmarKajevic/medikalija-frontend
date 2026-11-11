@@ -81,20 +81,29 @@ export default function SocialDocumentDialog({ open, onClose, patientId, patient
   const save = useSaveDocument(patientId);
   const finalize = useFinalizeDocument(patientId);
   const remove = useDeleteDocument(patientId);
-  const [form, setForm] = useState<DocumentInput>(() => toInput(type, doc, previousGoals));
-  const [confirm, setConfirm] = useState<"finalize" | "delete" | null>(null);
+  const [initial, setInitial] = useState<DocumentInput>(() => toInput(type, doc, previousGoals));
+  const [form, setForm] = useState<DocumentInput>(initial);
+  const [confirm, setConfirm] = useState<"finalize" | "delete" | "discard" | null>(null);
   const readOnly = !canWrite || doc?.status === "final";
+  const dirty = !readOnly && JSON.stringify(form) !== JSON.stringify(initial);
 
+  // Pri otvaranju: podaci dokumenta (ne dira formu dok je otvorena)
   useEffect(() => {
-    if (open) setForm(toInput(type, doc, previousGoals));
-  }, [open, type, doc, previousGoals]);
+    if (!open) return;
+    const next = toInput(type, doc, previousGoals);
+    setInitial(next);
+    setForm(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- samo pri otvaranju
+  }, [open]);
+
+  const requestClose = () => (dirty ? setConfirm("discard") : onClose());
 
   const set = (patch: Partial<DocumentInput>) => setForm((f) => ({ ...f, ...patch }));
   const setSection = (key: string, value: string) => set({ sections: { ...form.sections, [key]: value } });
   const setGoal = (i: number, patch: Partial<PlanGoal>) => set({ goals: form.goals.map((g, j) => (j === i ? { ...g, ...patch } : g)) });
 
   const persist = async () => {
-    const saved = await save.mutateAsync({ id: doc?._id, type, input: form });
+    const saved = await save.mutateAsync({ id: doc?._id, type, input: form, expectedUpdatedAt: doc?.updatedAt });
     return saved;
   };
 
@@ -140,7 +149,7 @@ export default function SocialDocumentDialog({ open, onClose, patientId, patient
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={requestClose}
         size="xl"
         title={
           <span className="flex flex-wrap items-center gap-2">
@@ -306,6 +315,17 @@ export default function SocialDocumentDialog({ open, onClose, patientId, patient
         title={`Zaključiti: ${meta.label}?`}
         description="Zaključen dokument postaje zapis u dosijeu i više se ne menja. Za kasnije promene pravi se nova procena ili pregled plana."
         confirmText="Zaključi"
+      />
+      <ConfirmDialog
+        open={confirm === "discard"}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          setConfirm(null);
+          onClose();
+        }}
+        title="Odbaciti nesačuvane izmene?"
+        description="Izmene koje niste sačuvali biće izgubljene. Sačuvajte nacrt ako želite da nastavite kasnije."
+        confirmText="Odbaci izmene"
       />
       <ConfirmDialog
         open={confirm === "delete"}

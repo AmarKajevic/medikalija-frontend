@@ -8,15 +8,15 @@ const labels = (role: string) => navigationFor(role).flatMap((g) => g.items.map(
 
 describe("navigacija po ulogama", () => {
   it("sestra vidi samo stranice kojima ima pristup", () => {
-    expect(labels("nurse")).toEqual(["Početna", "Pacijenti", "Unos nege", "Kalendar", "Artikli", "Porodične zalihe"]);
+    expect(labels("nurse")).toEqual(["Početna", "Korisnici", "Unos nege", "Kalendar", "Artikli", "Porodične zalihe"]);
   });
 
   it("doktor: pacijenti, kalendar i lekarski izveštaji, bez zaliha i nege", () => {
-    expect(labels("doctor")).toEqual(["Početna", "Pacijenti", "Kalendar", "Lekarski izveštaji", "Socijalni karton"]);
+    expect(labels("doctor")).toEqual(["Početna", "Korisnici", "Kalendar", "Lekarski izveštaji", "Socijalni karton"]);
   });
 
   it("socijalni radnik: pacijenti, kalendar i socijalni karton", () => {
-    expect(labels("social-worker")).toEqual(["Početna", "Pacijenti", "Kalendar", "Socijalni karton"]);
+    expect(labels("social-worker")).toEqual(["Početna", "Korisnici", "Kalendar", "Socijalni karton"]);
   });
 
   it("uprava vidi sve, uključujući lekove, rezervu i osoblje", () => {

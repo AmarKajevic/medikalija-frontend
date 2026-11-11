@@ -19,7 +19,8 @@ vi.mock("@features/patients/hooks/usePatients", () => ({
   }),
 }));
 vi.mock("@features/patients/hooks/useDeletePatient", () => ({ useDeletePatient: () => ({ mutate: vi.fn(), isPending: false }) }));
-vi.mock("@features/patients/ui/AddPatientDialog", () => ({ default: ({ open }: { open: boolean }) => (open ? <p>dijalog novi pacijent</p> : null) }));
+vi.mock("@features/social/ui/NewResidentDialog", () => ({ default: ({ open }: { open: boolean }) => (open ? <p>dijalog novi korisnik</p> : null) }));
+vi.mock("@features/patients/ui/PurgePatientDialog", () => ({ default: ({ patient }: { patient: { name: string } | null }) => (patient ? <p>trajno brisanje {patient.name}</p> : null) }));
 
 import PatientsPage from "./PatientsPage";
 
@@ -46,18 +47,42 @@ describe("PatientsPage", () => {
     expect(names()).toEqual(["Ljubica Živković"]);
   });
 
-  it("uprava otvara dijalog za novog pacijenta", async () => {
-    const { user } = renderWithProviders(<PatientsPage />);
-    await user.click(screen.getByRole("button", { name: "Novi pacijent" }));
-    expect(screen.getByText("dijalog novi pacijent")).toBeInTheDocument();
+  it("uprava i socijalni radnik otvaraju dijalog za novog korisnika", async () => {
+    for (const role of ["admin", "social-worker"] as const) {
+      auth.user = { _id: "u", name: "Ana", lastName: "A", email: "", role };
+      const { user, unmount } = renderWithProviders(<PatientsPage />);
+      await user.click(screen.getByRole("button", { name: "Novi korisnik" }));
+      expect(screen.getByText("dijalog novi korisnik")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("admin trajno briše (uz potvrdu imenom); glavna sestra samo obično brisanje; socijalni radnik ne briše", async () => {
+    const adminView = renderWithProviders(<PatientsPage />);
+    await adminView.user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
+    await adminView.user.click(screen.getByRole("menuitem", { name: "Trajno obriši korisnika" }));
+    expect(screen.getByText("trajno brisanje Milica")).toBeInTheDocument();
+    adminView.unmount();
+
+    auth.user = { _id: "m", name: "Glavna", lastName: "S", email: "", role: "main-nurse" };
+    const nurseView = renderWithProviders(<PatientsPage />);
+    await nurseView.user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
+    expect(screen.getByRole("menuitem", { name: "Obriši korisnika" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Trajno obriši korisnika" })).not.toBeInTheDocument();
+    nurseView.unmount();
+
+    auth.user = { _id: "s", name: "Vesna", lastName: "S", email: "", role: "social-worker" };
+    const swView = renderWithProviders(<PatientsPage />);
+    await swView.user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
+    expect(screen.queryByRole("menuitem", { name: /Obriši/ })).not.toBeInTheDocument();
   });
 
   it("sestra ne vidi dodavanje ni brisanje", async () => {
     auth.user = { _id: "n", name: "Sanja", lastName: "S", email: "", role: "nurse" };
     const { user } = renderWithProviders(<PatientsPage />);
-    expect(screen.queryByRole("button", { name: "Novi pacijent" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Novi korisnik" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
-    expect(screen.queryByRole("menuitem", { name: "Obriši pacijenta" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Obriši/ })).not.toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Otvori profil" })).toBeInTheDocument();
   });
 });
