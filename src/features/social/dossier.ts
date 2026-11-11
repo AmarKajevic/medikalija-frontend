@@ -33,6 +33,8 @@ export interface SocialProfileInput {
   healthInsuranceNumber: string;
   chosenDoctor: string;
   municipality: string;
+  dossierNumber: string;
+  accommodation: string;
   pensionType: "" | "old_age" | "family" | "disability" | "foreign" | "none" | "other";
   incomeNote: string;
   payer: "" | "resident" | "family" | "csr" | "mixed" | "other";
@@ -91,6 +93,8 @@ export const EMPTY_PROFILE: SocialProfileInput = {
   healthInsuranceNumber: "",
   chosenDoctor: "",
   municipality: "",
+  dossierNumber: "",
+  accommodation: "",
   pensionType: "",
   incomeNote: "",
   payer: "",
@@ -232,6 +236,8 @@ export type DocType = "intake" | "assessment" | "reassessment" | "plan" | "plan_
 
 export interface PlanGoal {
   _id?: string;
+  /** Oblast, npr. Adaptacija, Socijalni kontakti, Ostvarivanje prava */
+  area: string;
   goal: string;
   outcome: string;
   activities: string;
@@ -274,6 +280,7 @@ interface SectionMeta {
 // Delovi dokumenata (ključevi su isti kao na serveru i u budućim šablonima)
 const S = (key: string, label: string, hint: string): SectionMeta => ({ key, label, hint });
 const ASSESSMENT_SECTIONS: SectionMeta[] = [
+  S("socialHistory", "Socijalna anamneza", "Život pre prijema: porodica, rad, stanovanje, zašto je došlo do smeštaja."),
   S("health", "Zdravstveno stanje", "Dijagnoze, terapija, pomagala — prema medicinskoj dokumentaciji i lekaru."),
   S("selfCare", "Briga o sebi", "Ishrana, higijena, oblačenje, kretanje, kontrola sfinktera; koliko pomoći je potrebno."),
   S("mental", "Kognitivno i psihičko stanje", "Orijentacija, pamćenje, raspoloženje, ponašanje."),
@@ -322,7 +329,7 @@ export const DOC_TYPES: Record<
     description: "Periodično, u rokovima iz individualnog plana, ili kad se stanje korisnika promeni.",
     sections: [
       S("changes", "Šta se promenilo", "Razlog za ponovnu procenu i promene od prethodne."),
-      ...ASSESSMENT_SECTIONS.filter((s) => ["health", "selfCare", "mental", "socialTies", "risks", "needs", "userView", "conclusion"].includes(s.key)),
+      ...ASSESSMENT_SECTIONS.filter((s) => ["socialHistory", "health", "selfCare", "mental", "socialTies", "risks", "needs", "userView", "conclusion"].includes(s.key)),
     ],
     levels: true,
   },
