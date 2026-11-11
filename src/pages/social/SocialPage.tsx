@@ -17,9 +17,10 @@ import { SOCIAL_CATEGORIES, SocialCategory, useSocialNotes } from "@features/soc
 import SocialNotesList from "@features/social/ui/SocialNotesList";
 import SocialNoteDialog from "@features/social/ui/SocialNoteDialog";
 import SocialDeadlinesList from "@features/social/ui/SocialDeadlinesList";
+import TemplatesPanel from "@features/social/ui/TemplatesPanel";
 import { daysUntil, useSocialDeadlines } from "@features/social/dossier";
 
-type View = "followups" | "deadlines" | "all";
+type View = "followups" | "deadlines" | "all" | "templates";
 
 // Socijalni rad: podsetnici koji čekaju, rokovi za procene i individualne planove, sve beleške.
 export default function SocialPage() {
@@ -74,6 +75,7 @@ export default function SocialPage() {
             { value: "followups", label: `Podsetnici${followups.data?.length ? ` (${followups.data.length})` : ""}` },
             { value: "deadlines", label: `Rokovi${dueSoon ? ` (${dueSoon})` : ""}` },
             { value: "all", label: "Sve beleške" },
+            { value: "templates", label: "Word šabloni" },
           ]}
         />
       </div>
@@ -104,7 +106,9 @@ export default function SocialPage() {
         </p>
       )}
 
-      {view === "deadlines" ? (
+      {view === "templates" ? (
+        <TemplatesPanel canWrite={canWrite} />
+      ) : view === "deadlines" ? (
         <Card>
           <SocialDeadlinesList />
         </Card>

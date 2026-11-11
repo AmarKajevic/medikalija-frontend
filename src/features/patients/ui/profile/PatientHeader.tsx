@@ -68,7 +68,7 @@ export default function PatientHeader({ patient, canManage, canViewSchedule = ca
               )}
             </div>
             <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-              {formatDay(patient.dateOfBirth)} · {ageOf(patient.dateOfBirth)} god.
+              {patient.dateOfBirth ? `${formatDay(patient.dateOfBirth)} · ${ageOf(patient.dateOfBirth)} god.` : "Datum rođenja nije unet"}
             </p>
             <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
               <Meta icon={<LuCalendarDays />} label="Prijem">{formatDay(patient.admissionDate)}</Meta>

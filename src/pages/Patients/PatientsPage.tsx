@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { LuEllipsis, LuExternalLink, LuTrash2, LuUserPlus, LuUsers } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { isManager, paths } from "@app/paths";
+import { hasRole, isManager, paths, SOCIAL_WRITE_ROLES } from "@app/paths";
 import PageHeader from "@shared/ui/page/PageHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
@@ -16,7 +16,8 @@ import { formatDay, toCalendarDay } from "@shared/lib/calendarDay";
 import { notify } from "@shared/lib/notify";
 import { usePatients } from "@features/patients/hooks/usePatients";
 import { useDeletePatient } from "@features/patients/hooks/useDeletePatient";
-import AddPatientDialog from "@features/patients/ui/AddPatientDialog";
+import PurgePatientDialog from "@features/patients/ui/PurgePatientDialog";
+import NewResidentDialog from "@features/social/ui/NewResidentDialog";
 import { pages } from "@app/routeLoaders";
 
 type PatientRow = {
@@ -49,11 +50,15 @@ export default function PatientsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const manager = isManager(user?.role);
+  const admin = user?.role === "admin";
+  // Korisnika unose uprava i socijalni radnik (osnovni ili detaljni podaci)
+  const canAdd = hasRole(user?.role, SOCIAL_WRITE_ROLES);
   const [params, setParams] = useSearchParams();
   const { data, isLoading, isError, refetch } = usePatients();
   const remove = useDeletePatient();
   const [filter, setFilter] = useState<Filter>("active");
   const [toDelete, setToDelete] = useState<PatientRow | null>(null);
+  const [toPurge, setToPurge] = useState<PatientRow | null>(null);
 
   const addOpen = params.get("new") === "1";
   const setAddOpen = (open: boolean) => setParams(open ? { new: "1" } : {}, { replace: true });
@@ -72,7 +77,7 @@ export default function PatientsPage() {
   const columns: Column<PatientRow>[] = [
     {
       id: "name",
-      header: "Pacijent",
+      header: "Korisnik",
       sortValue: (p) => `${p.lastName} ${p.name}`,
       cell: (p) => (
         <div className="flex items-center gap-3">
@@ -136,7 +141,12 @@ export default function PatientsPage() {
             )}
             items={[
               { label: "Otvori profil", icon: <LuExternalLink />, to: paths.patient(p._id) },
-              ...(manager ? [{ label: "Obriši pacijenta", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToDelete(p) }] : []),
+              // Admin briše trajno sa svim podacima (uz ukucano ime); glavna sestra samo greškom unete, bez dokumentacije
+              ...(admin
+                ? [{ label: "Trajno obriši korisnika", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToPurge(p) }]
+                : manager
+                  ? [{ label: "Obriši korisnika", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToDelete(p) }]
+                  : []),
             ]}
           />
         </div>
@@ -157,12 +167,12 @@ export default function PatientsPage() {
   return (
     <>
       <PageHeader
-        title="Pacijenti"
+        title="Korisnici"
         description="Svi korisnici smeštaja, njihov status i kontakt porodice."
         actions={
-          manager && (
+          canAdd && (
             <Button size="sm" startIcon={<LuUserPlus className="h-4 w-4" />} onClick={() => setAddOpen(true)}>
-              Novi pacijent
+              Novi korisnik
             </Button>
           )
         }
@@ -180,7 +190,7 @@ export default function PatientsPage() {
       />
 
       {isError ? (
-        <ErrorState message="Lista pacijenata nije učitana." onRetry={() => refetch()} />
+        <ErrorState message="Lista korisnika nije učitana." onRetry={() => refetch()} />
       ) : (
         <DataTable
           columns={columns}
@@ -192,19 +202,20 @@ export default function PatientsPage() {
           searchPlaceholder="Pretraži po imenu, kontaktu, adresi..."
           empty={{
             icon: <LuUsers />,
-            title: filter === "discharged" ? "Nema otpuštenih pacijenata" : "Još nema pacijenata",
-            description: manager && filter !== "discharged" ? "Dodajte prvog pacijenta da biste počeli." : undefined,
+            title: filter === "discharged" ? "Nema otpuštenih korisnika" : "Još nema korisnika",
+            description: canAdd && filter !== "discharged" ? "Dodajte prvog korisnika da biste počeli." : undefined,
             action:
-              manager && filter !== "discharged" ? (
+              canAdd && filter !== "discharged" ? (
                 <Button size="sm" startIcon={<LuUserPlus className="h-4 w-4" />} onClick={() => setAddOpen(true)}>
-                  Novi pacijent
+                  Novi korisnik
                 </Button>
               ) : undefined,
           }}
         />
       )}
 
-      {manager && <AddPatientDialog open={addOpen} onClose={() => setAddOpen(false)} />}
+      {canAdd && <NewResidentDialog open={addOpen} onClose={() => setAddOpen(false)} />}
+      {admin && <PurgePatientDialog open={!!toPurge} onClose={() => setToPurge(null)} patient={toPurge} />}
 
       <ConfirmDialog
         open={!!toDelete}
@@ -212,7 +223,7 @@ export default function PatientsPage() {
         onConfirm={confirmDelete}
         loading={remove.isPending}
         title={`Obrisati ${toDelete?.name} ${toDelete?.lastName}?`}
-        description="Pacijent se trajno uklanja iz sistema. Ako je pacijent napustio dom, umesto brisanja koristite „Otpusti pacijenta“ na profilu — tako ostaje istorija specifikacija."
+        description="Briše se samo korisnik unet greškom, bez ikakve dokumentacije. Ako je korisnik napustio dom, koristite „Otpust“ na profilu — istorija ostaje sačuvana."
         confirmText="Obriši trajno"
       />
     </>

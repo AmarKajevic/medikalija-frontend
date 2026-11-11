@@ -35,7 +35,7 @@ const valuesOf = (p: Patient): FormValues => ({
   lastName: p.lastName,
   dateOfBirth: dayKey(p.dateOfBirth),
   admissionDate: dayKey(p.admissionDate),
-  address: p.address,
+  address: p.address ?? "",
   contactPerson: p.contactPerson ?? "",
 });
 
@@ -132,11 +132,10 @@ export default function AddPatientDialog({ open, onClose, patient }: { open: boo
         <Field label="Prezime" htmlFor={id("lastName")} error={errors.lastName?.message}>
           <Input id={id("lastName")} invalid={!!errors.lastName} {...register("lastName", { required: "Unesite prezime." })} />
         </Field>
-        <Field label="Datum rođenja" htmlFor={id("dob")} error={errors.dateOfBirth?.message}>
+        <Field label="Datum rođenja (nije obavezno)" htmlFor={id("dob")} error={errors.dateOfBirth?.message}>
           <Controller
             name="dateOfBirth"
             control={control}
-            rules={{ required: "Unesite datum rođenja." }}
             render={({ field }) => (
               <DateInput id={id("dob")} value={field.value} onChange={field.onChange} max={todayKey()} fromYear={1900} invalid={!!errors.dateOfBirth} />
             )}
@@ -152,8 +151,8 @@ export default function AddPatientDialog({ open, onClose, patient }: { open: boo
             )}
           />
         </Field>
-        <Field label="Adresa" htmlFor={id("address")} error={errors.address?.message} className="sm:col-span-2">
-          <Input id={id("address")} invalid={!!errors.address} {...register("address", { required: "Unesite adresu." })} />
+        <Field label="Adresa (nije obavezno)" htmlFor={id("address")} error={errors.address?.message} className="sm:col-span-2">
+          <Input id={id("address")} invalid={!!errors.address} {...register("address")} />
         </Field>
         <Field label="Kontakt osoba" htmlFor={id("contact")} hint="Ime i telefon člana porodice (opciono)." className="sm:col-span-2">
           <Input id={id("contact")} {...register("contactPerson")} placeholder="npr. Jovan Jovanović, 064 123 4567" />

@@ -68,7 +68,7 @@ export interface DossierPatient {
   _id: string;
   name: string;
   lastName: string;
-  dateOfBirth: string;
+  dateOfBirth: string | null;
   address: string;
   admissionDate: string;
   dischargeDate?: string | null;
@@ -164,6 +164,68 @@ export function isValidJmbg(jmbg: string): boolean {
   return m === d[12];
 }
 
+/** Datum rođenja ("YYYY-MM-DD") i pol iz ispravnog JMBG-a (DDMMGGG RR BBB K; BBB < 500 = muški) */
+export function jmbgInfo(jmbg: string): { birthDate: string; sex: "M" | "Ž" } | null {
+  if (!isValidJmbg(jmbg)) return null;
+  const day = Number(jmbg.slice(0, 2));
+  const month = Number(jmbg.slice(2, 4));
+  const yyy = Number(jmbg.slice(4, 7));
+  const year = yyy >= 800 ? 1000 + yyy : 2000 + yyy;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return null;
+  return { birthDate: d.toISOString().slice(0, 10), sex: Number(jmbg.slice(9, 12)) < 500 ? "M" : "Ž" };
+}
+
+/** Šta JMBG kaže o datumu rođenja i polu, i da li se slaže sa unetim */
+export function jmbgCheck(jmbg: string, dateOfBirth: string) {
+  const clean = jmbg.replace(/\s/g, "");
+  if (!clean) return { invalid: false, info: null, mismatch: false };
+  const info = jmbgInfo(clean);
+  return { invalid: !isValidJmbg(clean) || !info, info, mismatch: !!info && !!dateOfBirth && dateOfBirth !== info.birthDate };
+}
+
+// ── Osnovni podaci (žive u kartonu korisnika — jedan izvor za celu aplikaciju) ──
+
+export interface PatientBasics {
+  name: string;
+  lastName: string;
+  /** "YYYY-MM-DD" ili "" */
+  dateOfBirth: string;
+  address: string;
+}
+
+export const basicsOf = (p: DossierPatient | null | undefined): PatientBasics => ({
+  name: p?.name ?? "",
+  lastName: p?.lastName ?? "",
+  dateOfBirth: p?.dateOfBirth ? p.dateOfBirth.slice(0, 10) : "",
+  address: p?.address ?? "",
+});
+
+/** Samo polja koja su se promenila (delimično čuvanje ne prepisuje tuđe izmene drugih polja) */
+export function changedFields<T extends object>(before: T, after: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key of Object.keys(after) as Array<keyof T>) {
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) out[key] = after[key];
+  }
+  return out;
+}
+
+/** Šta još nedostaje u dosijeu (za podsetnik i procenat popunjenosti) */
+export function missingInfo(basics: PatientBasics, p: SocialProfileInput): string[] {
+  const checks: Array<[boolean, string]> = [
+    [!!basics.dateOfBirth, "datum rođenja"],
+    [!!basics.address, "adresa"],
+    [!!p.jmbg, "JMBG"],
+    [!!p.healthInsuranceNumber, "LBO"],
+    [!!p.placementBasis, "osnov smeštaja"],
+    [!!p.legalCapacity, "poslovna sposobnost"],
+    [p.contacts.length > 0, "kontakt porodice"],
+    [!!p.assignedStaff, "zaduženi zaposleni"],
+  ];
+  return checks.filter(([ok]) => !ok).map(([, label]) => label);
+}
+export const DOSSIER_CHECKS = 8;
+
 // ── Dokumenti ───────────────────────────────────────────────────────────
 
 export type DocType = "intake" | "assessment" | "reassessment" | "plan" | "plan_review";
@@ -180,6 +242,7 @@ export interface PlanGoal {
 
 export interface SocialDocument {
   _id: string;
+  updatedAt: string;
   type: DocType;
   date: string;
   status: "draft" | "final";
@@ -341,11 +404,127 @@ export function useSocialProfile(patientId: string) {
   });
 }
 
+export interface ProfilePatch {
+  patient?: Partial<PatientBasics>;
+  profile?: Partial<SocialProfileInput>;
+  /** updatedAt profila kad je forma otvorena — server odbija ako ga je neko u međuvremenu promenio */
+  expectedUpdatedAt?: string;
+}
+
+/** Osnovni podaci se vide i u listi korisnika, zaglavlju i svim ostalim stranama */
+function useInvalidatePatient(patientId?: string) {
+  const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["patients"] }),
+      patientId ? qc.invalidateQueries({ queryKey: ["patient", patientId] }) : undefined,
+      qc.invalidateQueries({ queryKey: ["social"] }),
+    ]);
+}
+
 export function useSaveProfile(patientId: string) {
+  const invalidate = useInvalidatePatient(patientId);
+  return useMutation({
+    mutationFn: async (patch: ProfilePatch) => (await api.patch(`/api/social/profile/${patientId}`, patch)).data as { patient: DossierPatient; profile: SocialProfile },
+    onSuccess: invalidate,
+  });
+}
+
+export interface NewResidentInput {
+  patient: PatientBasics & { admissionDate: string };
+  profile?: Partial<SocialProfileInput>;
+}
+
+export function useCreateResident() {
+  const invalidate = useInvalidatePatient();
+  return useMutation({
+    mutationFn: async (input: NewResidentInput) => (await api.post("/api/social/residents", input)).data as { patient: DossierPatient; profile: SocialProfile },
+    onSuccess: invalidate,
+  });
+}
+
+export interface HistoryEntry {
+  _id: string;
+  action: string;
+  fields: string[];
+  summary: string;
+  createdAt: string;
+  user: StaffRef | null;
+}
+
+export function useSocialHistory(patientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["social", "history", patientId],
+    queryFn: async () => (await api.get(`/api/social/history/${patientId}`)).data.history as HistoryEntry[],
+    enabled: enabled && !!patientId,
+  });
+}
+
+// ── Word šabloni ────────────────────────────────────────────────────────
+
+export interface MergeField {
+  key: string;
+  label: string;
+  group: string;
+}
+export interface MergeList {
+  key: string;
+  label: string;
+  fields: MergeField[];
+}
+export interface MergeData {
+  fields: Record<string, string>;
+  lists: Record<string, Array<Record<string, string>>>;
+}
+export interface DocumentTemplate {
+  _id: string;
+  name: string;
+  description: string;
+  fileName: string;
+  size: number;
+  updatedAt: string;
+  uploadedBy: StaffRef | null;
+}
+
+export function useMergeFields() {
+  return useQuery({
+    queryKey: ["social", "merge-fields"],
+    queryFn: async () => (await api.get("/api/social/merge-fields")).data as { fields: MergeField[]; lists: MergeList[] },
+    staleTime: Infinity,
+  });
+}
+
+export const fetchMergeData = async (patientId: string, templateName?: string) =>
+  (await api.get(`/api/social/merge-data/${patientId}`, { params: templateName ? { template: templateName } : undefined })).data as MergeData;
+
+export const fetchTemplateFile = async (id: string) => (await api.get(`/api/social/templates/${id}/file`, { responseType: "arraybuffer" })).data as ArrayBuffer;
+
+export function useTemplates() {
+  return useQuery({ queryKey: ["social", "templates"], queryFn: async () => (await api.get("/api/social/templates")).data.templates as DocumentTemplate[] });
+}
+
+export interface TemplateUpload {
+  name: string;
+  description: string;
+  fileName?: string;
+  /** base64 sadržaj .docx fajla */
+  data?: string;
+}
+
+export function useSaveTemplate() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: SocialProfileInput) => (await api.put(`/api/social/profile/${patientId}`, input)).data.profile as SocialProfile,
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.profile(patientId) }),
+    mutationFn: async ({ id, input }: { id?: string; input: TemplateUpload }) =>
+      (id ? await api.put(`/api/social/templates/${id}`, input) : await api.post("/api/social/templates", input)).data.template as DocumentTemplate,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["social", "templates"] }),
+  });
+}
+
+export function useDeleteTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.delete(`/api/social/templates/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["social", "templates"] }),
   });
 }
 
@@ -378,8 +557,8 @@ function useInvalidateDocs(patientId: string) {
 export function useSaveDocument(patientId: string) {
   const invalidate = useInvalidateDocs(patientId);
   return useMutation({
-    mutationFn: async ({ id, type, input }: { id?: string; type: DocType; input: DocumentInput }) =>
-      (id ? await api.put(`/api/social/documents/${id}`, input) : await api.post("/api/social/documents", { ...input, patientId, type })).data.document as SocialDocument,
+    mutationFn: async ({ id, type, input, expectedUpdatedAt }: { id?: string; type: DocType; input: DocumentInput; expectedUpdatedAt?: string }) =>
+      (id ? await api.put(`/api/social/documents/${id}`, { ...input, expectedUpdatedAt }) : await api.post("/api/social/documents", { ...input, patientId, type })).data.document as SocialDocument,
     onSuccess: invalidate,
   });
 }

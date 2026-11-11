@@ -5,7 +5,8 @@ export type Patient = {
   _id: string;
   name: string;
   lastName: string;
-  dateOfBirth: string | Date;
+  /** Može biti prazan: korisnik unet samo sa osnovnim podacima */
+  dateOfBirth: string | Date | null;
   admissionDate: string | Date;
   contactPerson: string;
   address: string;
