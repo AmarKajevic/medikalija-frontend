@@ -192,6 +192,14 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
           </Group>
 
           <Group title="Smeštaj i prihodi">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Broj dosijea" htmlFor={f("dossierNumber")}>
+                <Input {...text("dossierNumber")} placeholder="npr. SR-2026/087" />
+              </Field>
+              <Field label="Smeštaj (odeljenje, soba)" htmlFor={f("accommodation")}>
+                <Input {...text("accommodation")} placeholder="npr. Odeljenje B, soba 214" />
+              </Field>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Osnov smeštaja" htmlFor={f("placementBasis")}>
                 <Select {...text("placementBasis")}>{options(PLACEMENT_LABEL)}</Select>

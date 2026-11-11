@@ -15,12 +15,12 @@ export function printSocialDocument({ type, patientName, input, document: doc }:
     .join("");
   const goals = meta.goals
     ? `<h3>Ciljevi i aktivnosti</h3>
-      <table><thead><tr><th>#</th><th>Cilj</th><th>Očekivani ishod</th><th>Aktivnosti</th><th>Odgovorni</th><th>Rok</th>${type === "plan_review" ? "<th>Ishod</th>" : ""}</tr></thead><tbody>
+      <table><thead><tr><th>#</th><th>Oblast</th><th>Cilj</th><th>Očekivani ishod</th><th>Aktivnosti</th><th>Odgovorni</th><th>Rok</th>${type === "plan_review" ? "<th>Ishod</th>" : ""}</tr></thead><tbody>
       ${input.goals
         .filter((g) => g.goal.trim())
         .map(
           (g, i) =>
-            `<tr><td>${i + 1}</td><td>${para(g.goal)}</td><td>${para(g.outcome)}</td><td>${para(g.activities)}</td><td>${esc(g.responsible)}</td><td>${formatDay(g.due)}</td>${
+            `<tr><td>${i + 1}</td><td>${esc(g.area ?? "")}</td><td>${para(g.goal)}</td><td>${para(g.outcome)}</td><td>${para(g.activities)}</td><td>${esc(g.responsible)}</td><td>${formatDay(g.due)}</td>${
               type === "plan_review" ? `<td>${esc(GOAL_STATUS_LABEL[g.status] ?? "")}</td>` : ""
             }</tr>`
         )

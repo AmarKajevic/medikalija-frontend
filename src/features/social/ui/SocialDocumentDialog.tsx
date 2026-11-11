@@ -36,7 +36,10 @@ interface Props {
   previousGoals?: PlanGoal[];
 }
 
-const EMPTY_GOAL: PlanGoal = { goal: "", outcome: "", activities: "", responsible: "", due: null, status: "" };
+const EMPTY_GOAL: PlanGoal = { area: "", goal: "", outcome: "", activities: "", responsible: "", due: null, status: "" };
+/** Uobičajene oblasti individualnog plana (može se upisati i druga) */
+const GOAL_AREAS = ["Adaptacija", "Socijalni kontakti", "Slobodno vreme", "Ostvarivanje prava", "Psihosocijalna podrška", "Samostalnost", "Zdravlje i nega"];
+
 const plusMonths = (iso: string, months: number) => {
   const d = new Date(`${iso}T12:00:00`);
   d.setMonth(d.getMonth() + months);
@@ -64,7 +67,7 @@ function toInput(type: DocType, doc: SocialDocument | null | undefined, previous
     // Pregled plana kreće od ciljeva poslednjeg plana; novi plan od jednog praznog cilja
     goals:
       type === "plan_review"
-        ? previousGoals.map((g) => ({ goal: g.goal, outcome: g.outcome, activities: g.activities, responsible: g.responsible, due: g.due ? g.due.slice(0, 10) : null, status: "" as const }))
+        ? previousGoals.map((g) => ({ area: g.area ?? "", goal: g.goal, outcome: g.outcome, activities: g.activities, responsible: g.responsible, due: g.due ? g.due.slice(0, 10) : null, status: "" as const }))
         : type === "plan"
           ? [{ ...EMPTY_GOAL }]
           : [],
@@ -262,7 +265,10 @@ export default function SocialDocumentDialog({ open, onClose, patientId, patient
                         </button>
                       )}
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <Field label="Oblast" htmlFor={`${id}-g${i}-area`}>
+                        <Input id={`${id}-g${i}-area`} value={g.area} onChange={(e) => setGoal(i, { area: e.target.value })} placeholder="npr. Adaptacija" list={`${id}-areas`} />
+                      </Field>
                       <Field label="Očekivani ishod" htmlFor={`${id}-g${i}-outcome`}>
                         <Input id={`${id}-g${i}-outcome`} value={g.outcome} onChange={(e) => setGoal(i, { outcome: e.target.value })} placeholder="Po čemu ćemo znati da je ostvaren" />
                       </Field>
@@ -292,6 +298,11 @@ export default function SocialDocumentDialog({ open, onClose, patientId, patient
                     </div>
                   </div>
                 ))}
+                <datalist id={`${id}-areas`}>
+                  {GOAL_AREAS.map((a) => (
+                    <option key={a} value={a} />
+                  ))}
+                </datalist>
                 {!readOnly && (
                   <Button size="sm" variant="outline" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => set({ goals: [...form.goals, { ...EMPTY_GOAL }] })}>
                     Dodaj cilj

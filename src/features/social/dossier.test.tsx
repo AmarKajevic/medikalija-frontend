@@ -152,7 +152,7 @@ describe("individualni plan", () => {
   });
 
   it("pregled plana kreće od ciljeva poslednjeg plana; zaključen dokument je samo za čitanje", () => {
-    const goals = [{ _id: "g1", goal: "Šetnja svaki dan", outcome: "", activities: "", responsible: "", due: null, status: "" as const }];
+    const goals = [{ _id: "g1", area: "", goal: "Šetnja svaki dan", outcome: "", activities: "", responsible: "", due: null, status: "" as const }];
     const { unmount } = renderWithProviders(<SocialDocumentDialog open onClose={vi.fn()} patientId="p1" patientName="P" type="plan_review" canWrite previousGoals={goals} />);
     expect(screen.getByLabelText("Cilj")).toHaveValue("Šetnja svaki dan");
     unmount();

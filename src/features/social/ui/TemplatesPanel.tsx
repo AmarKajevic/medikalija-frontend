@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LuCheck, LuCopy, LuDownload, LuEllipsis, LuFileText, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuCheck, LuCopy, LuDownload, LuEllipsis, LuFileText, LuPencil, LuPlus, LuTrash2, LuWandSparkles } from "react-icons/lu";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
 import Button from "@shared/ui/button/Button";
 import ActionMenu from "@shared/ui/menu/ActionMenu";
@@ -11,6 +11,7 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { DocumentTemplate, fetchTemplateFile, MergeField, useDeleteTemplate, useMergeFields, useTemplates } from "@features/social/dossier";
 import { downloadBlob } from "@features/social/lib/wordTemplate";
 import TemplateUploadDialog from "./TemplateUploadDialog";
+import AutoTemplateDialog from "./AutoTemplateDialog";
 
 const kb = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
@@ -48,6 +49,7 @@ export default function TemplatesPanel({ canWrite }: { canWrite: boolean }) {
   const remove = useDeleteTemplate();
   const [editing, setEditing] = useState<DocumentTemplate | null | "new">(null);
   const [toDelete, setToDelete] = useState<DocumentTemplate | null>(null);
+  const [auto, setAuto] = useState(false);
 
   const groups = (catalog.data?.fields ?? []).reduce<Record<string, MergeField[]>>((acc, f) => ({ ...acc, [f.group]: [...(acc[f.group] ?? []), f] }), {});
 
@@ -68,9 +70,14 @@ export default function TemplatesPanel({ canWrite }: { canWrite: boolean }) {
           description="Ugovori, obaveštenja, dopisi CSR-u… Popunjavaju se podacima korisnika jednim klikom, iz dosijea korisnika."
           actions={
             canWrite && (
-              <Button size="xs" startIcon={<LuPlus className="h-3.5 w-3.5" />} onClick={() => setEditing("new")}>
-                Novi šablon
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button size="xs" variant="outline" startIcon={<LuWandSparkles className="h-3.5 w-3.5" />} onClick={() => setAuto(true)}>
+                  Iz popunjenog dokumenta
+                </Button>
+                <Button size="xs" startIcon={<LuPlus className="h-3.5 w-3.5" />} onClick={() => setEditing("new")}>
+                  Novi šablon
+                </Button>
+              </div>
             )
           }
         />
@@ -86,12 +93,17 @@ export default function TemplatesPanel({ canWrite }: { canWrite: boolean }) {
           <EmptyState
             icon={<LuFileText />}
             title="Još nema šablona"
-            description="Napravite dokument u Wordu sa poljima iz liste desno, sačuvajte ga kao .docx i postavite ga ovde."
+            description="Postavite dokument koji već koristite, popunjen za jednog korisnika — aplikacija sama prepoznaje podatke. Ili napravite šablon u Wordu sa poljima iz liste desno."
             action={
               canWrite ? (
-                <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setEditing("new")}>
-                  Postavi prvi šablon
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button size="sm" startIcon={<LuWandSparkles className="h-4 w-4" />} onClick={() => setAuto(true)}>
+                    Iz popunjenog dokumenta
+                  </Button>
+                  <Button size="sm" variant="outline" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setEditing("new")}>
+                    Šablon sa poljima
+                  </Button>
+                </div>
               ) : undefined
             }
           />
@@ -174,6 +186,7 @@ export default function TemplatesPanel({ canWrite }: { canWrite: boolean }) {
         </CardBody>
       </Card>
 
+      {canWrite && <AutoTemplateDialog open={auto} onClose={() => setAuto(false)} />}
       <TemplateUploadDialog open={editing !== null} onClose={() => setEditing(null)} template={editing === "new" ? null : editing} />
       <ConfirmDialog
         open={!!toDelete}
