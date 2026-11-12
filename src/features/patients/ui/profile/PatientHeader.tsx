@@ -34,7 +34,7 @@ interface Props {
   /** Porodično stanje (nega); bez njega se stavka ne prikazuje */
   onOpenFamilyStock?: () => void;
   onDischarge: () => void;
-  /** Uprava: ispravka podataka pacijenta */
+  /** Uprava i socijalni radnik: ispravka podataka pacijenta */
   onEdit?: () => void;
   /** Glavne akcije za ulogu (npr. "Nov izveštaj" za doktora) */
   actions?: ReactNode;
@@ -45,7 +45,7 @@ export default function PatientHeader({ patient, canManage, canViewSchedule = ca
 
   const menu: ActionMenuItem[] = [
     ...(onOpenFamilyStock ? [{ label: "Porodično stanje", icon: <LuPackageOpen />, onClick: onOpenFamilyStock }] : []),
-    ...(canManage && onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
+    ...(onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
     ...(canManage ? [{ label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) }] : []),
     ...(canViewSchedule ? [{ label: "Raspored perioda (20 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) }] : []),
     ...(canManage && !discharged ? [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }] : []),
