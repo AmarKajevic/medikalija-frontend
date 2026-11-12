@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { LuCopy, LuEllipsis, LuExternalLink, LuTrash2, LuUserPlus, LuUsers } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { hasRole, isManager, paths, SOCIAL_WRITE_ROLES } from "@app/paths";
+import { hasRole, paths, PATIENT_EDIT_ROLES, PATIENT_PURGE_ROLES, SOCIAL_WRITE_ROLES } from "@app/paths";
 import PageHeader from "@shared/ui/page/PageHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
@@ -50,10 +50,12 @@ export default function PatientsPage() {
 
   const navigate = useNavigate();
   const { user } = useAuth();
-  const manager = isManager(user?.role);
-  const admin = user?.role === "admin";
   // Korisnika unose uprava i socijalni radnik (osnovni ili detaljni podaci)
   const canAdd = hasRole(user?.role, SOCIAL_WRITE_ROLES);
+  // Brisanje greškom/dvaput unetih korisnika: uprava i socijalni radnik
+  const canDelete = hasRole(user?.role, PATIENT_EDIT_ROLES);
+  // Trajno brisanje sa svim podacima: admin i socijalni radnik
+  const canPurge = hasRole(user?.role, PATIENT_PURGE_ROLES);
   const [dupesOpen, setDupesOpen] = useState(false);
   const [params, setParams] = useSearchParams();
   const { data, isLoading, isError, refetch } = usePatients();
@@ -143,10 +145,10 @@ export default function PatientsPage() {
             )}
             items={[
               { label: "Otvori profil", icon: <LuExternalLink />, to: paths.patient(p._id) },
-              // Admin briše trajno sa svim podacima (uz ukucano ime); glavna sestra samo greškom unete, bez dokumentacije
-              ...(admin
+              // Admin i socijalni radnik brišu trajno sa svim podacima (uz ukucano ime); glavna sestra samo greškom unete, bez dokumentacije
+              ...(canPurge
                 ? [{ label: "Trajno obriši korisnika", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToPurge(p) }]
-                : manager
+                : canDelete
                   ? [{ label: "Obriši korisnika", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToDelete(p) }]
                   : []),
             ]}
@@ -172,9 +174,9 @@ export default function PatientsPage() {
         title="Korisnici"
         description="Svi korisnici smeštaja, njihov status i kontakt porodice."
         actions={
-          (canAdd || admin) && (
+          (canAdd || canDelete) && (
             <div className="flex flex-wrap gap-2">
-              {admin && (
+              {canDelete && (
                 <Button size="sm" variant="outline" startIcon={<LuCopy className="h-4 w-4" />} onClick={() => setDupesOpen(true)}>
                   Obriši duplikate
                 </Button>
@@ -188,7 +190,7 @@ export default function PatientsPage() {
           )
         }
       />
-      {admin && <RemoveDuplicatesDialog open={dupesOpen} onClose={() => setDupesOpen(false)} />}
+      {canDelete && <RemoveDuplicatesDialog open={dupesOpen} onClose={() => setDupesOpen(false)} />}
 
       <Tabs
         className="mb-4"
@@ -227,7 +229,7 @@ export default function PatientsPage() {
       )}
 
       {canAdd && <NewResidentDialog open={addOpen} onClose={() => setAddOpen(false)} />}
-      {admin && <PurgePatientDialog open={!!toPurge} onClose={() => setToPurge(null)} patient={toPurge} />}
+      {canPurge && <PurgePatientDialog open={!!toPurge} onClose={() => setToPurge(null)} patient={toPurge} />}
 
       <ConfirmDialog
         open={!!toDelete}

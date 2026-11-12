@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { LuClipboardCheck, LuFilePlus, LuPlus } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PERIOD_SCHEDULE_ROLES, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
+import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PATIENT_EDIT_ROLES, PERIOD_SCHEDULE_ROLES, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
 import usePatient, { type Patient } from "@entities/patient/hooks/usePatient";
 import { Breadcrumbs } from "@shared/ui/page/PageHeader";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
@@ -109,6 +109,8 @@ export default function PatientPage() {
   const { user } = useAuth();
   const role = user?.role;
   const manager = isManager(role);
+  // Ispravka podataka korisnika: uprava i socijalni radnik
+  const canEdit = hasRole(role, PATIENT_EDIT_ROLES);
   const [params, setParams] = useSearchParams();
   const { data: patient, isLoading, isError, refetch } = usePatient(patientId);
   const specification = usePatientSpecification(manager ? patientId : "");
@@ -155,7 +157,7 @@ export default function PatientPage() {
         onOpenSpecification={openSpecification}
         onOpenFamilyStock={hasRole(role, CARE_ROLES) ? () => setDialog("family") : undefined}
         onDischarge={() => setDialog("discharge")}
-        onEdit={manager ? () => setDialog("edit") : undefined}
+        onEdit={canEdit ? () => setDialog("edit") : undefined}
         actions={headerActions}
       />
 
@@ -233,9 +235,9 @@ export default function PatientPage() {
       {manager && (
         <>
           <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />
-          <AddPatientDialog open={dialog === "edit"} onClose={close} patient={patient} />
         </>
       )}
+      {canEdit && <AddPatientDialog open={dialog === "edit"} onClose={close} patient={patient} />}
       {hasRole(role, CARE_ROLES) && <FamilyStockDialog open={dialog === "family"} onClose={close} patientId={patient._id} />}
       {canWriteSocial && <SocialNoteDialog open={dialog === "socialNote"} onClose={close} patientId={patient._id} />}
     </div>

@@ -57,7 +57,7 @@ describe("PatientsPage", () => {
     }
   });
 
-  it("admin trajno briše (uz potvrdu imenom); glavna sestra samo obično brisanje; socijalni radnik ne briše", async () => {
+  it("admin trajno briše (uz potvrdu imenom); socijalni radnik takođe trajno; glavna sestra samo obično brisanje", async () => {
     const adminView = renderWithProviders(<PatientsPage />);
     await adminView.user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
     await adminView.user.click(screen.getByRole("menuitem", { name: "Trajno obriši korisnika" }));
@@ -74,7 +74,7 @@ describe("PatientsPage", () => {
     auth.user = { _id: "s", name: "Vesna", lastName: "S", email: "", role: "social-worker" };
     const swView = renderWithProviders(<PatientsPage />);
     await swView.user.click(screen.getByRole("button", { name: "Akcije za Milica Jovanović" }));
-    expect(screen.queryByRole("menuitem", { name: /Obriši/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Trajno obriši korisnika" })).toBeInTheDocument();
   });
 
   it("sestra ne vidi dodavanje ni brisanje", async () => {

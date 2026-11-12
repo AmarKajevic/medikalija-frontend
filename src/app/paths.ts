@@ -63,6 +63,10 @@ export const PHYSIO_ROLES: Role[] = ["admin", "main-nurse", "physiotherapist"];
 export const SOCIAL_READ_ROLES: Role[] = ["admin", "main-nurse", "doctor", "social-worker"];
 /** Socijalni karton: pišu */
 export const SOCIAL_WRITE_ROLES: Role[] = ["admin", "main-nurse", "social-worker"];
+/** Ispravka podataka korisnika i brisanje greškom/dvaput unetih korisnika */
+export const PATIENT_EDIT_ROLES: Role[] = ["admin", "main-nurse", "social-worker"];
+/** Trajno brisanje korisnika sa svim podacima (uz ukucano ime i prezime) */
+export const PATIENT_PURGE_ROLES: Role[] = ["admin", "social-worker"];
 
 export const isManager = (role?: string) => MANAGER_ROLES.includes(role as Role);
 export const hasRole = (role: string | undefined, roles: Role[]) => roles.includes(role as Role);

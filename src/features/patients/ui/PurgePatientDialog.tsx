@@ -16,7 +16,7 @@ interface Props {
 
 const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
-// Trajno brisanje korisnika sa SVIM podacima (samo admin). Nepovratno, pa se ime i prezime
+// Trajno brisanje korisnika sa SVIM podacima (admin i socijalni radnik). Nepovratno, pa se ime i prezime
 // kuca ručno — kao kod brisanja repozitorijuma u velikim aplikacijama.
 export default function PurgePatientDialog({ open, onClose, patient }: Props) {
   const formId = useId();
