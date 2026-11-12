@@ -33,7 +33,8 @@ interface Props {
   onOpenSpecification: () => void;
   /** Porodično stanje (nega); bez njega se stavka ne prikazuje */
   onOpenFamilyStock?: () => void;
-  onDischarge: () => void;
+  /** Uprava i socijalni radnik: otpust; bez njega se stavka ne prikazuje */
+  onDischarge?: () => void;
   /** Uprava i socijalni radnik: ispravka podataka pacijenta */
   onEdit?: () => void;
   /** Glavne akcije za ulogu (npr. "Nov izveštaj" za doktora) */
@@ -48,7 +49,7 @@ export default function PatientHeader({ patient, canManage, canViewSchedule = ca
     ...(onEdit ? [{ label: "Izmeni podatke", icon: <LuUserPen />, onClick: onEdit }] : []),
     ...(canManage ? [{ label: "Istorija specifikacija", icon: <LuHistory />, to: paths.patientSpecifications(patient._id) }] : []),
     ...(canViewSchedule ? [{ label: "Raspored perioda (20 godina)", icon: <LuClipboardList />, to: paths.patientSchedule(patient._id) }] : []),
-    ...(canManage && !discharged ? [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }] : []),
+    ...(onDischarge && !discharged ? [{ label: "Otpusti pacijenta", icon: <LuLogOut />, onClick: onDischarge, danger: true, separated: true }] : []),
   ];
 
   return (

@@ -156,7 +156,7 @@ export default function PatientPage() {
         canViewSchedule={hasRole(role, PERIOD_SCHEDULE_ROLES)}
         onOpenSpecification={openSpecification}
         onOpenFamilyStock={hasRole(role, CARE_ROLES) ? () => setDialog("family") : undefined}
-        onDischarge={() => setDialog("discharge")}
+        onDischarge={canEdit ? () => setDialog("discharge") : undefined}
         onEdit={canEdit ? () => setDialog("edit") : undefined}
         actions={headerActions}
       />
@@ -232,11 +232,7 @@ export default function PatientPage() {
         </div>
       )}
 
-      {manager && (
-        <>
-          <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />
-        </>
-      )}
+      {canEdit && <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />}
       {canEdit && <AddPatientDialog open={dialog === "edit"} onClose={close} patient={patient} />}
       {hasRole(role, CARE_ROLES) && <FamilyStockDialog open={dialog === "family"} onClose={close} patientId={patient._id} />}
       {canWriteSocial && <SocialNoteDialog open={dialog === "socialNote"} onClose={close} patientId={patient._id} />}
