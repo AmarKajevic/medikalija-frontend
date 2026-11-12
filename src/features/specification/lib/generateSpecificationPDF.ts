@@ -52,8 +52,6 @@ interface GeneratePDFParams {
   facility?: Facility;
   /** Napomena uprave — štampa se ispod tabela */
   note?: string;
-  /** Datum specifikacije (podrazumevano danas) */
-  issuedAt?: Date;
   /** "print" otvara dijalog za štampu, "preview" vraća adresu PDF-a za pregled u aplikaciji */
   mode?: "download" | "print" | "preview";
 }
@@ -83,14 +81,10 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
     earlyLodgingNote = "",
     earlyPeriodLabel = "",
     note = "",
-    issuedAt = new Date(),
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
   const periodText = `${formatDate(startDate)} – ${formatDate(endDate)}`;
-  // Datum specifikacije (kada je napravljena / odštampana), npr. 12.11.2026.
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const issuedText = `${pad(issuedAt.getDate())}.${pad(issuedAt.getMonth() + 1)}.${issuedAt.getFullYear()}.`;
   const noteText = note.trim();
 
   // Logo ustanove; ugrađeni logo samo za postojeću instalaciju koja nije postavila svoj.
@@ -196,14 +190,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
 
       // Tabela 2 – Specifikacija
       // Posle naslova razmak visine jednog reda, pa tabela
-      {
-        columns: [
-          { width: "*", text: `Specifikacija troškova za period: ${periodText}`, bold: true },
-          { width: "auto", text: [{ text: "Datum specifikacije: ", color: "#555" }, { text: issuedText, bold: true }] },
-        ],
-        columnGap: 10,
-        margin: [0, 0, 0, LINE_GAP],
-      },
+      { text: `Specifikacija troškova za period: ${periodText}`, bold: true, alignment: "left", margin: [0, 0, 0, LINE_GAP] },
       {
         table: {
           widths: colWidths,

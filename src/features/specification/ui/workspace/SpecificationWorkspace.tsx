@@ -23,7 +23,7 @@ import ExchangeRateBox from "./ExchangeRateBox";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
 import SpecPreviewDialog from "./SpecPreviewDialog";
-import SpecNote from "./SpecNote";
+import SpecNoteButton, { SpecNoteText } from "./SpecNote";
 
 interface Props {
   specification: Specification;
@@ -176,6 +176,8 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             >
               Zabeleške
             </Button>
+            {/* Napomena za štampu (ispod tabela specifikacije) */}
+            <SpecNoteButton specification={spec} patientId={patientId} readOnly={!editable} />
             <div className="min-w-0 flex-1">
               <LodgingButton billing={billing} onOpen={() => setLodgingOpen(true)} readOnly={!editable} />
             </div>
@@ -243,13 +245,12 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
               >
                 <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
                 {/* Ispod smeštaja i duga: lekovi, artikli, usluge… (kao na odštampanoj specifikaciji) */}
-                <div className="mb-2 mt-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2 first:mt-0 dark:border-gray-800">
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-white/90">Specifikacija troškova</h4>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Datum specifikacije: {new Date().toLocaleDateString("sr-Latn-RS")}</span>
-                </div>
+                <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">
+                  Specifikacija troškova za period: {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
+                </h4>
                 <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
-                {/* Napomena ispod svih stavki — štampa se ispod tabela */}
-                <SpecNote specification={spec} patientId={patientId} readOnly={!editable} />
+                {/* Sačuvana napomena ispod svih stavki — štampa se ispod tabela */}
+                <SpecNoteText specification={spec} />
               </Section>
             </div>
           </div>

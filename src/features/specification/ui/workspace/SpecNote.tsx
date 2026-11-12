@@ -10,8 +10,20 @@ import { Specification } from "@features/specification/types/types";
 
 const MAX = 2000;
 
-// Napomena ispod tabela specifikacije: unosi se u prozoru i štampa se na dnu PDF-a
-export default function SpecNote({ specification: spec, patientId, readOnly = false }: { specification: Specification; patientId: string; readOnly?: boolean }) {
+// Sačuvana napomena (prikaz ispod stavki, kao na štampi)
+export function SpecNoteText({ specification: spec }: { specification: Specification }) {
+  const note = spec.note?.trim() ?? "";
+  if (!note) return null;
+  return (
+    <div className="mt-4 rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/[0.03]">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Napomena</p>
+      <p className="mt-1 whitespace-pre-line text-sm text-gray-800 dark:text-gray-200">{note}</p>
+    </div>
+  );
+}
+
+// Dugme "Napomena" (pored Zabeleški): unosi se u prozoru i štampa se na dnu PDF-a, ispod tabela
+export default function SpecNoteButton({ specification: spec, patientId, readOnly = false }: { specification: Specification; patientId: string; readOnly?: boolean }) {
   const formId = useId();
   const fieldId = useId();
   const save = useSaveSpecificationNote(spec._id, patientId);
@@ -34,25 +46,18 @@ export default function SpecNote({ specification: spec, patientId, readOnly = fa
     });
   };
 
+  if (readOnly) return null;
+
   return (
-    <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-      {note && (
-        <div className="mb-3 rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/[0.03]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Napomena</p>
-          <p className="mt-1 whitespace-pre-line text-sm text-gray-800 dark:text-gray-200">{note}</p>
-        </div>
-      )}
-      {!readOnly && (
-        <Button
-          variant="outline"
-          size="sm"
-          startIcon={note ? <LuPencil className="h-4 w-4" /> : <LuMessageSquareText className="h-4 w-4" />}
-          onClick={() => setOpen(true)}
-          title="Napomena se štampa ispod tabela specifikacije"
-        >
-          {note ? "Izmeni napomenu" : "Napomena"}
-        </Button>
-      )}
+    <>
+      <Button
+        variant="outline"
+        startIcon={note ? <LuPencil className="h-4 w-4" /> : <LuMessageSquareText className="h-4 w-4" />}
+        onClick={() => setOpen(true)}
+        title="Napomena se štampa ispod tabela specifikacije"
+      >
+        {note ? "Izmeni napomenu" : "Napomena"}
+      </Button>
 
       <Dialog
         open={open}
@@ -77,6 +82,6 @@ export default function SpecNote({ specification: spec, patientId, readOnly = fa
           </Field>
         </form>
       </Dialog>
-    </div>
+    </>
   );
 }

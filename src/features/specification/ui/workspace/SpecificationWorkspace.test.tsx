@@ -77,7 +77,7 @@ describe("SpecificationWorkspace", () => {
     renderWithProviders(<SpecificationWorkspace specification={spec} patientId="p1" patientName="Petar" />);
     expect(screen.queryByRole("navigation", { name: "Koraci" })).not.toBeInTheDocument();
     for (const name of ["Pregled specifikacije", "Skini PDF", "Štampaj"]) expect(screen.getByRole("button", { name })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Specifikacija troškova" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^Specifikacija troškova za period: / })).toBeInTheDocument();
   });
 
   it("pregled prikazuje PDF koji će biti odštampan, sa dugmadima Skini PDF i Štampaj", async () => {

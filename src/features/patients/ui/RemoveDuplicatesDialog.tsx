@@ -40,7 +40,7 @@ export default function RemoveDuplicatesDialog({ open, onClose }: { open: boolea
       onClose={onClose}
       size="md"
       title="Brisanje duplikata"
-      description="Korisnici sa istim imenom i prezimenom. Ostaje onaj koji ima dokumentaciju (ili najstariji); brišu se samo duplikati bez ikakvih podataka."
+      description="Korisnici sa istim imenom i prezimenom (i kad je jedan unet ćirilicom, a drugi latinicom). Ostaje onaj koji ima dokumentaciju (ili najstariji); brišu se samo duplikati bez ikakvih podataka."
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
