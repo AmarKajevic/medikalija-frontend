@@ -25,6 +25,8 @@ export type Specification = {
   /** Vanstandardni period: ručni datumi van redovnog niza perioda */
   nonStandard?: boolean;
   items: SpecificationItem[];
+  /** Napomena uprave — štampa se ispod tabela specifikacije */
+  note?: string;
   /** Lista perioda (istorija) šalje samo broj stavki, bez stavki */
   itemsCount?: number;
   billing?: {

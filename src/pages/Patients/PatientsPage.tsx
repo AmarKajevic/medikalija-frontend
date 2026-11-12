@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { LuEllipsis, LuExternalLink, LuTrash2, LuUserPlus, LuUsers } from "react-icons/lu";
+import { LuCopy, LuEllipsis, LuExternalLink, LuTrash2, LuUserPlus, LuUsers } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { hasRole, isManager, paths, SOCIAL_WRITE_ROLES } from "@app/paths";
 import PageHeader from "@shared/ui/page/PageHeader";
@@ -17,6 +17,7 @@ import { notify } from "@shared/lib/notify";
 import { usePatients } from "@features/patients/hooks/usePatients";
 import { useDeletePatient } from "@features/patients/hooks/useDeletePatient";
 import PurgePatientDialog from "@features/patients/ui/PurgePatientDialog";
+import RemoveDuplicatesDialog from "@features/patients/ui/RemoveDuplicatesDialog";
 import NewResidentDialog from "@features/social/ui/NewResidentDialog";
 import { pages } from "@app/routeLoaders";
 
@@ -53,6 +54,7 @@ export default function PatientsPage() {
   const admin = user?.role === "admin";
   // Korisnika unose uprava i socijalni radnik (osnovni ili detaljni podaci)
   const canAdd = hasRole(user?.role, SOCIAL_WRITE_ROLES);
+  const [dupesOpen, setDupesOpen] = useState(false);
   const [params, setParams] = useSearchParams();
   const { data, isLoading, isError, refetch } = usePatients();
   const remove = useDeletePatient();
@@ -170,13 +172,23 @@ export default function PatientsPage() {
         title="Korisnici"
         description="Svi korisnici smeštaja, njihov status i kontakt porodice."
         actions={
-          canAdd && (
-            <Button size="sm" startIcon={<LuUserPlus className="h-4 w-4" />} onClick={() => setAddOpen(true)}>
-              Novi korisnik
-            </Button>
+          (canAdd || admin) && (
+            <div className="flex flex-wrap gap-2">
+              {admin && (
+                <Button size="sm" variant="outline" startIcon={<LuCopy className="h-4 w-4" />} onClick={() => setDupesOpen(true)}>
+                  Obriši duplikate
+                </Button>
+              )}
+              {canAdd && (
+                <Button size="sm" startIcon={<LuUserPlus className="h-4 w-4" />} onClick={() => setAddOpen(true)}>
+                  Novi korisnik
+                </Button>
+              )}
+            </div>
           )
         }
       />
+      {admin && <RemoveDuplicatesDialog open={dupesOpen} onClose={() => setDupesOpen(false)} />}
 
       <Tabs
         className="mb-4"

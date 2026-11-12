@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { computeBilling } from "./billing";
 import { periodProgress } from "./period";
-import { categoryOf, itemDisplayName } from "./items";
+import { categoryOf, itemDisplayName, itemNameParts } from "./items";
 import type { Specification, SpecificationItem } from "@features/specification/types/types";
 
 describe("computeBilling", () => {
@@ -72,5 +72,8 @@ describe("stavke specifikacije", () => {
       ],
     });
     expect(itemDisplayName(combo)).toBe("6-Lab analize i patronaža - Vađenje krvi+KKS+CRP = 420+190,50");
+    // Na štampi se cene štampaju posebno (sitnije od naziva)
+    expect(itemNameParts(combo)).toEqual({ text: "6-Lab analize i patronaža - Vađenje krvi+KKS+CRP", prices: "420+190,50" });
+    expect(itemNameParts(item({ name: "Andol" }))).toEqual({ text: "Andol", prices: "" });
   });
 });
