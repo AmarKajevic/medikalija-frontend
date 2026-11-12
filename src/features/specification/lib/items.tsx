@@ -39,12 +39,18 @@ const priceText = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2)
 // Naziv stavke kako ide u PDF. Kombinacija: naziv, pa analize spojene sa "+" i njihove cene:
 // "Lab analize - KKS+CRP+Urea = 420+190+190". Analize bez cene (npr. uključene u paket)
 // ne dodaju "0" na početak spiska cena.
-export const itemDisplayName = (item: SpecificationItem) => {
+/** Naziv stavke u dva dela: tekst i (za analize) spisak cena "420+750+190" — na štampi su cene sitnije */
+export const itemNameParts = (item: SpecificationItem): { text: string; prices: string } => {
   if (item.category === "combination" && item.analyses?.length) {
     const names = item.analyses.map((a) => a.name.trim()).filter(Boolean).join("+");
     const prices = item.analyses.map((a) => Number(a.price) || 0).filter((p) => p > 0).map(priceText).join("+");
     const title = item.name?.trim();
-    return `${title ? `${title} - ` : ""}${names}${prices ? ` = ${prices}` : ""}`;
+    return { text: `${title ? `${title} - ` : ""}${names}`, prices };
   }
-  return item.formattedName ?? item.name ?? "Nepoznata stavka";
+  return { text: item.formattedName ?? item.name ?? "Nepoznata stavka", prices: "" };
+};
+
+export const itemDisplayName = (item: SpecificationItem) => {
+  const { text, prices } = itemNameParts(item);
+  return prices ? `${text} = ${prices}` : text;
 };

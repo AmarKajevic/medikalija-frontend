@@ -8,7 +8,7 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import { getNextPeriodLabel } from "@features/specification/lib/helpers";
 import { Specification } from "@features/specification/types/types";
-import { itemDisplayName, sortSpecItems } from "@features/specification/lib/items";
+import { itemNameParts, sortSpecItems } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
 import { useNurseEntries } from "@features/nurse-entries/model";
@@ -23,6 +23,7 @@ import ExchangeRateBox from "./ExchangeRateBox";
 import AddItemPanel, { type AddPreset } from "./AddItemPanel";
 import PeriodNotes from "./PeriodNotes";
 import SpecPreviewDialog from "./SpecPreviewDialog";
+import SpecNote from "./SpecNote";
 
 interface Props {
   specification: Specification;
@@ -91,13 +92,15 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
       startDate: spec.startDate,
       endDate: spec.endDate,
       items: sortSpecItems(spec.items).map((item) => ({
-        formattedName: itemDisplayName(item),
+        formattedName: itemNameParts(item).text,
+        priceList: itemNameParts(item).prices,
         amount: item.amount ?? 1,
         price: item.price ?? 0,
       })),
       ...billing.result,
       nextPeriodLabel,
       facility,
+      note: spec.note,
     });
   };
   // Pregled, PDF i štampa idu sa sačuvanim dugom/smeštajem — nesačuvano se čuva usput
@@ -240,10 +243,13 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
               >
                 <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
                 {/* Ispod smeštaja i duga: lekovi, artikli, usluge… (kao na odštampanoj specifikaciji) */}
-                <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">
-                  Specifikacija troškova
-                </h4>
+                <div className="mb-2 mt-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2 first:mt-0 dark:border-gray-800">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white/90">Specifikacija troškova</h4>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Datum specifikacije: {new Date().toLocaleDateString("sr-Latn-RS")}</span>
+                </div>
                 <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
+                {/* Napomena ispod svih stavki — štampa se ispod tabela */}
+                <SpecNote specification={spec} patientId={patientId} readOnly={!editable} />
               </Section>
             </div>
           </div>

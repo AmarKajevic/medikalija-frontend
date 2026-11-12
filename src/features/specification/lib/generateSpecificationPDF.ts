@@ -21,6 +21,8 @@ interface GeneratePDFParams {
   endDate: string;
   items: Array<{
     formattedName: string;
+    /** Cene analiza "420+750+190" — štampaju se sitnije od naziva */
+    priceList?: string;
     amount: number;
     price: number;
   }>;
@@ -48,6 +50,10 @@ interface GeneratePDFParams {
   earlyPeriodLabel?: string;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
   facility?: Facility;
+  /** Napomena uprave — štampa se ispod tabela */
+  note?: string;
+  /** Datum specifikacije (podrazumevano danas) */
+  issuedAt?: Date;
   /** "print" otvara dijalog za štampu, "preview" vraća adresu PDF-a za pregled u aplikaciji */
   mode?: "download" | "print" | "preview";
 }
@@ -76,10 +82,16 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
     includeEarlyLodging = earlyLodgingEUR > 0,
     earlyLodgingNote = "",
     earlyPeriodLabel = "",
+    note = "",
+    issuedAt = new Date(),
   } = params;
 
   const formatDate = (dateStr: string) => formatDay(dateStr);
   const periodText = `${formatDate(startDate)} – ${formatDate(endDate)}`;
+  // Datum specifikacije (kada je napravljena / odštampana), npr. 12.11.2026.
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const issuedText = `${pad(issuedAt.getDate())}.${pad(issuedAt.getMonth() + 1)}.${issuedAt.getFullYear()}.`;
+  const noteText = note.trim();
 
   // Logo ustanove; ugrađeni logo samo za postojeću instalaciju koja nije postavila svoj.
   // Sve ide kroz canvas → PNG jer pdfmake ne podržava WebP.
@@ -184,7 +196,14 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
 
       // Tabela 2 – Specifikacija
       // Posle naslova razmak visine jednog reda, pa tabela
-      { text: `Specifikacija troškova za period: ${periodText}`, bold: true, alignment: "left", margin: [0, 0, 0, LINE_GAP] },
+      {
+        columns: [
+          { width: "*", text: `Specifikacija troškova za period: ${periodText}`, bold: true },
+          { width: "auto", text: [{ text: "Datum specifikacije: ", color: "#555" }, { text: issuedText, bold: true }] },
+        ],
+        columnGap: 10,
+        margin: [0, 0, 0, LINE_GAP],
+      },
       {
         table: {
           widths: colWidths,
@@ -195,7 +214,10 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
               { text: "RSD", bold: true, alignment: "center" },
             ],
             ...items.map((item) => [
-              { text: item.formattedName },
+              // Cene analiza (cifre) su sitnije, da ne izgledaju veće od slova naziva
+              item.priceList
+                ? { text: [{ text: item.formattedName }, { text: ` = ${item.priceList}`, fontSize: 9 }] }
+                : { text: item.formattedName },
               { text: qtyFmt.format(item.amount), alignment: "center" },
               { text: money.format(item.price), alignment: "center" },
             ]),
@@ -225,6 +247,14 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
         layout: tableLayout((i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2)),
         margin: [0, 0, 0, 15],
       },
+
+      // Napomena ispod svih tabela (levo)
+      ...(noteText
+        ? [
+            { text: "Napomena:", bold: true, margin: [0, 5, 0, 3] },
+            { text: noteText, fontSize: 10, alignment: "left" },
+          ]
+        : []),
     ],
     footer: facility.bankAccount
       ? { text: `Uplata na račun: ${facility.bankAccount} · ${facility.name}`, fontSize: 8, color: "#666", alignment: "center", margin: [40, 20, 40, 0] }

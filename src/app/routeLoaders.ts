@@ -25,6 +25,7 @@ export const pages = {
   PhysioPage: () => import("@pages/physio/PhysioPage"),
   PhysioPricesPage: () => import("@pages/settings/PhysioPricesPage"),
   ProfessionalServicesPage: () => import("@pages/settings/ProfessionalServicesPage"),
+  ExtraCostsPage: () => import("@pages/settings/ExtraCostsPage"),
   CarePage: () => import("@pages/care/CarePage"),
   ApprovalsPage: () => import("@pages/care/ApprovalsPage"),
   CareTasksPage: () => import("@pages/care/CareTasksPage"),
@@ -59,6 +60,7 @@ const BY_PATH: Record<string, () => Promise<unknown>> = {
   [paths.physio]: pages.PhysioPage,
   [paths.physioPrices]: pages.PhysioPricesPage,
   [paths.professionalServices]: pages.ProfessionalServicesPage,
+  [paths.extraCosts]: pages.ExtraCostsPage,
 };
 
 const started = new Set<string>();

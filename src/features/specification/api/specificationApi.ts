@@ -17,6 +17,11 @@ export const addExtraCost = async (specId: string, amount: number, label: string
   return data.specification;
 };
 
+export const saveSpecificationNote = async (specId: string, note: string): Promise<{ specification: Specification; message: string }> => {
+  const { data } = await api.patch(`/api/specification/${specId}/note`, { note });
+  return data;
+};
+
 export const saveBilling = async (specId: string, payload: {
   previousDebtEUR: number;
   nextLodgingEUR: number;
