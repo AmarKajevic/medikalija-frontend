@@ -145,7 +145,7 @@ export default function PatientsPage() {
             )}
             items={[
               { label: "Otvori profil", icon: <LuExternalLink />, to: paths.patient(p._id) },
-              // Admin i socijalni radnik brišu trajno sa svim podacima (uz ukucano ime); glavna sestra samo greškom unete, bez dokumentacije
+              // Admin i socijalni radnik brišu trajno sa svim podacima (uz potvrdu); glavna sestra samo greškom unete, bez dokumentacije
               ...(canPurge
                 ? [{ label: "Trajno obriši korisnika", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setToPurge(p) }]
                 : canDelete
