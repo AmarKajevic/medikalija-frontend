@@ -8,7 +8,8 @@ import SearchSelect from "@shared/ui/combobox/SearchSelect";
 import { notify } from "@shared/lib/notify";
 import { todayIso } from "@shared/lib/dateText";
 import { usePatients } from "@features/patients/hooks/usePatients";
-import { PHYSIO_KIND_LABEL, useCreateEntries, type PhysioKind } from "@features/nurse-entries/model";
+import { useCreateEntries, type PhysioKind } from "@features/nurse-entries/model";
+import { usePhysioKinds } from "@features/physio/model";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const nowTime = () => {
@@ -23,8 +24,6 @@ function performedAtIso(date: string, time: string): string | undefined {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(t[1]), Number(t[2])).toISOString();
 }
 
-const KINDS = Object.keys(PHYSIO_KIND_LABEL) as PhysioKind[];
-
 // Fizioterapeut beleži kod kog pacijenta i kada je radio terapiju.
 // Redovna se ne naplaćuje (samo se beleži); vanredna ide upravi, koja određuje cenu i odobrava je.
 export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId?: string }) {
@@ -38,6 +37,8 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState(nowTime());
   const create = useCreateEntries(fixedPatient ?? patientId);
+  // Osnovne vrste i one koje je admin dodao u "Cene fizioterapije"
+  const kinds = usePhysioKinds();
 
   const patientOptions = useMemo(
     () =>
@@ -79,7 +80,7 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Terapija</legend>
         <div role="radiogroup" className="space-y-2">
-          {KINDS.map((k, i) => (
+          {kinds.map(({ kind: k, name }, i) => (
             <label
               key={k}
               className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
@@ -88,7 +89,7 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
             >
               <input type="radio" name={`${ids.patient}-kind`} checked={kind === k} onChange={() => setKind(k)} className="accent-brand-600" />
               <span className="font-medium text-gray-800 dark:text-white/90">
-                {i + 1}. {PHYSIO_KIND_LABEL[k]}
+                {i + 1}. {name}
               </span>
             </label>
           ))}

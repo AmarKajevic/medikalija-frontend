@@ -23,6 +23,8 @@ interface GeneratePDFParams {
     formattedName: string;
     /** Cene analiza "420+750+190" — štampaju se sitnije od naziva */
     priceList?: string;
+    /** Vanredna fizikalna terapija: štampa se u posebnoj tabeli iznad specifikacije troškova */
+    physio?: boolean;
     amount: number;
     price: number;
   }>;
@@ -87,6 +89,16 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
   const periodText = `${formatDate(startDate)} – ${formatDate(endDate)}`;
   const noteText = note.trim();
 
+  // Vanredna fizikalna terapija je deo ukupnog iznosa specifikacije, ali se štampa odvojeno:
+  // svoja tabela iznad specifikacije troškova i svoj red u konačnom obračunu (EUR po istom, nižem kursu)
+  const physioItems = items.filter((i) => i.physio);
+  const costItems = items.filter((i) => !i.physio);
+  const physioRSD = physioItems.reduce((s, i) => s + (Number(i.price) || 0), 0);
+  const costsRSD = specTotalRSD - physioRSD;
+  const eurPerRSD = specTotalRSD > 0 ? specEUR / specTotalRSD : 0;
+  const physioEUR = physioRSD * eurPerRSD;
+  const costsEUR = specEUR - physioEUR;
+
   // Logo ustanove; ugrađeni logo samo za postojeću instalaciju koja nije postavila svoj.
   // Sve ide kroz canvas → PNG jer pdfmake ne podržava WebP.
   const logoSource = facility.logo || (facility.name === DEFAULT_FACILITY.name ? logoUrl : "");
@@ -147,6 +159,36 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
   });
   const LINE_GAP = 14; // visina jednog reda teksta
 
+  // Tabela stavki (naziv, količina, RSD) sa redom "Ukupno"
+  const itemsTable = (list: typeof items, total: number) => ({
+    table: {
+      widths: colWidths,
+      body: [
+        [
+          { text: "NAZIV", bold: true },
+          { text: "KOLIČINA", bold: true, alignment: "center" },
+          { text: "RSD", bold: true, alignment: "center" },
+        ],
+        ...list.map((item) => [
+          // Cene analiza (cifre) su sitnije, da ne izgledaju veće od slova naziva
+          item.priceList
+            ? { text: [{ text: item.formattedName }, { text: ` = ${item.priceList}`, fontSize: 9 }] }
+            : { text: item.formattedName },
+          { text: qtyFmt.format(item.amount), alignment: "center" },
+          { text: money.format(item.price), alignment: "center" },
+        ]),
+        [
+          { text: "" },
+          { text: "Ukupno", bold: true, alignment: "center" },
+          { text: money.format(total), bold: true, alignment: "center" },
+        ],
+      ],
+    },
+    layout: tableLayout(),
+    margin: [0, 0, 0, 15],
+  });
+  const physioRows = physioItems.length > 0 ? [moneyRow("Vanredna fizikalna terapija", physioRSD, physioEUR)] : [];
+
   // pdfmake tipovi zahtevaju literalne tipove (npr. alignment: "right") za svaku ćeliju;
   // struktura je proverena ručno, pa se tip dodeljuje jednom na kraju.
   const docDefinition = {
@@ -188,36 +230,18 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
           ]
         : []),
 
+      // Tabela 2a – Vanredna fizikalna terapija (samo ako postoji), isti period kao specifikacija troškova
+      ...(physioItems.length > 0
+        ? [
+            { text: `Vanredna fizikalna terapija za period: ${periodText}`, bold: true, alignment: "left", margin: [0, 0, 0, LINE_GAP] },
+            itemsTable(physioItems, physioRSD),
+          ]
+        : []),
+
       // Tabela 2 – Specifikacija
       // Posle naslova razmak visine jednog reda, pa tabela
       { text: `Specifikacija troškova za period: ${periodText}`, bold: true, alignment: "left", margin: [0, 0, 0, LINE_GAP] },
-      {
-        table: {
-          widths: colWidths,
-          body: [
-            [
-              { text: "NAZIV", bold: true },
-              { text: "KOLIČINA", bold: true, alignment: "center" },
-              { text: "RSD", bold: true, alignment: "center" },
-            ],
-            ...items.map((item) => [
-              // Cene analiza (cifre) su sitnije, da ne izgledaju veće od slova naziva
-              item.priceList
-                ? { text: [{ text: item.formattedName }, { text: ` = ${item.priceList}`, fontSize: 9 }] }
-                : { text: item.formattedName },
-              { text: qtyFmt.format(item.amount), alignment: "center" },
-              { text: money.format(item.price), alignment: "center" },
-            ]),
-            [
-              { text: "" },
-              { text: "Ukupno", bold: true, alignment: "center" },
-              { text: money.format(specTotalRSD), bold: true, alignment: "center" },
-            ],
-          ],
-        },
-        layout: tableLayout(),
-        margin: [0, 0, 0, 15],
-      },
+      itemsTable(costItems, costsRSD),
 
       // Tabela 3 – Konačan obračun
       { text: "Konačan obračun", style: "subheader", margin: [0, 10, 0, 5] },
@@ -226,12 +250,13 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
           widths: colWidths,
           body: [
             moneyHeader,
-            moneyRow("Specifikacija troškova", specTotalRSD, specEUR),
+            moneyRow("Specifikacija troškova", costsRSD, costsEUR),
+            ...physioRows,
             ...extraRows,
             moneyRow("Račun za naplatu (ukupno)", totalRSD, totalEUR, true),
           ],
         },
-        layout: tableLayout((i: number) => (i === 0 || i === 2 + extraRows.length ? 0.5 : 0.2)),
+        layout: tableLayout((i: number) => (i === 0 || i === 2 + physioRows.length + extraRows.length ? 0.5 : 0.2)),
         margin: [0, 0, 0, 15],
       },
 

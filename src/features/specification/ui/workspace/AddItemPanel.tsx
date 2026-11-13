@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useState } from "react";
-import { LuBriefcaseMedical, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
+import { LuActivity, LuBriefcaseMedical, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt } from "react-icons/lu";
 import ConsumeItemForm from "./forms/ConsumeItemForm";
 import AddCombinationForm from "./forms/AddCombinationForm";
 import AddExtraCostForm from "./forms/AddExtraCostForm";
 import AddProfessionalServiceForm from "./forms/AddProfessionalServiceForm";
+import AddPhysioForm from "./forms/AddPhysioForm";
 import CareTaskPicker from "@features/nurse-entries/ui/CareTaskPicker";
 
-export type Kind = "medicine" | "article" | "professional" | "combination" | "care" | "extra";
+export type Kind = "medicine" | "article" | "professional" | "combination" | "care" | "physio" | "extra";
 
 /** Spolja zadat izbor (npr. "Dodaj kao trošak" iz učinka sestre); nonce ponavlja isti izbor */
 export interface AddPreset {
@@ -21,6 +22,7 @@ const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode; 
   { value: "professional", label: "Stručne usluge", hint: "Iz cenovnika, sa cenom", icon: <LuBriefcaseMedical />, tone: "bg-blue-light-50 text-blue-light-600 dark:bg-blue-light-500/15 dark:text-blue-light-400" },
   { value: "combination", label: "Analize", hint: "Laboratorija", icon: <LuFlaskConical />, tone: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300" },
   { value: "care", label: "Nega", hint: "Kupanje, previjanje, presvlačenje", icon: <LuHeartHandshake />, tone: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300" },
+  { value: "physio", label: "Fizikalna terapija", hint: "Vanredna, iz cenovnika fizioterapije", icon: <LuActivity />, tone: "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300" },
   { value: "extra", label: "Drugi trošak", hint: "Frizer, prevoz, pedikir", icon: <LuReceipt />, tone: "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400" },
 ];
 
@@ -62,6 +64,7 @@ export default function AddItemPanel({ specId, patientId, preset }: { specId: st
       {kind === "professional" && <AddProfessionalServiceForm patientId={patientId} specificationId={specId} />}
       {kind === "combination" && <AddCombinationForm patientId={patientId} specificationId={specId} />}
       {kind === "care" && <CareTaskPicker key="care" patientId={patientId} specificationId={specId} />}
+      {kind === "physio" && <AddPhysioForm patientId={patientId} specificationId={specId} />}
       {kind === "extra" && (
         <AddExtraCostForm key={preset?.kind === "extra" ? preset.nonce : "extra"} specId={specId} patientId={patientId} initialLabel={preset?.kind === "extra" ? preset.label : undefined} />
       )}
