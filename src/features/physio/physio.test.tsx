@@ -40,6 +40,17 @@ describe("PhysioEntryForm", () => {
     await waitFor(() => expect(notify.success).toHaveBeenCalledWith("Vanredna terapija je poslata upravi na odobrenje."));
   });
 
+  it("nudi i vrste koje je admin dodao u cenovnik", async () => {
+    api.get.mockImplementation(async (url: string) =>
+      url === "/api/physio-prices/kinds" ? { data: { kinds: [{ kind: "active", name: "Individualna aktivna fizikalna terapija" }, { kind: "c1", name: "Limfna drenaža" }] } } : { data: {} }
+    );
+    api.post.mockResolvedValue({ data: { message: "ok", entries: [] } });
+    const { user } = renderWithProviders(<PhysioEntryForm patientId="p1" />);
+    await user.click(await screen.findByLabelText(/Limfna drenaža/));
+    await user.click(screen.getByRole("button", { name: "Zabeleži terapiju" }));
+    expect(api.post).toHaveBeenCalledWith("/api/nurse-entries", expect.objectContaining({ entries: [expect.objectContaining({ physioKind: "c1" })] }));
+  });
+
   it("redovna se samo beleži; bez vrste terapije nema slanja", async () => {
     api.post.mockResolvedValue({ data: { message: "ok", entries: [] } });
     const { user } = renderWithProviders(<PhysioEntryForm patientId="p1" />);

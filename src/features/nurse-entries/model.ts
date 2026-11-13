@@ -4,8 +4,10 @@ import { refreshAfterSpecChange } from "@features/specification/lib/queries";
 
 // ---------- tipovi ----------
 export type EntryType = "medicine" | "article" | "care" | "physio";
-export type PhysioKind = "active" | "passive" | "group";
-export const PHYSIO_KIND_LABEL: Record<PhysioKind, string> = {
+/** Osnovna vrsta ("active" | "passive" | "group") ili vrsta koju je admin dodao u "Cene fizioterapije" */
+export type PhysioKind = string;
+/** Nazivi osnovnih vrsta (dodate vrste imaju naziv u cenovniku) */
+export const PHYSIO_KIND_LABEL: Record<string, string> = {
   active: "Individualna aktivna fizikalna terapija",
   passive: "Individualna pasivna fizikalna terapija",
   group: "Grupna fizikalna terapija",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { LuPencil, LuReceipt, LuTrash2 } from "react-icons/lu";
-import { CATEGORY_META, CATEGORY_ORDER, categoryOf } from "@features/specification/lib/items";
+import { CATEGORY_META, CATEGORY_ORDER, categoryOf, type CategoryKey } from "@features/specification/lib/items";
 import { Specification, SpecificationItem } from "@features/specification/types/types";
 import { useDeleteSpecificationItem } from "@features/specification/hooks/useDeleteSpecificationItem";
 import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
@@ -24,6 +24,10 @@ interface Props {
   readOnly?: boolean;
   /** Iznad liste već postoji smeštaj ili dug, pa je poruka o praznoj listi kratka */
   compactEmpty?: boolean;
+  /** Samo ove kategorije (npr. fizikalna terapija u posebnom bloku); bez naslova grupa i bez poruke o praznoj listi */
+  only?: CategoryKey[];
+  /** Ove kategorije se ne prikazuju (prikazane su u posebnom bloku) */
+  exclude?: CategoryKey[];
 }
 
 // Upravo dodate ili promenjene stavke (po id-ju i količini) — kratko se ističu i dovode u vidno polje
@@ -47,14 +51,16 @@ function useJustChanged(items: SpecificationItem[]) {
   return changed;
 }
 
-export default function SpecificationItems({ specification: spec, patientId, readOnly = false, compactEmpty = false }: Props) {
+export default function SpecificationItems({ specification: spec, patientId, readOnly = false, compactEmpty = false, only, exclude = [] }: Props) {
   const remove = useDeleteSpecificationItem(patientId);
   const [pending, setPending] = useState<SpecificationItem | null>(null);
   const [editing, setEditing] = useState<SpecificationItem | null>(null);
   const justChanged = useJustChanged(spec.items);
 
+  const shown = spec.items.filter((i) => (only ? only.includes(categoryOf(i)) : !exclude.includes(categoryOf(i))));
+  const shownTotal = shown.reduce((s, i) => s + (Number(i.price) || 0), 0);
   const groups = CATEGORY_ORDER.map((key) => {
-    const items = spec.items.filter((i) => categoryOf(i) === key);
+    const items = shown.filter((i) => categoryOf(i) === key);
     return { key, items, subtotal: items.reduce((s, i) => s + (Number(i.price) || 0), 0) };
   }).filter((g) => g.items.length > 0);
 
@@ -72,7 +78,8 @@ export default function SpecificationItems({ specification: spec, patientId, rea
     );
   };
 
-  if (spec.items.length === 0) {
+  if (only && shown.length === 0) return null;
+  if (shown.length === 0) {
     return (
       <EmptyState
         compact={compactEmpty}
@@ -90,6 +97,7 @@ export default function SpecificationItems({ specification: spec, patientId, rea
           const meta = g.key === "other" ? { label: "Ostalo", icon: <LuReceipt /> } : CATEGORY_META[g.key];
           return (
             <section key={g.key} className="py-3 first:pt-0">
+              {!only && (
               <header className="mb-1 flex items-center justify-between px-1">
                 <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <span className="text-sm">{meta.icon}</span>
@@ -98,6 +106,7 @@ export default function SpecificationItems({ specification: spec, patientId, rea
                 </h4>
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatRSD(g.subtotal)}</span>
               </header>
+              )}
 
               <ul>
                 {g.items.map((item) => (
@@ -161,8 +170,8 @@ export default function SpecificationItems({ specification: spec, patientId, rea
       </div>
 
       <div className="mt-2 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/[0.03]">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ukupno za period</span>
-        <span className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">{formatRSD(spec.totalPrice)}</span>
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{only ? "Ukupno" : "Ukupno za period"}</span>
+        <span className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">{formatRSD(only || exclude.length ? shownTotal : spec.totalPrice)}</span>
       </div>
 
       <EditItemDialog specId={spec._id} patientId={patientId} item={editing} onClose={() => setEditing(null)} />

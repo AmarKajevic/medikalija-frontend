@@ -68,7 +68,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Dnevnik nege", to: paths.careLog, icon: <LuNotebookPen />, roles: MANAGER_ROLES, tone: "text-teal-600 dark:text-teal-400" },
       { label: "Osoblje", to: paths.users, icon: <LuUserCog />, roles: MANAGER_ROLES, tone: "text-indigo-500 dark:text-indigo-400" },
       { label: "Cene smeštaja", to: paths.lodgingPrices, icon: <LuBedDouble />, roles: ["admin"], tone: "text-blue-light-600 dark:text-blue-light-400" },
-      { label: "Cene fizioterapije", to: paths.physioPrices, icon: <LuActivity />, roles: ["admin"], tone: "text-teal-500 dark:text-teal-400" },
+      { label: "Cene fizikalne terapije", to: paths.physioPrices, icon: <LuActivity />, roles: ["admin"], tone: "text-teal-500 dark:text-teal-400" },
       { label: "Stručne usluge", to: paths.professionalServices, icon: <LuBriefcaseMedical />, roles: ["admin"], tone: "text-sky-600 dark:text-sky-400" },
       { label: "Drugi troškovi", to: paths.extraCosts, icon: <LuReceipt />, roles: ["admin"], tone: "text-emerald-600 dark:text-emerald-400" },
       { label: "Podešavanja", to: paths.settings, icon: <LuSettings />, roles: ["admin"], tone: "text-gray-500 dark:text-gray-400" },

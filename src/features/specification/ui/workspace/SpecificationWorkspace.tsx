@@ -8,7 +8,7 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import { getNextPeriodLabel } from "@features/specification/lib/helpers";
 import { Specification } from "@features/specification/types/types";
-import { itemNameParts, sortSpecItems } from "@features/specification/lib/items";
+import { categoryOf, itemNameParts, sortSpecItems, type CategoryKey } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
 import { useNurseEntries } from "@features/nurse-entries/model";
@@ -39,6 +39,9 @@ interface Props {
 
 // Visina kolone: ekran bez zaglavlja dijaloga i donje trake sa ukupnim. Kad kolona dođe do
 // kraja (ili vrha), skrol prelazi na glavni prozor specifikacije — zato bez overscroll-contain.
+// Vanredna fizikalna terapija ima svoj blok (i svoju tabelu na štampi), odvojeno od specifikacije troškova
+const PHYSIO: CategoryKey[] = ["physio"];
+
 const COLUMN_SCROLL = "lg:max-h-[calc(100dvh-13rem)] lg:overflow-y-auto";
 
 const Section = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
@@ -65,6 +68,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
     addPanelRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   };
   const billing = useBillingState(spec, patientId);
+  const hasPhysio = spec.items.some((i) => categoryOf(i) === "physio");
   const { facility } = useFacility();
   const pending = useNurseEntries({ patientId, status: ["pending"], limit: 500 }).data ?? [];
   const pendingCount = pending.filter((e) => !pendingFilter || pendingFilter(e.performedAt)).length;
@@ -96,6 +100,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         priceList: itemNameParts(item).prices,
         amount: item.amount ?? 1,
         price: item.price ?? 0,
+        physio: categoryOf(item) === "physio",
       })),
       ...billing.result,
       nextPeriodLabel,
@@ -244,11 +249,25 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
               >
                 <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
-                {/* Ispod smeštaja i duga: lekovi, artikli, usluge… (kao na odštampanoj specifikaciji) */}
+                {/* Ispod smeštaja: vanredna fizikalna terapija u posebnom bloku (kao na štampi), pa lekovi, artikli, usluge… */}
+                {hasPhysio && (
+                  <>
+                    <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">
+                      Vanredna fizikalna terapija za period: {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
+                    </h4>
+                    <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} only={PHYSIO} />
+                  </>
+                )}
                 <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">
                   Specifikacija troškova za period: {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
                 </h4>
-                <SpecificationItems specification={spec} patientId={patientId} readOnly={!editable} compactEmpty={billingRows(billing, nextPeriodLabel).length > 0} />
+                <SpecificationItems
+                  specification={spec}
+                  patientId={patientId}
+                  readOnly={!editable}
+                  exclude={PHYSIO}
+                  compactEmpty={billingRows(billing, nextPeriodLabel).length > 0 || hasPhysio}
+                />
                 {/* Sačuvana napomena ispod svih stavki — štampa se ispod tabela */}
                 <SpecNoteText specification={spec} />
               </Section>
