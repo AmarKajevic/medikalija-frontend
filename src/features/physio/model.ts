@@ -11,7 +11,7 @@ export interface PhysioPrice {
   name: string;
   /** null = još nije uneta */
   priceRSD: number | null;
-  /** Vrsta koju je dodao admin (može se preimenovati i obrisati) */
+  /** Vrsta koju je dodao admin (osnovne su "active" | "passive" | "group") */
   custom?: boolean;
 }
 
@@ -62,7 +62,7 @@ export function useCreatePhysioKind() {
   });
 }
 
-/** Briše vrstu koju je dodao admin (osnovne ostaju) */
+/** Briše vrstu terapije (i osnovnu) */
 export function useDeletePhysioKind() {
   const qc = useQueryClient();
   return useMutation({
