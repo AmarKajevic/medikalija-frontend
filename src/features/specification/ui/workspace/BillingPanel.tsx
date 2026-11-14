@@ -109,19 +109,32 @@ function OptionalAmount({
 }
 
 export default function BillingPanel({ billing, nextPeriodLabel, readOnly = false, onSaved }: Props) {
-  const ids = { debt: useId(), lodging: useId(), early: useId(), note: useId() };
+  const ids = { debt: useId(), lodging: useId(), early: useId(), note: useId(), title: useId() };
   const { fields, result, dirty, saving, saveBilling } = billing;
   const { user } = useAuth();
   const { data: prices = [] } = useLodgingPrices();
-  const { data: notes = [] } = useLodgingNotes();
-  // Sačuvana napomena koja je u međuvremenu obrisana iz liste ostaje vidljiva kao opcija
+  const { data: allNotes = [] } = useLodgingNotes();
+  // Admin pravi dve liste: napomene (dopisuju se u red smeštaja) i nazive (zamenjuju ceo naziv reda)
+  const notes = allNotes.filter((n) => n.kind !== "title");
+  const titles = allNotes.filter((n) => n.kind === "title");
+  // Sačuvana napomena/naziv koji je u međuvremenu obrisan iz liste ostaje vidljiv kao opcija
   const noteKnown = notes.some((n) => n.text === fields.earlyNote);
+  const titleKnown = titles.some((n) => n.text === fields.earlyTitle);
 
   const rows: Array<[string, string, string, string]> = [
     ["Lekovi, artikli, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
     ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
     ...(fields.includeLodging ? [[`Smeštaj za naredni period${fields.lodgingOption ? ` · ${fields.lodgingOption}` : ""}`, nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
-    ...(fields.includeEarly ? [[`Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`, [result.earlyPeriodLabel, fields.earlyNote].filter(Boolean).join(" · ") || "uneto gore", formatRSD(result.earlyLodgingRSD), formatEUR(result.earlyLodgingEUR)] as [string, string, string, string]] : []),
+    ...(fields.includeEarly
+      ? [
+          [
+            fields.earlyTitle || `Vanstandardni period smeštaja${fields.earlyOption ? ` · ${fields.earlyOption}` : ""}`,
+            [result.earlyPeriodLabel, fields.earlyTitle ? "" : fields.earlyNote].filter(Boolean).join(" · ") || "uneto gore",
+            formatRSD(result.earlyLodgingRSD),
+            formatEUR(result.earlyLodgingEUR),
+          ] as [string, string, string, string],
+        ]
+      : []),
   ];
 
   return (
@@ -174,6 +187,27 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
 
       {fields.includeEarly && (
         <div className="max-w-xl">
+          <label htmlFor={ids.title} className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Naziv u specifikaciji
+          </label>
+          <Select id={ids.title} value={fields.earlyTitle} onChange={(e) => fields.setEarlyTitle(e.target.value)}>
+            <option value="">Uobičajeno („Smeštaj za period …”)</option>
+            {titles.map((n) => (
+              <option key={n._id} value={n.text}>
+                {n.text}
+              </option>
+            ))}
+            {fields.earlyTitle && !titleKnown && <option value={fields.earlyTitle}>{fields.earlyTitle} (sačuvano)</option>}
+          </Select>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Izabran naziv se štampa tačno kako je napisan (npr. kad pacijent izlazi pre isteka otkaznog roka).
+            {titles.length === 0 && (user?.role === "admin" ? " Nazive dodajete u „Šabloni i cene → Smeštaj”." : " Nazive dodaje admin u „Šabloni i cene → Smeštaj”.")}
+          </p>
+        </div>
+      )}
+
+      {fields.includeEarly && !fields.earlyTitle && (
+        <div className="max-w-xl">
           <label htmlFor={ids.note} className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Napomena uz vanstandardni smeštaj
           </label>
@@ -188,7 +222,7 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
           </Select>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Štampa se u istom redu sa smeštajem.
-            {notes.length === 0 && (user?.role === "admin" ? " Napomene dodajete u „Cene smeštaja”." : " Napomene dodaje admin u „Cene smeštaja”.")}
+            {notes.length === 0 && (user?.role === "admin" ? " Napomene dodajete u „Šabloni i cene → Smeštaj”." : " Napomene dodaje admin u „Šabloni i cene → Smeštaj”.")}
           </p>
         </div>
       )}

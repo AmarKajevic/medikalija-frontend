@@ -121,7 +121,8 @@ export default function LodgingPricesSection() {
         />
       )}
 
-      <LodgingNotesSection />
+      <LodgingNotesSection kind="title" />
+      <LodgingNotesSection kind="note" />
 
       <PriceDialog open={dialog?.type === "edit"} price={dialog?.type === "edit" ? dialog.price : null} onClose={() => setDialog(null)} />
 
@@ -233,9 +234,44 @@ function PriceDialog({ open, price, onClose }: { open: boolean; price: LodgingPr
   );
 }
 
-// Napomene za vanstandardni period: u obračunu se bira jedna i štampa se u istom redu sa smeštajem
-function LodgingNotesSection() {
-  const { data: notes = [], isLoading, isError, refetch } = useLodgingNotes();
+// Šabloni za vanstandardni smeštaj, dve liste istog oblika:
+//  title — naziv koji ide u specifikaciju tačno kako je napisan (umesto "Smeštaj za period …")
+//  note  — napomena koja se dopisuje u red smeštaja
+const NOTE_COPY = {
+  title: {
+    title: "Nazivi za vanstandardni smeštaj",
+    description: "Naziv se u obračunu bira umesto „Smeštaj za period …” i štampa se u specifikaciji tačno kako je napisan.",
+    placeholder: "npr. Otkazni rok 15 dana — pacijent izlazi za 10 dana",
+    add: "Dodaj naziv",
+    newLabel: "Novi naziv",
+    empty: "Još nema naziva",
+    emptyHint: "Dodajte naziv za slučajeve kao što je izlazak pre isteka otkaznog roka.",
+    noun: "naziv",
+    added: "Naziv je dodat.",
+    required: "Upišite naziv.",
+    deleteTitle: "Obrisati naziv?",
+    deleteHint: "Već sačuvani obračuni zadržavaju naziv.",
+  },
+  note: {
+    title: "Napomene za vanstandardni period",
+    description: "U obračunu specifikacije bira se jedna napomena uz vanstandardni smeštaj; štampa se u istom redu kao smeštaj za period.",
+    placeholder: "npr. Smeštaj od dana prijema do početka perioda",
+    add: "Dodaj napomenu",
+    newLabel: "Nova napomena",
+    empty: "Još nema napomena",
+    emptyHint: "Dodajte tekst koji se često piše uz vanstandardni smeštaj.",
+    noun: "napomenu",
+    added: "Napomena je dodata.",
+    required: "Upišite tekst napomene.",
+    deleteTitle: "Obrisati napomenu?",
+    deleteHint: "Već sačuvani obračuni zadržavaju tekst napomene.",
+  },
+} as const;
+
+function LodgingNotesSection({ kind }: { kind: "note" | "title" }) {
+  const copy = NOTE_COPY[kind];
+  const { data: all = [], isLoading, isError, refetch } = useLodgingNotes();
+  const notes = all.filter((n) => (n.kind ?? "note") === kind);
   const save = useSaveLodgingNote();
   const remove = useDeleteLodgingNote();
   const newId = useId();
@@ -245,12 +281,12 @@ function LodgingNotesSection() {
 
   const add = (e: FormEvent) => {
     e.preventDefault();
-    if (!text.trim()) return notify.error("Upišite tekst napomene.");
+    if (!text.trim()) return notify.error(copy.required);
     save.mutate(
-      { text: text.trim() },
+      { text: text.trim(), kind },
       {
         onSuccess: () => {
-          notify.success("Napomena je dodata.");
+          notify.success(copy.added);
           setText("");
         },
         onError: (err) => notify.error(err),
@@ -258,7 +294,7 @@ function LodgingNotesSection() {
     );
   };
   const saveEdit = () => {
-    if (!editing || !editing.text.trim()) return notify.error("Upišite tekst napomene.");
+    if (!editing || !editing.text.trim()) return notify.error(copy.required);
     save.mutate({ id: editing.id, text: editing.text.trim() }, { onSuccess: () => setEditing(null), onError: (err) => notify.error(err) });
   };
 
@@ -266,26 +302,26 @@ function LodgingNotesSection() {
     <Card className="mt-6">
       <CardHeader
         icon={<LuNotebookPen />}
-        title="Napomene za vanstandardni period"
-        description="U obračunu specifikacije bira se jedna napomena uz vanstandardni smeštaj; štampa se u istom redu kao smeštaj za period."
+        title={copy.title}
+        description={copy.description}
       />
       <CardBody className="space-y-4">
         <form onSubmit={add} className="flex flex-wrap items-end gap-2">
           <div className="min-w-64 flex-1">
             <label htmlFor={newId} className="sr-only">
-              Nova napomena
+              {copy.newLabel}
             </label>
-            <Input id={newId} value={text} onChange={(e) => setText(e.target.value)} placeholder="npr. Smeštaj od dana prijema do početka perioda" maxLength={300} />
+            <Input id={newId} value={text} onChange={(e) => setText(e.target.value)} placeholder={copy.placeholder} maxLength={300} />
           </div>
           <Button type="submit" size="sm" startIcon={<LuPlus className="h-4 w-4" />} loading={save.isPending && !editing}>
-            Dodaj napomenu
+            {copy.add}
           </Button>
         </form>
 
         {isError ? (
           <ErrorState message="Napomene nisu učitane." onRetry={() => refetch()} />
         ) : isLoading ? null : notes.length === 0 ? (
-          <EmptyState compact icon={<LuNotebookPen />} title="Još nema napomena" description="Dodajte tekst koji se često piše uz vanstandardni smeštaj." />
+          <EmptyState compact icon={<LuNotebookPen />} title={copy.empty} description={copy.emptyHint} />
         ) : (
           <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
             {notes.map((n) => (
@@ -293,7 +329,7 @@ function LodgingNotesSection() {
                 {editing?.id === n._id ? (
                   <>
                     <Input
-                      aria-label="Izmena napomene"
+                      aria-label={`Izmena: ${copy.noun}`}
                       value={editing.text}
                       onChange={(e) => setEditing({ id: n._id, text: e.target.value })}
                       onKeyDown={(e) => e.key === "Enter" && saveEdit()}
@@ -310,10 +346,10 @@ function LodgingNotesSection() {
                 ) : (
                   <>
                     <span className="min-w-0 flex-1 text-sm text-gray-800 dark:text-white/90">{n.text}</span>
-                    <button type="button" onClick={() => setEditing({ id: n._id, text: n.text })} aria-label={`Izmeni napomenu ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5">
+                    <button type="button" onClick={() => setEditing({ id: n._id, text: n.text })} aria-label={`Izmeni ${copy.noun} ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5">
                       <LuPencil className="h-4 w-4" />
                     </button>
-                    <button type="button" onClick={() => setDeleting(n)} aria-label={`Obriši napomenu ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10">
+                    <button type="button" onClick={() => setDeleting(n)} aria-label={`Obriši ${copy.noun} ${n.text}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10">
                       <LuTrash2 className="h-4 w-4" />
                     </button>
                   </>
@@ -327,8 +363,8 @@ function LodgingNotesSection() {
       <ConfirmDialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
-        title="Obrisati napomenu?"
-        description="Već sačuvani obračuni zadržavaju tekst napomene."
+        title={copy.deleteTitle}
+        description={copy.deleteHint}
         confirmText="Obriši"
         loading={remove.isPending}
         onConfirm={() =>

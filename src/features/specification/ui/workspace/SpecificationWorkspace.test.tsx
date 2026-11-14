@@ -101,7 +101,7 @@ describe("SpecificationWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Zatvori" }));
 
     await user.click(screen.getByRole("button", { name: "Pregled specifikacije" }));
-    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "", earlyLodgingNote: "" });
+    expect(save.mutateAsync).toHaveBeenCalledWith({ previousDebtEUR: 10, nextLodgingEUR: 0, earlyLodgingEUR: 0, includeDebt: true, includeLodging: false, includeEarlyLodging: false, nextLodgingOption: "", earlyLodgingOption: "", earlyLodgingNote: "", earlyLodgingTitle: "" });
     expect(await screen.findByRole("dialog", { name: "Pregled specifikacije" })).toBeInTheDocument();
   });
 

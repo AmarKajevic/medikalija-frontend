@@ -21,6 +21,8 @@ export function useBillingState(spec: Specification, patientId: string) {
   const [earlyOption, setEarlyOptionRaw] = useState("");
   // Napomena uz vanstandardni smeštaj (iz liste koju pravi admin)
   const [earlyNote, setEarlyNoteRaw] = useState("");
+  // Naziv vanstandardnog smeštaja (iz liste koju pravi admin) — ide u specifikaciju tačno ovako
+  const [earlyTitle, setEarlyTitleRaw] = useState("");
   const [lowerRate, setLowerRate] = useState("");
   const [middleRate, setMiddleRate] = useState("");
   // Dug i smeštaj su opcioni: isključeni se ne naplaćuju i ne štampaju
@@ -39,6 +41,7 @@ export function useBillingState(spec: Specification, patientId: string) {
     setLodgingOptionRaw(spec.billing?.nextLodgingOption ?? "");
     setEarlyOptionRaw(spec.billing?.earlyLodgingOption ?? "");
     setEarlyNoteRaw(spec.billing?.earlyLodgingNote ?? "");
+    setEarlyTitleRaw(spec.billing?.earlyLodgingTitle ?? "");
     setDirty(false);
   }, [
     spec._id,
@@ -51,6 +54,7 @@ export function useBillingState(spec: Specification, patientId: string) {
     spec.billing?.nextLodgingOption,
     spec.billing?.earlyLodgingOption,
     spec.billing?.earlyLodgingNote,
+    spec.billing?.earlyLodgingTitle,
   ]);
 
   useEffect(() => {
@@ -98,6 +102,7 @@ export function useBillingState(spec: Specification, patientId: string) {
         nextLodgingOption: lodgingOption,
         earlyLodgingOption: earlyOption,
         earlyLodgingNote: earlyNote,
+        earlyLodgingTitle: earlyTitle,
       });
       setDirty(false);
       notify.success("Obračun je sačuvan.");
@@ -143,6 +148,11 @@ export function useBillingState(spec: Specification, patientId: string) {
         setEarlyNoteRaw(v);
         setDirty(true);
       },
+      earlyTitle,
+      setEarlyTitle: (v: string) => {
+        setEarlyTitleRaw(v);
+        setDirty(true);
+      },
       includeEarly,
       setIncludeEarly: (v: boolean) => {
         setIncludeEarlyRaw(v);
@@ -164,7 +174,7 @@ export function useBillingState(spec: Specification, patientId: string) {
       },
     },
     rates,
-    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption, earlyLodgingNote: earlyNote, earlyPeriodLabel },
+    result: { ...result, includeDebt, includeLodging, includeEarlyLodging: includeEarly, lodgingOption, earlyLodgingOption: earlyOption, earlyLodgingNote: earlyNote, earlyLodgingTitle: earlyTitle, earlyPeriodLabel },
     commitRates,
     dirty,
     saving: save.isPending,

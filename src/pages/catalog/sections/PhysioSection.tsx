@@ -159,7 +159,7 @@ function PriceRow({
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
             {price.priceRSD != null
-              ? `Trenutno: ${formatRSD(price.priceRSD)} (vanredna)`
+              ? `Trenutno: ${formatRSD(price.priceRSD)}`
               : "Cena još nije uneta — vanredna terapija ne može da se odobri."}
           </span>
         </label>
@@ -295,7 +295,7 @@ function KindDialog({
             autoFocus
           />
         </Field>
-        <Field label="Cena (vanredna)" htmlFor={ids.price}>
+        <Field label="Cena" htmlFor={ids.price}>
           <Input
             id={ids.price}
             inputMode="decimal"

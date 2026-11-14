@@ -44,6 +44,8 @@ export function useDeleteLodgingPrice() {
 export interface LodgingNote {
   _id: string;
   text: string;
+  /** "note" dopisuje se u red smeštaja; "title" zamenjuje ceo naziv reda (štampa se tačno ovako) */
+  kind?: "note" | "title";
 }
 
 const NOTES_KEY = ["lodgingNotes"] as const;
@@ -59,8 +61,8 @@ export function useLodgingNotes({ enabled = true } = {}) {
 export function useSaveLodgingNote() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, text }: { id?: string; text: string }) =>
-      (id ? (await api.put(`/api/lodging-notes/${id}`, { text })).data.note : (await api.post("/api/lodging-notes", { text })).data.note) as LodgingNote,
+    mutationFn: async ({ id, text, kind = "note" }: { id?: string; text: string; kind?: "note" | "title" }) =>
+      (id ? (await api.put(`/api/lodging-notes/${id}`, { text })).data.note : (await api.post("/api/lodging-notes", { text, kind })).data.note) as LodgingNote,
     onSuccess: () => qc.invalidateQueries({ queryKey: NOTES_KEY }),
   });
 }

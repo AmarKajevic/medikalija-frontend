@@ -11,6 +11,7 @@ import { useWorkNotes, type WorkNote } from "@entities/diagnosis/hooks/useDiagno
 import { NurseEntry, personName, STATUS_META, useNurseEntries } from "@features/nurse-entries/model";
 import { TYPE_ICON } from "@features/nurse-entries/ui/display";
 import { Specification } from "@features/specification/types/types";
+import { withoutExtraTag } from "@features/physio/name";
 
 type Tab = "all" | "notes" | "entries" | "physio";
 
@@ -158,7 +159,7 @@ export default function PeriodNotes({ specification: spec, patientId, onAddAsCos
                       <span className="mt-0.5 text-gray-400">{TYPE_ICON[r.entry.type]}</span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-800 dark:text-gray-200">
-                          {r.entry.name}
+                          {withoutExtraTag(r.entry.name)}
                           {r.entry.type !== "physio" && <span className="text-gray-500"> × {formatQty(r.entry.acceptedAmount ?? r.entry.amount)}</span>}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">

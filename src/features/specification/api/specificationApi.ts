@@ -33,6 +33,7 @@ export const saveBilling = async (specId: string, payload: {
   nextLodgingOption?: string;
   earlyLodgingOption?: string;
   earlyLodgingNote?: string;
+  earlyLodgingTitle?: string;
 }) => {
   const { data } = await api.post(`/api/specification/${specId}/billing`, payload);
   return data.specification;
