@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useId, useMemo, useState } from "react";
 import { LuArchiveRestore, LuEllipsis, LuHeartHandshake, LuPencil, LuPlus, LuSparkles, LuTrash2 } from "react-icons/lu";
-import PageHeader from "@shared/ui/page/PageHeader";
+import SectionHeader from "@shared/ui/page/SectionHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
@@ -42,7 +42,7 @@ const billingText = (t: CareTask) => {
 
 type DialogState = { type: "edit"; task: CareTask | null } | { type: "delete"; task: CareTask } | null;
 
-export default function CareTasksPage() {
+export default function CareTasksSection() {
   const { data = [], isLoading, isError, refetch } = useCareTasks({ all: true });
   const save = useSaveCareTask();
   const remove = useDeleteCareTask();
@@ -125,12 +125,12 @@ export default function CareTasksPage() {
 
   return (
     <>
-      <PageHeader
-        title="Usluge nege"
+      <SectionHeader
+        title="Šabloni nege"
         description="Lista iz koje sestre biraju šta je urađeno pacijentu. Usluga može da troši artikal sa stanja i/ili da ima svoju cenu. Svaka urađena nega ide na odobrenje i u specifikaciju."
         actions={
-          <Button startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", task: null })}>
-            Nova usluga
+          <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", task: null })}>
+            Nova usluga nege
           </Button>
         }
       />

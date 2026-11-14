@@ -33,7 +33,7 @@ export default function EntryReview({ patientId, filter }: Props) {
   const { isLoading, isError, refetch } = query;
   const data = useMemo(() => (filter ? (query.data ?? []).filter(filter) : query.data ?? []), [query.data, filter]);
   const accept = useAcceptEntries();
-  // Vanredna fizikalna terapija: cena iz cenovnika (admin je unosi unapred u "Cene fizioterapije")
+  // Vanredna fizikalna terapija: cena iz cenovnika (admin je unosi unapred u "Šabloni i cene → Fizikalna terapija")
   const hasPhysio = data.some((e) => e.type === "physio");
   const physioPrices = usePhysioPrices({ enabled: hasPhysio }).data ?? [];
   const physioPrice = (e: NurseEntry) => physioPrices.find((p) => p.kind === e.physioKind)?.priceRSD ?? null;
@@ -76,7 +76,7 @@ export default function EntryReview({ patientId, filter }: Props) {
     const bad = entries.find(invalidAmount);
     if (bad)
       return notify.error(
-        isPhysio(bad) ? `Cena za „${bad.name}” nije uneta. Admin je unosi u „Cene fizioterapije”.` : `Neispravna količina za „${bad.name}”.`
+        isPhysio(bad) ? `Cena za „${bad.name}” nije uneta. Admin je unosi u „Šabloni i cene → Fizikalna terapija”.` : `Neispravna količina za „${bad.name}”.`
       );
 
     accept.mutate(

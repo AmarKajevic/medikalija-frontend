@@ -37,7 +37,7 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState(nowTime());
   const create = useCreateEntries(fixedPatient ?? patientId);
-  // Osnovne vrste i one koje je admin dodao u "Cene fizioterapije"
+  // Osnovne vrste i one koje je admin dodao u "Šabloni i cene → Fizikalna terapija"
   const kinds = usePhysioKinds();
 
   const patientOptions = useMemo(

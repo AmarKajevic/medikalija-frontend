@@ -4,7 +4,7 @@ import { refreshAfterSpecChange } from "@features/specification/lib/queries";
 
 // ---------- tipovi ----------
 export type EntryType = "medicine" | "article" | "care" | "physio";
-/** Osnovna vrsta ("active" | "passive" | "group") ili vrsta koju je admin dodao u "Cene fizioterapije" */
+/** Osnovna vrsta ("active" | "passive" | "group") ili vrsta koju je admin dodao u "Šabloni i cene → Fizikalna terapija" */
 export type PhysioKind = string;
 /** Nazivi osnovnih vrsta (dodate vrste imaju naziv u cenovniku) */
 export const PHYSIO_KIND_LABEL: Record<string, string> = {

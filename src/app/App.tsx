@@ -25,24 +25,19 @@ const FamilyStockPage = lazy(pages.FamilyStockPage);
 const ReservePage = lazy(pages.ReservePage);
 const AnalysesPage = lazy(pages.AnalysesPage);
 const CombinationsPage = lazy(pages.CombinationsPage);
-const DiagnosisTemplatesPage = lazy(pages.DiagnosisTemplatesPage);
 const UsersPage = lazy(pages.UsersPage);
 const ActivityPage = lazy(pages.ActivityPage);
 const NotificationsPage = lazy(pages.NotificationsPage);
 const CalendarPage = lazy(pages.CalendarPage);
 const FacilitySettingsPage = lazy(pages.FacilitySettingsPage);
-const LodgingPricesPage = lazy(pages.LodgingPricesPage);
 const PhysioPage = lazy(pages.PhysioPage);
-const PhysioPricesPage = lazy(pages.PhysioPricesPage);
-const ProfessionalServicesPage = lazy(pages.ProfessionalServicesPage);
-const ExtraCostsPage = lazy(pages.ExtraCostsPage);
 const CarePage = lazy(pages.CarePage);
 const ApprovalsPage = lazy(pages.ApprovalsPage);
-const CareTasksPage = lazy(pages.CareTasksPage);
 const CareLogPage = lazy(pages.CareLogPage);
 const ReportsPage = lazy(pages.ReportsPage);
 const ReportPage = lazy(pages.ReportPage);
 const SocialPage = lazy(pages.SocialPage);
+const CatalogPage = lazy(pages.CatalogPage);
 
 const managers = (el: React.ReactNode) => <RequireRole roles={MANAGER_ROLES}>{el}</RequireRole>;
 const staff = (el: React.ReactNode) => <RequireRole roles={STAFF_ROLES}>{el}</RequireRole>;
@@ -51,6 +46,13 @@ const clinical = (el: React.ReactNode) => <RequireRole roles={CLINICAL_ROLES}>{e
 const admins = (el: React.ReactNode) => <RequireRole roles={["admin"]}>{el}</RequireRole>;
 
 const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
+  // Ranije posebne stranice, sada sekcije "Šabloni i cene"
+  ["/diagnosis-templates", paths.diagnosisTemplates],
+  ["/care-tasks", paths.careTasks],
+  ["/physio-prices", paths.physioPrices],
+  ["/lodging-prices", paths.lodgingPrices],
+  ["/professional-services", paths.professionalServices],
+  ["/extra-costs", paths.extraCosts],
   ["/nurseDashboard", paths.home],
   ["/patient-list", paths.patients],
   ["/patient-page", paths.patients],
@@ -120,24 +122,20 @@ export default function App() {
 
             <Route path="/analyses" element={managers(<AnalysesPage />)} />
             <Route path="/combinations" element={managers(<CombinationsPage />)} />
-            <Route path="/diagnosis-templates" element={managers(<DiagnosisTemplatesPage />)} />
 
             <Route path="/users" element={managers(<UsersPage />)} />
             <Route path="/activity" element={managers(<ActivityPage />)} />
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
-            <Route path="/lodging-prices" element={admins(<LodgingPricesPage />)} />
-            <Route path="/physio-prices" element={admins(<PhysioPricesPage />)} />
-            <Route path="/professional-services" element={admins(<ProfessionalServicesPage />)} />
-            <Route path="/extra-costs" element={admins(<ExtraCostsPage />)} />
             <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
-            <Route path="/care-tasks" element={managers(<CareTasksPage />)} />
             <Route path="/care-log" element={managers(<CareLogPage />)} />
             <Route path="/reports" element={<RequireRole roles={["admin", "main-nurse", "doctor"]}><ReportsPage /></RequireRole>} />
             <Route path="/reports/:reportId" element={clinical(<ReportPage />)} />
             <Route path="/physio" element={<RequireRole roles={PHYSIO_ROLES}><PhysioPage /></RequireRole>} />
+            {/* Šabloni i cene: sekcije unutar jedne stranice; dozvole po sekciji proverava stranica */}
+            <Route path="/templates/:section?" element={managers(<CatalogPage />)} />
             <Route path="/social" element={<RequireRole roles={SOCIAL_READ_ROLES}><SocialPage /></RequireRole>} />
 
             {LEGACY.map(([from, to]) => (

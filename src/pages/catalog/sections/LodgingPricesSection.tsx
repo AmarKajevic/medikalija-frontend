@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useId, useState } from "react";
 import { LuArchiveRestore, LuBedDouble, LuCheck, LuEllipsis, LuEyeOff, LuNotebookPen, LuPencil, LuPlus, LuTrash2, LuX } from "react-icons/lu";
-import PageHeader from "@shared/ui/page/PageHeader";
+import SectionHeader from "@shared/ui/page/SectionHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
@@ -28,7 +28,7 @@ type DialogState = { type: "edit"; price: LodgingPrice | null } | { type: "delet
 
 // Cenovnik smeštaja: u obračunu specifikacije uprava bira jednu od ovih cena za
 // smeštaj za naredni period i za vanstandardni period smeštaja.
-export default function LodgingPricesPage() {
+export default function LodgingPricesSection() {
   const { data = [], isLoading, isError, refetch } = useLodgingPrices({ all: true });
   const save = useSaveLodgingPrice();
   const remove = useDeleteLodgingPrice();
@@ -88,11 +88,11 @@ export default function LodgingPricesPage() {
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title="Cene smeštaja"
         description="Cene koje se biraju u obračunu specifikacije za smeštaj za naredni period i vanstandardni period smeštaja."
         actions={
-          <Button startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", price: null })}>
+          <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", price: null })}>
             Nova cena
           </Button>
         }
