@@ -42,6 +42,8 @@ export type Specification = {
     earlyLodgingOption?: string;
     /** Napomena uz vanstandardni smeštaj (štampa se u istom redu) */
     earlyLodgingNote?: string;
+    /** Naziv vanstandardnog smeštaja — štampa se tačno ovako umesto "Smeštaj za period …" */
+    earlyLodgingTitle?: string;
     includeEarlyLodging?: boolean;
     earlyLodgingEUR?: number;
     earlyLodgingRSD?: number;

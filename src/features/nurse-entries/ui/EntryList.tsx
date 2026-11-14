@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { withoutExtraTag } from "@features/physio/name";
 import { LuUndo2 } from "react-icons/lu";
 import { formatWhen, TYPE_ICON } from "./display";
 import Tabs from "@shared/ui/tabs/Tabs";
@@ -66,7 +67,7 @@ export default function EntryList({ patientId, mine = false, type }: { patientId
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white/90">
-                    {e.name}
+                    {withoutExtraTag(e.name)}
                     <span className="ml-1.5 font-normal text-gray-500">× {formatQty(e.acceptedAmount ?? e.amount)}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">

@@ -14,6 +14,7 @@ import { NurseEntry, personName, TYPE_LABEL, useAcceptEntries, useNurseEntries, 
 import { formatWhen, TYPE_ICON } from "./display";
 import { formatRSD } from "@shared/lib/format";
 import { usePhysioPrices } from "@features/physio/model";
+import { withoutExtraTag } from "@features/physio/name";
 
 const REASONS = ["Greška u unosu", "Dupli unos", "Ne naplaćuje se", "Nije dato pacijentu"];
 
@@ -167,7 +168,7 @@ export default function EntryReview({ patientId, filter }: Props) {
                   {TYPE_ICON[e.type]}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white/90">{e.name}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white/90">{withoutExtraTag(e.name)}</p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     {TYPE_LABEL[e.type]} · {formatWhen(e.performedAt)} · {personName(e.createdBy) || "Nepoznato"}
                   </p>

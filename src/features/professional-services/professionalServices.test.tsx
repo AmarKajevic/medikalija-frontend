@@ -50,11 +50,24 @@ describe("stručne usluge u specifikaciji", () => {
 });
 
 describe("napomene za vanstandardni period (cene smeštaja)", () => {
+  it("nazivi za vanstandardni smeštaj su posebna lista", async () => {
+    api.get.mockImplementation(async (url: string) =>
+      url.startsWith("/api/lodging-notes")
+        ? { data: { notes: [{ _id: "n1", text: "Smeštaj od prijema", kind: "note" }, { _id: "t1", text: "Otkazni rok 15 dana", kind: "title" }] } }
+        : { data: { prices: [] } }
+    );
+    const { user } = renderWithProviders(<LodgingPricesSection />);
+    expect(await screen.findByText("Otkazni rok 15 dana")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Novi naziv"), "Izlazak pre otkaznog roka");
+    await user.click(screen.getByRole("button", { name: "Dodaj naziv" }));
+    expect(api.post).toHaveBeenCalledWith("/api/lodging-notes", { text: "Izlazak pre otkaznog roka", kind: "title" });
+  });
+
   it("lista i dodavanje napomene", async () => {
     const { user } = renderWithProviders(<LodgingPricesSection />);
     expect(await screen.findByText("Smeštaj od prijema")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Nova napomena"), "Smeštaj do početka perioda");
     await user.click(screen.getByRole("button", { name: "Dodaj napomenu" }));
-    expect(api.post).toHaveBeenCalledWith("/api/lodging-notes", { text: "Smeštaj do početka perioda" });
+    expect(api.post).toHaveBeenCalledWith("/api/lodging-notes", { text: "Smeštaj do početka perioda", kind: "note" });
   });
 });

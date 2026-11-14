@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import EditItemDialog from "./EditItemDialog";
+import { withoutExtraTag } from "@features/physio/name";
 import { formatQty, formatRSD } from "@shared/lib/format";
 
 const deleteHint = (item: SpecificationItem) => {
@@ -119,7 +120,7 @@ export default function SpecificationItems({ specification: spec, patientId, rea
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-base text-gray-800 dark:text-white/90">{item.name}</p>
+                      <p className="truncate text-base text-gray-800 dark:text-white/90">{withoutExtraTag(item.name)}</p>
                       {item.category === "combination" && item.analyses?.length ? (
                         <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                           {item.analyses.map((a) => a.name).join(", ")}

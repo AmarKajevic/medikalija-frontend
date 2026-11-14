@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { withoutExtraTag } from "@features/physio/name";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LuClipboardCheck, LuDownload, LuHeartHandshake, LuListChecks, LuReceipt } from "react-icons/lu";
@@ -190,7 +191,7 @@ export default function CareLogPage() {
           <span className="mt-0.5 text-gray-400">{TYPE_ICON[e.type]}</span>
           <div className="min-w-0">
             <p className="text-gray-900 dark:text-white/90">
-              {e.name} <span className="text-gray-500">× {formatQty(e.acceptedAmount ?? e.amount)}</span>
+              {withoutExtraTag(e.name)} <span className="text-gray-500">× {formatQty(e.acceptedAmount ?? e.amount)}</span>
             </p>
             {e.note && <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">„{e.note}”</p>}
           </div>

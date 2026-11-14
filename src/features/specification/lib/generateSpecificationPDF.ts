@@ -48,6 +48,8 @@ interface GeneratePDFParams {
   earlyLodgingOption?: string;
   /** Napomena uz vanstandardni smeštaj (u istom redu) */
   earlyLodgingNote?: string;
+  /** Naziv vanstandardnog smeštaja: štampa se tačno ovako (umesto "Smeštaj za period …" i napomene) */
+  earlyLodgingTitle?: string;
   /** Datumi vanstandardnog perioda, npr. "01.10.2026. — 05.10.2026." */
   earlyPeriodLabel?: string;
   /** Ustanova iz Podešavanja: logo, naziv i kontakt u zaglavlju */
@@ -81,6 +83,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
     includeLodging = lodgingEUR > 0,
     includeEarlyLodging = earlyLodgingEUR > 0,
     earlyLodgingNote = "",
+    earlyLodgingTitle = "",
     earlyPeriodLabel = "",
     note = "",
   } = params;
@@ -133,14 +136,22 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
     {},
   ];
 
-  // Redovi duga, smeštaja i vanstandardnog perioda smeštaja — samo uključeni (isti u prvoj i završnoj tabeli)
+  // Vanstandardni smeštaj: izabran naziv ide tačno kako je napisan; inače period i napomena
+  const earlyTitle = earlyLodgingTitle.trim();
+  const earlyLabel = earlyTitle || `Smeštaj za period${earlyPeriodLabel ? ` ${earlyPeriodLabel}` : ""}${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}`;
+
+  // Prva tabela: dug, smeštaj i vanstandardni period smeštaja — samo uključeni, sa periodom
   const extraRows = [
     ...(includeDebt ? [moneyRow("Dug iz prethodnog perioda", debtRSD, debtEUR)] : []),
     ...(includeLodging ? [moneyRow(`Smeštaj za period ${nextPeriodLabel}`, lodgingRSD, lodgingEUR)] : []),
-    ...(includeEarlyLodging
-      ? [moneyRow(`Smeštaj za period${earlyPeriodLabel ? ` ${earlyPeriodLabel}` : ""}${earlyLodgingNote ? ` – ${earlyLodgingNote}` : ""}`, earlyLodgingRSD, earlyLodgingEUR)]
-      : []),
+    ...(includeEarlyLodging ? [moneyRow(earlyLabel, earlyLodgingRSD, earlyLodgingEUR)] : []),
   ];
+  // Konačan obračun: kratki nazivi ("Smeštaj"), smeštaj ide prvi
+  const finalLodgingRows = [
+    ...(includeLodging ? [moneyRow("Smeštaj", lodgingRSD, lodgingEUR)] : []),
+    ...(includeEarlyLodging ? [moneyRow(earlyTitle || "Vanstandardni smeštaj", earlyLodgingRSD, earlyLodgingEUR)] : []),
+  ];
+  const finalDebtRows = includeDebt ? [moneyRow("Dug iz prethodnog perioda", debtRSD, debtEUR)] : [];
   const extraRSD = (includeDebt ? debtRSD : 0) + (includeLodging ? lodgingRSD : 0) + (includeEarlyLodging ? earlyLodgingRSD : 0);
   const extraEUR = (includeDebt ? debtEUR : 0) + (includeLodging ? lodgingEUR : 0) + (includeEarlyLodging ? earlyLodgingEUR : 0);
 
@@ -250,13 +261,15 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
           widths: colWidths,
           body: [
             moneyHeader,
-            moneyRow("Specifikacija troškova", costsRSD, costsEUR),
+            // Redosled: smeštaj, fizikalna terapija, specifikacija troškova, pa dug
+            ...finalLodgingRows,
             ...physioRows,
-            ...extraRows,
+            moneyRow("Specifikacija troškova", costsRSD, costsEUR),
+            ...finalDebtRows,
             moneyRow("Račun za naplatu (ukupno)", totalRSD, totalEUR, true),
           ],
         },
-        layout: tableLayout((i: number) => (i === 0 || i === 2 + physioRows.length + extraRows.length ? 0.5 : 0.2)),
+        layout: tableLayout((i: number) => (i === 0 || i === 2 + finalLodgingRows.length + physioRows.length + finalDebtRows.length ? 0.5 : 0.2)),
         margin: [0, 0, 0, 15],
       },
 

@@ -1,5 +1,6 @@
 import { LuActivity, LuBriefcaseMedical, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt, LuSyringe } from "react-icons/lu";
 import { SpecificationItem } from "@features/specification/types/types";
+import { withoutExtraTag } from "@features/physio/name";
 
 export const CATEGORY_META = {
   medicine: { label: "Lekovi — tablete, kapsule", icon: <LuPill /> },
@@ -47,7 +48,7 @@ export const itemNameParts = (item: SpecificationItem): { text: string; prices: 
     const title = item.name?.trim();
     return { text: `${title ? `${title} - ` : ""}${names}`, prices };
   }
-  return { text: item.formattedName ?? item.name ?? "Nepoznata stavka", prices: "" };
+  return { text: withoutExtraTag(item.formattedName ?? item.name ?? "Nepoznata stavka"), prices: "" };
 };
 
 export const itemDisplayName = (item: SpecificationItem) => {
