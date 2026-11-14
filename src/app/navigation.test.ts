@@ -25,11 +25,19 @@ describe("navigacija po ulogama", () => {
     }
   });
 
-  it("odobravanje unosa i katalog usluga vidi samo uprava", () => {
+  it("odobravanje unosa i šablone i cene vidi samo uprava", () => {
     expect(labels("nurse")).not.toContain("Za odobrenje");
-    expect(labels("nurse")).not.toContain("Usluge nege");
-    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Usluge nege", "Unos nege", "Dnevnik nege"]));
+    expect(labels("nurse")).not.toContain("Šabloni i cene");
+    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Šabloni i cene", "Unos nege", "Dnevnik nege"]));
     expect(labels("nurse")).not.toContain("Dnevnik nege");
+  });
+
+  it("šabloni i cenovnici su jedna stavka menija umesto šest", () => {
+    for (const old of ["Šabloni dijagnoza", "Usluge nege", "Cene smeštaja", "Cene fizikalne terapije", "Stručne usluge", "Drugi troškovi"]) {
+      expect(labels("admin")).not.toContain(old);
+    }
+    expect(labels("admin").filter((l) => l === "Šabloni i cene")).toHaveLength(1);
+    expect(paths.physioPrices).toBe("/templates/physio");
   });
 
   it("podešavanja ustanove vidi samo direktor", () => {

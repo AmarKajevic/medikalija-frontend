@@ -6,7 +6,7 @@ import {
   LuPlus,
   LuTrash2,
 } from "react-icons/lu";
-import PageHeader from "@shared/ui/page/PageHeader";
+import SectionHeader from "@shared/ui/page/SectionHeader";
 import { Card } from "@shared/ui/card/Card";
 import { Input } from "@shared/ui/form/controls";
 import Field from "@shared/ui/form/Field";
@@ -34,15 +34,15 @@ type DialogState =
 
 // Cene vanredne fizikalne terapije. Admin ih unosi unapred; kad uprava odobri vanrednu terapiju
 // (ili je doda u specifikaciju), cena se uzima odavde. Pored tri osnovne vrste admin dodaje nove.
-export default function PhysioPricesPage() {
+export default function PhysioSection() {
   const { data = [], isLoading, isError, refetch } = usePhysioPrices();
   const remove = useDeletePhysioKind();
   const [dialog, setDialog] = useState<DialogState>(null);
 
   return (
     <>
-      <PageHeader
-        title="Cene fizioterapije"
+      <SectionHeader
+        title="Fizikalna terapija — vrste i cene"
         description="Cena vanredne fizikalne terapije za svaku vrstu. Redovna terapija se ne naplaćuje. Pri odobravanju vanredne terapije i dodavanju u specifikaciju cena se uzima odavde."
         actions={
           <Button

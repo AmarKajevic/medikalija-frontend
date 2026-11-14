@@ -28,7 +28,7 @@ export default function AddPhysioForm({ patientId, specificationId }: { patientI
     );
   }
   if (prices.length === 0) {
-    return <EmptyState compact icon={<LuActivity />} title="Nema cenovnika fizioterapije" description="Cene unosi admin u meniju Cene fizioterapije." />;
+    return <EmptyState compact icon={<LuActivity />} title="Nema cenovnika fizioterapije" description="Cene unosi admin u meniju Šabloni i cene → Fizikalna terapija." />;
   }
 
   return (

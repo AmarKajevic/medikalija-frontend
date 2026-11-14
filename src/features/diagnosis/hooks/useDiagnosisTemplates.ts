@@ -29,3 +29,19 @@ export const useAddDiagnosisTemplate = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 };
+
+export const useUpdateDiagnosisTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; name: string; description: string }) => (await api.put(`/api/diagnosisTemplate/${id}`, payload)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+};
+
+export const useDeleteDiagnosisTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/api/diagnosisTemplate/${id}`)).data as { message: string },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+};

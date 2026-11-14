@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useId, useState } from "react";
-import { LuArchiveRestore, LuBriefcaseMedical, LuEllipsis, LuEyeOff, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
-import PageHeader from "@shared/ui/page/PageHeader";
+import { LuArchiveRestore, LuReceipt, LuEllipsis, LuEyeOff, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import SectionHeader from "@shared/ui/page/SectionHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Button from "@shared/ui/button/Button";
 import Badge from "@shared/ui/badge/Badge";
@@ -12,28 +12,28 @@ import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import { formatRSD } from "@shared/lib/format";
 import {
-  ProfessionalService,
-  useDeleteProfessionalService,
-  useProfessionalServices,
-  useSaveProfessionalService,
-} from "@features/professional-services/model";
+  ExtraCost,
+  useDeleteExtraCost,
+  useExtraCosts,
+  useSaveExtraCost,
+} from "@features/extra-costs/model";
 
-type DialogState = { type: "edit"; service: ProfessionalService | null } | { type: "delete"; service: ProfessionalService } | null;
+type DialogState = { type: "edit"; cost: ExtraCost | null } | { type: "delete"; cost: ExtraCost } | null;
 
-// Cenovnik stručnih usluga: uprava ih dodaje u specifikaciju (posle artikala), sa ovom cenom.
-export default function ProfessionalServicesPage() {
-  const { data = [], isLoading, isError, refetch } = useProfessionalServices({ all: true });
-  const save = useSaveProfessionalService();
-  const remove = useDeleteProfessionalService();
+// Cenovnik drugih troškova: uprava ih bira u specifikaciji (Drugi trošak), ili trošak unosi ručno.
+export default function ExtraCostsSection() {
+  const { data = [], isLoading, isError, refetch } = useExtraCosts({ all: true });
+  const save = useSaveExtraCost();
+  const remove = useDeleteExtraCost();
   const [dialog, setDialog] = useState<DialogState>(null);
 
-  const setActive = (s: ProfessionalService, active: boolean) =>
+  const setActive = (s: ExtraCost, active: boolean) =>
     save.mutate(
       { id: s._id, active },
-      { onSuccess: () => notify.success(active ? "Usluga se ponovo nudi." : "Usluga se više ne nudi u specifikaciji."), onError: (e) => notify.error(e) }
+      { onSuccess: () => notify.success(active ? "Trošak se ponovo nudi." : "Trošak se više ne nudi u specifikaciji."), onError: (e) => notify.error(e) }
     );
 
-  const columns: Column<ProfessionalService>[] = [
+  const columns: Column<ExtraCost>[] = [
     {
       id: "name",
       header: "Naziv",
@@ -46,7 +46,7 @@ export default function ProfessionalServicesPage() {
       header: "Status",
       hideBelow: "sm",
       sortValue: (s) => (s.active ? 0 : 1),
-      cell: (s) => (s.active ? <Badge size="sm" color="success">U ponudi</Badge> : <Badge size="sm" color="light">Sakrivena</Badge>),
+      cell: (s) => (s.active ? <Badge size="sm" color="success">U ponudi</Badge> : <Badge size="sm" color="light">Sakriven</Badge>),
     },
     {
       id: "actions",
@@ -66,11 +66,11 @@ export default function ProfessionalServicesPage() {
               </button>
             )}
             items={[
-              { label: "Izmeni", icon: <LuPencil />, onClick: () => setDialog({ type: "edit", service: s }) },
+              { label: "Izmeni", icon: <LuPencil />, onClick: () => setDialog({ type: "edit", cost: s }) },
               s.active
                 ? { label: "Sakrij iz specifikacije", icon: <LuEyeOff />, onClick: () => setActive(s, false) }
                 : { label: "Vrati u ponudu", icon: <LuArchiveRestore />, onClick: () => setActive(s, true) },
-              { label: "Obriši", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setDialog({ type: "delete", service: s }) },
+              { label: "Obriši", icon: <LuTrash2 />, danger: true, separated: true, onClick: () => setDialog({ type: "delete", cost: s }) },
             ]}
           />
         </div>
@@ -80,51 +80,51 @@ export default function ProfessionalServicesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Stručne usluge"
-        description="Usluge sa cenom koje uprava dodaje u specifikaciju (npr. pregled specijaliste, psiholog). Na štampi su posle artikala."
+      <SectionHeader
+        title="Drugi troškovi"
+        description="Troškovi sa cenom koje uprava bira u specifikaciji (npr. frizer, prevoz, pedikir). U specifikaciji se trošak može uneti i ručno."
         actions={
-          <Button startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", service: null })}>
-            Nova usluga
+          <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", cost: null })}>
+            Novi trošak
           </Button>
         }
       />
       {isError ? (
-        <ErrorState message="Usluge nisu učitane." onRetry={() => refetch()} />
+        <ErrorState message="Troškovi nisu učitani." onRetry={() => refetch()} />
       ) : (
         <DataTable
           columns={columns}
           data={data}
           loading={isLoading}
           getRowId={(s) => s._id}
-          onRowClick={(s) => setDialog({ type: "edit", service: s })}
+          onRowClick={(s) => setDialog({ type: "edit", cost: s })}
           searchText={(s) => `${s.name} ${s.priceRSD}`}
-          searchPlaceholder="Pretraži usluge..."
+          searchPlaceholder="Pretraži troškove..."
           empty={{
-            icon: <LuBriefcaseMedical />,
-            title: "Još nema stručnih usluga",
-            description: "Dodajte usluge sa cenom, npr. „Pregled kardiologa” = 4.500 RSD.",
+            icon: <LuReceipt />,
+            title: "Još nema drugih troškova",
+            description: "Dodajte troškove sa cenom, npr. „Frizer” = 800 RSD.",
             action: (
-              <Button variant="outline" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", service: null })}>
-                Dodaj uslugu
+              <Button variant="outline" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", cost: null })}>
+                Dodaj trošak
               </Button>
             ),
           }}
         />
       )}
 
-      <ServiceDialog open={dialog?.type === "edit"} service={dialog?.type === "edit" ? dialog.service : null} onClose={() => setDialog(null)} />
+      <CostDialog open={dialog?.type === "edit"} cost={dialog?.type === "edit" ? dialog.cost : null} onClose={() => setDialog(null)} />
 
       <ConfirmDialog
         open={dialog?.type === "delete"}
         onClose={() => setDialog(null)}
-        title="Obrisati uslugu?"
-        description="Već napravljene specifikacije zadržavaju naziv i cenu. Ako uslugu samo privremeno ne nudite, sakrijte je umesto brisanja."
+        title="Obrisati trošak?"
+        description="Već napravljene specifikacije zadržavaju naziv i cenu. Ako trošak samo privremeno ne nudite, sakrijte je umesto brisanja."
         confirmText="Obriši"
         loading={remove.isPending}
         onConfirm={() =>
           dialog?.type === "delete" &&
-          remove.mutate(dialog.service._id, {
+          remove.mutate(dialog.cost._id, {
             onSuccess: (res) => {
               notify.success(res.message);
               setDialog(null);
@@ -139,29 +139,29 @@ export default function ProfessionalServicesPage() {
 
 const toNumber = (v: string) => Number(v.replace(",", "."));
 
-function ServiceDialog({ open, service, onClose }: { open: boolean; service: ProfessionalService | null; onClose: () => void }) {
+function CostDialog({ open, cost, onClose }: { open: boolean; cost: ExtraCost | null; onClose: () => void }) {
   const formId = useId();
   const ids = { name: useId(), price: useId() };
-  const save = useSaveProfessionalService();
+  const save = useSaveExtraCost();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
 
   useEffect(() => {
     if (!open) return;
-    setName(service?.name ?? "");
-    setAmount(service ? String(service.priceRSD).replace(".", ",") : "");
-  }, [open, service]);
+    setName(cost?.name ?? "");
+    setAmount(cost ? String(cost.priceRSD).replace(".", ",") : "");
+  }, [open, cost]);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return notify.error("Unesite naziv usluge.");
+    if (!name.trim()) return notify.error("Unesite naziv troška.");
     const priceRSD = toNumber(amount);
     if (!amount.trim() || !(priceRSD >= 0)) return notify.error("Unesite cenu u dinarima.");
     save.mutate(
-      { id: service?._id, name: name.trim(), priceRSD, ...(service ? {} : { active: true }) },
+      { id: cost?._id, name: name.trim(), priceRSD, ...(cost ? {} : { active: true }) },
       {
         onSuccess: () => {
-          notify.success(service ? "Usluga je izmenjena." : "Usluga je dodata.");
+          notify.success(cost ? "Trošak je izmenjen." : "Trošak je dodat.");
           onClose();
         },
         onError: (err) => notify.error(err),
@@ -173,7 +173,7 @@ function ServiceDialog({ open, service, onClose }: { open: boolean; service: Pro
     <Dialog
       open={open}
       onClose={onClose}
-      title={service ? "Izmena stručne usluge" : "Nova stručna usluga"}
+      title={cost ? "Izmena troška" : "Novi trošak"}
       size="sm"
       footer={
         <>
@@ -188,7 +188,7 @@ function ServiceDialog({ open, service, onClose }: { open: boolean; service: Pro
     >
       <form id={formId} onSubmit={onSubmit} className="space-y-4">
         <Field label="Naziv" htmlFor={ids.name} hint="Kako se prikazuje u specifikaciji i na štampi.">
-          <Input id={ids.name} value={name} onChange={(e) => setName(e.target.value)} placeholder="npr. Pregled kardiologa" autoFocus />
+          <Input id={ids.name} value={name} onChange={(e) => setName(e.target.value)} placeholder="npr. Frizer" autoFocus />
         </Field>
         <Field label="Cena" htmlFor={ids.price}>
           <Input id={ids.price} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" trailing="RSD" />

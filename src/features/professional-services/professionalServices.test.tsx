@@ -9,7 +9,7 @@ vi.mock("@shared/api/api", () => ({ api }));
 vi.mock("@shared/lib/notify", () => ({ notify: { success: vi.fn(), error: vi.fn() } }));
 
 import AddProfessionalServiceForm from "@features/specification/ui/workspace/forms/AddProfessionalServiceForm";
-import LodgingPricesPage from "@pages/settings/LodgingPricesPage";
+import LodgingPricesSection from "@pages/catalog/sections/LodgingPricesSection";
 import { sortSpecItems } from "@features/specification/lib/items";
 
 beforeEach(() => {
@@ -51,7 +51,7 @@ describe("stručne usluge u specifikaciji", () => {
 
 describe("napomene za vanstandardni period (cene smeštaja)", () => {
   it("lista i dodavanje napomene", async () => {
-    const { user } = renderWithProviders(<LodgingPricesPage />);
+    const { user } = renderWithProviders(<LodgingPricesSection />);
     expect(await screen.findByText("Smeštaj od prijema")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Nova napomena"), "Smeštaj do početka perioda");
     await user.click(screen.getByRole("button", { name: "Dodaj napomenu" }));

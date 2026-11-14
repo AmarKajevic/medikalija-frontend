@@ -90,7 +90,7 @@ describe("odobravanje vanredne terapije", () => {
     expect(await screen.findByRole("link", { name: "Cena nije uneta" })).toBeInTheDocument();
     await first.user.click(screen.getByRole("button", { name: `Prihvati ${physio.name}` }));
     expect(api.post).not.toHaveBeenCalled();
-    expect(notify.error).toHaveBeenCalledWith(`Cena za „${physio.name}” nije uneta. Admin je unosi u „Cene fizioterapije”.`);
+    expect(notify.error).toHaveBeenCalledWith(`Cena za „${physio.name}” nije uneta. Admin je unosi u „Šabloni i cene → Fizikalna terapija”.`);
     first.unmount();
 
     prices = [{ kind: "passive", priceRSD: 1500 }];

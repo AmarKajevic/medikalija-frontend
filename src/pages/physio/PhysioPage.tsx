@@ -18,8 +18,8 @@ export default function PhysioPage() {
   return (
     <>
       <PageHeader
-        title="Fizioterapija"
-        description="Kada i kod kog pacijenta je rađena fizikalna terapija. Redovna se ne naplaćuje; vanrednu odobrava uprava, a cena se uzima iz „Cene fizioterapije”."
+        title="Fiziklna Terapija"
+        description="Kada i kod kog pacijenta je rađena fizikalna terapija. Redovna se ne naplaćuje; vanrednu odobrava uprava, a cena se uzima iz „Šabloni i cene → Fizikalna terapija”."
         actions={
           manager && pending.length > 0 ? (
             <Link
