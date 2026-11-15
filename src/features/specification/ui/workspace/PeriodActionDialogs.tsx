@@ -15,6 +15,9 @@ import { itemsLabel } from "@features/specification/lib/itemsLabel";
 
 export type PeriodAction = "manual" | "history";
 
+/** Koliko perioda posle današnjeg se može izabrati za specifikaciju (rad unapred) — isto kao na serveru */
+export const BILLING_PERIODS_AHEAD = 3;
+
 interface Props {
   patientId: string;
   open: PeriodAction | null;
@@ -30,8 +33,11 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
   const choose = useSetBillingPeriod(patientId);
   const { data: all = [] } = useSelectablePeriods(open === "history" ? patientId : "");
   const currentPeriod = all.find((p) => p.isCurrent);
-  // Period specifikacije ne može biti u budućnosti: najkasnije današnji (smeštaj tada ide unapred)
-  const periods = currentPeriod ? all.filter((p) => p.startDate <= currentPeriod.startDate) : all;
+  // Period specifikacije: od prijema do današnjeg, plus do BILLING_PERIODS_AHEAD perioda unapred
+  // (lista je od najnovijeg, pa su periodi unapred ispred današnjeg)
+  const currentIdx = currentPeriod ? all.indexOf(currentPeriod) : -1;
+  const periods = currentIdx >= 0 ? all.slice(Math.max(0, currentIdx - BILLING_PERIODS_AHEAD)) : all;
+  const isAhead = (p: SelectablePeriod) => !!currentPeriod && p.startDate > currentPeriod.startDate;
   // Podrazumevano: period specifikacije je onaj pre današnjeg (lista je od najnovijeg)
   const defaultBilling = currentPeriod ? periods[periods.indexOf(currentPeriod) + 1] : undefined;
   const [start, setStart] = useState("");
@@ -90,7 +96,7 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
         open={open === "history"}
         onClose={onClose}
         title="Promena perioda specifikacije"
-        description="Izaberite period za koji se pravi specifikacija (od prijema do današnjeg). Smeštaj za period se pomera sam — period posle izabranog."
+        description={`Izaberite period za koji se pravi specifikacija — od prijema do današnjeg, ili do ${BILLING_PERIODS_AHEAD} perioda unapred. Smeštaj za period se pomera sam — period posle izabranog.`}
         size="md"
       >
         {defaultBilling && !defaultBilling.isBilling && (
@@ -118,6 +124,7 @@ export default function PeriodActionDialogs({ patientId, open, onClose, onActiva
                     {p.isBilling && <Badge size="sm" color="warning">Period specifikacije</Badge>}
                     {p.isActive && <Badge size="sm" color="light">Smeštaj za period</Badge>}
                     {p.isCurrent && <Badge size="sm" color="primary">Današnji</Badge>}
+                    {isAhead(p) && <Badge size="sm" color="info">Unapred</Badge>}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {p.itemsCount ? `${itemsLabel(p.itemsCount)} · ${formatRSD(p.totalPrice)}` : "Bez stavki"}
