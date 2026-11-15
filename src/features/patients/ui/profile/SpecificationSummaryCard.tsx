@@ -43,7 +43,7 @@ export default function SpecificationSummaryCard({ specification: spec, isLoadin
     <div className="rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
       <div className="flex flex-wrap items-start justify-between gap-4 p-5">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Tekući period</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Tekući period specifikacije</p>
           <p className="mt-0.5 text-base font-semibold text-gray-900 dark:text-white/90">
             {formatDay(spec.startDate)} – {formatDay(spec.endDate)}
           </p>

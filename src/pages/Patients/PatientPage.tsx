@@ -11,6 +11,7 @@ import Tabs from "@shared/ui/tabs/Tabs";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { usePatientSpecification } from "@features/specification/hooks/usePatientSpecification";
+import { useBillingPeriodSpecification } from "@features/specification/hooks/useBillingPeriodSpecification";
 import { useSpecificationDock } from "@features/specification/ui/dock/useSpecificationDock";
 import { loadSpecificationDialog } from "@app/routeLoaders";
 import NurseEntryPanel from "@features/nurse-entries/ui/NurseEntryPanel";
@@ -114,6 +115,9 @@ export default function PatientPage() {
   const [params, setParams] = useSearchParams();
   const { data: patient, isLoading, isError, refetch } = usePatient(patientId);
   const specification = usePatientSpecification(manager ? patientId : "");
+  // Na profilu se prikazuje period specifikacije (u njemu se radi), ne smeštaj za period koji ide unapred.
+  // Bez perioda specifikacije (npr. prvi period posle prijema) prikazuje se aktivan period.
+  const billingPeriod = useBillingPeriodSpecification(manager ? patientId : "");
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const dock = useSpecificationDock();
   // Uprava sa profila skoro uvek otvara specifikaciju: kod prozora se preuzima odmah
@@ -181,7 +185,11 @@ export default function PatientPage() {
             </div>
           )}
           <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
-            <SpecificationSummaryCard specification={specification.data} isLoading={specification.isLoading} onOpen={openSpecification} />
+            <SpecificationSummaryCard
+              specification={specification.data ? (billingPeriod.data ?? specification.data) : specification.data}
+              isLoading={specification.isLoading || billingPeriod.isLoading}
+              onOpen={openSpecification}
+            />
             <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
           </div>
         </>

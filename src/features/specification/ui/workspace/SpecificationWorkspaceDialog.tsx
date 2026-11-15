@@ -157,7 +157,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               }`}
             >
               <LuCalendarRange className="h-4 w-4" />
-              Vanstandardni period
+              Vanstandardni period specifikacije
             </button>
             {/* Dugmad biraju period specifikacije; smeštaj za period ide sam za njim (samo informacija) */}
             <div className="flex flex-wrap items-center gap-2">
