@@ -141,7 +141,7 @@ export default function SpecificationWorkspaceDialog({ open, onClose, patientId,
               ...(billingSpec
                 ? [{ value: "billing" as const, label: "Period specifikacije", suffix: <PeriodDates start={billingSpec.startDate} end={billingSpec.endDate} /> }]
                 : // Prvi period: još nema isteklog, pa se radi u tekućem
-                  [{ value: "active" as const, label: "Tekući period", suffix: <PeriodDates start={active.data.startDate} end={active.data.endDate} /> }]),
+                  [{ value: "active" as const, label: "Tekući period specifikacije", suffix: <PeriodDates start={active.data.startDate} end={active.data.endDate} /> }]),
               ...(otherPeriods.length > 0 ? [{ value: "other" as const, label: "Izaberi period", count: otherPeriods.length }] : []),
             ]}
           />

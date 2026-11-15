@@ -145,8 +145,11 @@ describe("ručno biranje perioda", () => {
 });
 
 describe("Promena perioda specifikacije", () => {
-  it("periodi od današnjeg unazad, sa oznakama; smeštaj za period se ne bira kao budući", async () => {
+  it("periodi od prijema do 3 unapred, sa oznakama; četvrti unapred se ne nudi", async () => {
     data.periods = [
+      period("2027-02-23", "2027-03-24", null),
+      period("2027-01-24", "2027-02-22", null),
+      period("2026-12-25", "2027-01-23", null),
       period("2026-11-25", "2026-12-24", null),
       period("2026-10-26", "2026-11-24", "active", { isActive: true, isCurrent: true }),
       period("2026-09-26", "2026-10-25", "prethodni", { isBilling: true, itemsCount: 1 }),
@@ -157,18 +160,25 @@ describe("Promena perioda specifikacije", () => {
     await user.click(screen.getByRole("button", { name: /26\.10\.2026\./ }));
     await user.click(screen.getByRole("menuitem", { name: /Promeni period/ }));
     const items = screen.getAllByRole("listitem").map((li) => li.textContent);
-    expect(items).toHaveLength(4); // bez perioda posle današnjeg
-    expect(items[0]).toContain("Smeštaj za period");
-    expect(items[0]).toContain("Današnji");
-    expect(items[1]).toContain("Period specifikacije");
-    expect(items[1]).toContain("1 stavka");
-    expect(items[3]).toContain("12 stavki");
+    expect(items).toHaveLength(7); // 3 unapred + današnji + 3 ranija
+    expect(items[0]).toContain("24.01.2027."); // treći unapred
+    expect(items.slice(0, 3).every((t) => t?.includes("Unapred"))).toBe(true);
+    expect(items.some((t) => t?.includes("23.02.2027."))).toBe(false);
+    expect(items[3]).toContain("Smeštaj za period");
+    expect(items[3]).toContain("Današnji");
+    expect(items[4]).toContain("Period specifikacije");
+    expect(items[4]).toContain("1 stavka");
+    expect(items[6]).toContain("12 stavki");
     expect(screen.getByRole("button", { name: "Izabran" })).toBeDisabled();
     // Već je uobičajeno (period pre današnjeg): nema prečice
     expect(screen.queryByRole("button", { name: "Vrati na uobičajeno" })).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Izaberi" })[2]!);
+    const choices = screen.getAllByRole("button", { name: "Izaberi" });
+    await user.click(choices[choices.length - 1]!);
     expect(data.setBilling).toHaveBeenCalledWith({ specificationId: "star" }, expect.anything());
+    // Period unapred (bez zapisa) se šalje po datumima
+    await user.click(choices[0]!);
+    expect(data.setBilling).toHaveBeenLastCalledWith({ startDate: "2027-01-24", endDate: "2027-02-22" }, expect.anything());
   });
 
   it("neotvaran period se šalje po datumima; prečica vraća na period pre današnjeg", async () => {
