@@ -82,7 +82,7 @@ export const STATUS_META: Record<EntryStatus, { label: string; color: "warning" 
   logged: { label: "Zabeleženo", color: "light" },
 };
 
-export const TYPE_LABEL: Record<EntryType, string> = { medicine: "Lek", article: "Artikal", care: "Nega", physio: "Fizioterapija" };
+export const TYPE_LABEL: Record<EntryType, string> = { medicine: "Lek", article: "Artikal", care: "Nega", physio: "fizikalna terapija" };
 
 export const isPending = (e: Pick<NurseEntry, "status">) => e.status === "pending" || e.status === "processing";
 export const isBillableTask = (t: Pick<CareTask, "article" | "articleAmount" | "price">) =>

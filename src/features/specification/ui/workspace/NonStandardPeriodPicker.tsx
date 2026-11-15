@@ -63,7 +63,7 @@ export default function NonStandardPeriodPicker({ patientId, value, onChange }: 
         <>
           <div className="min-w-56">
             <label htmlFor={ids.list} className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Vanstandardni period
+              Vanstandardni period specifikacije
             </label>
             <Select id={ids.list} value={value} onChange={(e) => onChange(e.target.value)}>
               {periods.map((p) => (
@@ -74,11 +74,11 @@ export default function NonStandardPeriodPicker({ patientId, value, onChange }: 
             </Select>
           </div>
           <Button size="sm" variant="outline" startIcon={<LuCalendarPlus className="h-4 w-4" />} onClick={() => setCreating(true)}>
-            Novi vanstandardni period
+            Novi vanstandardni period 
           </Button>
           {selected && (
             <p className="flex items-center gap-2 rounded-lg bg-warning-500 px-3.5 py-2 text-sm font-semibold text-white shadow-theme-xs" aria-live="polite">
-              Izabran period: {formatDay(selected.startDate)} – {formatDay(selected.endDate)}
+              Izabran period vanstandardne specifikacije: {formatDay(selected.startDate)} – {formatDay(selected.endDate)}
             </p>
           )}
         </>

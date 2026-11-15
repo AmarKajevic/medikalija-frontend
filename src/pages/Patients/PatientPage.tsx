@@ -36,7 +36,7 @@ import AddPatientDialog from "@features/patients/ui/AddPatientDialog";
 type OpenDialog = "family" | "discharge" | "socialNote" | "edit" | null;
 type TabKey = "overview" | "care" | "medical" | "social" | "physio";
 
-const TAB_LABELS: Record<TabKey, string> = { overview: "Pregled", care: "Nega", medical: "Medicina", social: "Socijalno", physio: "Fizioterapija" };
+const TAB_LABELS: Record<TabKey, string> = { overview: "Pregled", care: "Nega", medical: "Lekarski izvestaj", social: "Socijalno", physio: "fizikalna terapija" };
 
 /** Kartice profila po ulozi; prva je podrazumevana */
 function tabsFor(role?: string): TabKey[] {

@@ -19,7 +19,7 @@ import EventDialog from "./ui/EventDialog";
 const weekly: CalendarOccurrence = {
   id: "s1_x",
   eventId: "s1",
-  title: "Fizioterapija",
+  title: "fizikalna terapija",
   description: "",
   location: "",
   calendar: "plava",
@@ -154,7 +154,7 @@ describe("EventDialog", () => {
     const draft = newDraft({ start: new Date(2026, 10, 17, 10, 0), end: new Date(2026, 10, 17, 11, 0) });
     const { user } = renderWithProviders(<EventDialog draft={draft} onClose={onClose} />);
 
-    await user.type(screen.getByLabelText("Naziv"), "Fizioterapija");
+    await user.type(screen.getByLabelText("Naziv"), "fizikalna terapija");
     await user.click(screen.getByRole("button", { name: "30 min" }));
     await user.selectOptions(screen.getByLabelText("Ponavljanje"), "custom");
     await user.click(screen.getByRole("button", { name: "četvrtak" }));
@@ -165,7 +165,7 @@ describe("EventDialog", () => {
     const [url, body] = api.post.mock.calls[0]!;
     expect(url).toBe("/api/calendar");
     expect(body).toMatchObject({
-      title: "Fizioterapija",
+      title: "fizikalna terapija",
       allDay: false,
       start: new Date(2026, 10, 17, 10, 0).toISOString(),
       end: new Date(2026, 10, 17, 10, 30).toISOString(),
@@ -189,7 +189,7 @@ describe("EventDialog", () => {
     api.put.mockResolvedValue({ data: {} });
     const { user } = renderWithProviders(<EventDialog draft={draftFrom(weekly)} onClose={vi.fn()} />);
     await user.clear(screen.getByLabelText("Naziv"));
-    await user.type(screen.getByLabelText("Naziv"), "Fizioterapija (pomereno)");
+    await user.type(screen.getByLabelText("Naziv"), "fizikalna terapija (pomereno)");
     await user.click(screen.getByRole("button", { name: "Sačuvaj" }));
 
     const scope = screen.getByRole("dialog", { name: "Izmena događaja koji se ponavlja" });
@@ -197,7 +197,7 @@ describe("EventDialog", () => {
     await user.click(within(scope).getByRole("button", { name: "Sačuvaj" }));
     await waitFor(() => expect(api.put).toHaveBeenCalled());
     expect(api.put.mock.calls[0]![0]).toBe("/api/calendar/s1");
-    expect(api.put.mock.calls[0]![1]).toMatchObject({ scope: "occurrence", title: "Fizioterapija (pomereno)", recurrence: null });
+    expect(api.put.mock.calls[0]![1]).toMatchObject({ scope: "occurrence", title: "fizikalna terapija (pomereno)", recurrence: null });
   });
 
   it("neispravan unos se ne šalje", async () => {

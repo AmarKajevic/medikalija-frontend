@@ -47,12 +47,12 @@ function byDay<T>(items: T[], dateOf: (t: T) => string) {
 
 type Row = { key: string; at: string } & ({ note: WorkNote; entry?: undefined } | { entry: NurseEntry; note?: undefined });
 
-// Redovna fizioterapija i usluge bez naplate se samo beleže — ne ulaze u specifikaciju
+// Redovna fizikalna terapija i usluge bez naplate se samo beleže — ne ulaze u specifikaciju
 const statusOf = (e: NurseEntry) =>
   e.status === "logged" ? { label: e.type === "physio" ? "Redovna · ne naplaćuje se" : "Zabeleženo · ne naplaćuje se", color: "light" as const } : STATUS_META[e.status];
 
 // Sve što je osoblje upisalo u periodu specifikacije — i ono što ne ulazi u specifikaciju
-// (učinak rada, redovna fizioterapija). Uprava to vidi dok pravi specifikaciju.
+// (učinak rada, redovna fizikalna terapija). Uprava to vidi dok pravi specifikaciju.
 export default function PeriodNotes({ specification: spec, patientId, onAddAsCost, embedded = false }: Props) {
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
@@ -92,7 +92,7 @@ export default function PeriodNotes({ specification: spec, patientId, onAddAsCos
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Zabeleške iz ovog perioda</h3>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizioterapija). Proverite da li nešto treba naplatiti.
+              Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizikalna terapija). Proverite da li nešto treba naplatiti.
             </p>
           </div>
         )}
@@ -104,7 +104,7 @@ export default function PeriodNotes({ specification: spec, patientId, onAddAsCos
             { value: "all", label: `Sve${count("all", !!notes.data && !!entries.data)}` },
             { value: "notes", label: `Učinak rada${count("notes", !!notes.data)}` },
             { value: "entries", label: `Unosi sestara${count("entries", !!entries.data)}` },
-            { value: "physio", label: `Fizioterapija${count("physio", !!entries.data)}` },
+            { value: "physio", label: `fizikalna terapija${count("physio", !!entries.data)}` },
           ]}
         />
       </header>

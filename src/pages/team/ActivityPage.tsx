@@ -31,7 +31,7 @@ const KIND: Record<Kind, { label: string; icon: ReactNode }> = {
   medicine: { label: "Lek", icon: <LuPill /> },
   article: { label: "Artikal", icon: <LuPackage /> },
   care: { label: "Nega", icon: <LuHeartHandshake /> },
-  physio: { label: "Fizioterapija", icon: <LuActivity /> },
+  physio: { label: "fizikalna terapija", icon: <LuActivity /> },
   analysis: { label: "Analize", icon: <LuFlaskConical /> },
   social: { label: "Socijalna beleška", icon: <LuHandHeart /> },
 };

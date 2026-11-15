@@ -8,7 +8,7 @@ import { useNurseEntries } from "@features/nurse-entries/model";
 import EntryList from "@features/nurse-entries/ui/EntryList";
 import PhysioEntryForm from "@features/physio/ui/PhysioEntryForm";
 
-// Fizioterapija: fizioterapeut beleži redovnu (ne naplaćuje se) i vanrednu terapiju
+// fizikalna terapija: fizioterapeut beleži redovnu (ne naplaćuje se) i vanrednu terapiju
 // (uprava određuje cenu i odobrava je u "Za odobrenje"). Uprava ovde vidi sve unose.
 export default function PhysioPage() {
   const { user } = useAuth();
