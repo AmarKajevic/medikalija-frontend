@@ -1,4 +1,4 @@
-// Fizioterapija: unos terapije i odobravanje vanredne sa cenom.
+// fizikalna terapija: unos terapije i odobravanje vanredne sa cenom.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "../../test/render";

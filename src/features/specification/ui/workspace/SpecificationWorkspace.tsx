@@ -141,7 +141,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
           </>
         ) : isNonStandard ? (
           <>
-            <Badge size="sm" color="warning">Vanstandardni period</Badge>
+            <Badge size="sm" color="warning">Vanstandardni period specifikacije</Badge>
             <PeriodDates start={spec.startDate} end={spec.endDate} />
             <span className="text-xs text-gray-500 dark:text-gray-400">stavke i obračun idu u ovaj period</span>
           </>
@@ -197,7 +197,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             <header className="border-b border-warning-100 bg-warning-50 px-5 py-3.5 dark:border-warning-500/20 dark:bg-warning-500/10">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi osoblja čekaju odobrenje ({pendingCount})</h3>
               <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-                Unosi sestara i vanredna fizioterapija. Prihvaćeno ulazi u specifikaciju (lekovi i artikli se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje.
+                Unosi sestara i vanredna fizikalna terapija. Prihvaćeno ulazi u specifikaciju (lekovi i artikli se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje.
               </p>
             </header>
             <div className="p-5">
@@ -282,7 +282,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         onClose={() => setNotesOpen(false)}
         size="xl"
         title="Zabeleške iz ovog perioda"
-        description="Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizioterapija). Proverite da li nešto treba naplatiti."
+        description="Sve što je osoblje upisalo, i ono što ne ulazi u specifikaciju (učinak rada, redovna fizikalna terapija). Proverite da li nešto treba naplatiti."
       >
         <PeriodNotes
           embedded

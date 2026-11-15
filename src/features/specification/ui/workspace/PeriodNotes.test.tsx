@@ -42,7 +42,7 @@ describe("PeriodNotes", () => {
     expect(screen.queryByRole("button", { name: /Dodaj kao trošak/ })).not.toBeInTheDocument(); // zatvoren period / bez prava
   });
 
-  it("sve na jednom mestu: učinak, unosi sestara i fizioterapija (i ono što se ne naplaćuje)", async () => {
+  it("sve na jednom mestu: učinak, unosi sestara i fizikalna terapija (i ono što se ne naplaćuje)", async () => {
     const fizio = { _id: "f1", name: "Fica", lastName: "Fizio", role: "physiotherapist" };
     const entry = (id: string, over: object) => ({ _id: id, patient: "p1", amount: 1, note: "", performedAt: new Date(2026, 10, 4, 11, 0).toISOString(), createdBy: sestra, ...over });
     api.get.mockImplementation(async (url: string) =>
@@ -65,7 +65,7 @@ describe("PeriodNotes", () => {
     expect(screen.getByText("Redovna · ne naplaćuje se")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Unosi sestara (1)" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Fizioterapija (2)" }));
+    await user.click(screen.getByRole("tab", { name: "fizikalna terapija (2)" }));
     expect(screen.queryByText("Kupanje")).not.toBeInTheDocument();
     expect(screen.queryByText("Izmeren pritisak")).not.toBeInTheDocument();
     expect(screen.getByText("Grupna fizikalna terapija")).toBeInTheDocument();
