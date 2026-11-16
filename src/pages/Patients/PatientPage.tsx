@@ -23,7 +23,7 @@ import { useSocialNotes } from "@features/social/model";
 import SocialNotesList from "@features/social/ui/SocialNotesList";
 import SocialNoteDialog from "@features/social/ui/SocialNoteDialog";
 import SocialProfileCard from "@features/social/ui/SocialProfileCard";
-import SocialDocumentsCard from "@features/social/ui/SocialDocumentsCard";
+import SocialFormsPanel from "@features/social/ui/SocialFormsPanel";
 import FillTemplateCard from "@features/social/ui/FillTemplateCard";
 import PatientHeader from "@features/patients/ui/profile/PatientHeader";
 import SpecificationSummaryCard from "@features/patients/ui/profile/SpecificationSummaryCard";
@@ -132,6 +132,7 @@ export default function PatientPage() {
 
   const tabs = tabsFor(role);
   const tab = tabs.includes(params.get("tab") as TabKey) ? (params.get("tab") as TabKey) : tabs[0]!;
+  const socialSection = (["documents", "profile", "notes"] as const).find((s) => s === params.get("social")) ?? "documents";
   const patientName = `${patient.name} ${patient.lastName}`;
   const close = () => setDialog(null);
   // Specifikacija se otvara kao "u toku": kad se skloni, ostaje kartica dole desno na svakoj stranici
@@ -226,17 +227,32 @@ export default function PatientPage() {
       )}
 
       {tab === "social" && hasRole(role, SOCIAL_READ_ROLES) && (
-        // Socijalni dosije: lični podaci (za dokumente), procene i individualni plan, beleške
-        <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
-          <div className="min-w-0 space-y-6">
-            <SocialProfileCard patientId={patient._id} canWrite={canWriteSocial} />
-            <SocialDocumentsCard patientId={patient._id} patientName={patientName} canWrite={canWriteSocial && !discharged} active={!discharged} />
-            <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />
-          </div>
-          <div className="space-y-6">
-            <FillTemplateCard patientId={patient._id} patientName={patientName} />
-            <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
-          </div>
+        // Socijalni rad: dokumentacija (obrasci doma i stručni dokumenti), karton (podaci koji idu
+        // u obrasce) i beleške — sekcija je u adresi (?tab=social&social=karton)
+        <div className="space-y-5">
+          <Tabs
+            variant="pills"
+            value={socialSection}
+            onChange={(v) => setParams({ tab: "social", social: v }, { replace: true })}
+            items={[
+              { value: "documents", label: "Dokumentacija" },
+              { value: "profile", label: "Karton" },
+              { value: "notes", label: "Beleške" },
+            ]}
+          />
+          {socialSection === "documents" && (
+            <div className="grid items-start gap-6 xl:grid-cols-[1fr_360px]">
+              <div className="min-w-0">
+                <SocialFormsPanel patientId={patient._id} patientName={patientName} canWrite={canWriteSocial && !discharged} active={!discharged} />
+              </div>
+              <div className="space-y-6">
+                <FillTemplateCard patientId={patient._id} patientName={patientName} />
+                <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
+              </div>
+            </div>
+          )}
+          {socialSection === "profile" && <SocialProfileCard patientId={patient._id} canWrite={canWriteSocial} />}
+          {socialSection === "notes" && <SocialCard patientId={patient._id} canWrite={canWriteSocial} onNew={() => setDialog("socialNote")} />}
         </div>
       )}
 

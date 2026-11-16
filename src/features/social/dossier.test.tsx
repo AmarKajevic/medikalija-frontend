@@ -132,18 +132,19 @@ describe("novi korisnik", () => {
   });
 });
 
-describe("individualni plan", () => {
-  it("novi plan ima cilj i rok za pregled za 12 meseci; Zaključi čuva pa zaključuje", async () => {
+describe("stručni dokumenti po obrascima", () => {
+  it("individualni plan (obrazac 12): uobičajeni tekstovi, evaluacija za 12 meseci; Zaključi čuva pa zaključuje", async () => {
     api.post.mockImplementation(async (url: string) => (url.endsWith("/finalize") ? { data: { document: { _id: "d1", status: "final" } } } : { data: { document: { _id: "d1" } } }));
     const onClose = vi.fn();
     const { user } = renderWithProviders(<SocialDocumentDialog open onClose={onClose} patientId="p1" patientName="Petar Petrović" type="plan" canWrite />);
-    await user.type(screen.getByLabelText("Cilj"), "Uključiti u radno-okupacione aktivnosti");
+    expect(screen.getByLabelText("Vremenski okvir u kojem se realizuje plan usluge")).toHaveValue("Godinu dana.");
+    await user.type(screen.getByLabelText("Ciljevi koji se žele postići pružanjem usluge"), "1. Adaptacija na domske uslove.");
     await user.click(screen.getByRole("button", { name: "Zaključi" }));
     await user.click(within(screen.getByRole("dialog", { name: /Zaključiti/ })).getByRole("button", { name: "Zaključi" }));
 
     const [url, body] = api.post.mock.calls[0]!;
     expect(url).toBe("/api/social/documents");
-    expect(body).toMatchObject({ patientId: "p1", type: "plan", goals: [expect.objectContaining({ goal: "Uključiti u radno-okupacione aktivnosti" })] });
+    expect(body).toMatchObject({ patientId: "p1", type: "plan", sections: expect.objectContaining({ goals: "1. Adaptacija na domske uslove.", responsible: "socijalni radnik" }) });
     const date = new Date(`${body.date}T12:00:00`);
     date.setMonth(date.getMonth() + 12);
     expect(body.nextReview).toBe(date.toISOString().slice(0, 10));
@@ -151,19 +152,26 @@ describe("individualni plan", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("pregled plana kreće od ciljeva poslednjeg plana; zaključen dokument je samo za čitanje", () => {
-    const goals = [{ _id: "g1", area: "", goal: "Šetnja svaki dan", outcome: "", activities: "", responsible: "", due: null, status: "" as const }];
-    const { unmount } = renderWithProviders(<SocialDocumentDialog open onClose={vi.fn()} patientId="p1" patientName="P" type="plan_review" canWrite previousGoals={goals} />);
-    expect(screen.getByLabelText("Cilj")).toHaveValue("Šetnja svaki dan");
-    unmount();
+  it("stepen podrške (obrazac 11): zbirovi i stepen se računaju dok se unose ocene", async () => {
+    api.post.mockResolvedValue({ data: { document: { _id: "d9" } } });
+    const { user } = renderWithProviders(<SocialDocumentDialog open onClose={vi.fn()} patientId="p1" patientName="P" type="support_scale" canWrite />);
+    await user.selectOptions(screen.getByLabelText("Upotreba toaleta: stanje na prijemu"), "4");
+    await user.selectOptions(screen.getByLabelText("Uzimanje obroka: stanje na prijemu"), "4");
+    // Prosek 4 = potpuno zavisan → I stepen (najviše podrške)
+    expect(screen.getByText("I stepen")).toBeInTheDocument();
+    expect(screen.getByText(/ocenjeno 2\/25/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sačuvaj nacrt" }));
+    expect(api.post).toHaveBeenCalledWith("/api/social/documents", expect.objectContaining({ type: "support_scale", scale: expect.objectContaining({ toilet: { now: 4, expected: null } }) }));
+  });
 
+  it("zaključen dokument u ranijem obliku: samo za čitanje, raniji delovi se prikazuju", () => {
     const finalDoc: SocialDocument = {
       _id: "d2",
       updatedAt: "2026-11-06T00:00:00.000Z",
       type: "assessment",
       date: "2026-11-05T00:00:00.000Z",
       status: "final",
-      sections: { health: "Dijabetes" },
+      sections: { health: "Dijabetes", needs: "Pomoć pri kupanju" },
       supportLevel: 2,
       participants: "korisnik",
       goals: [],
@@ -173,9 +181,13 @@ describe("individualni plan", () => {
       finalizedAt: "2026-11-06T00:00:00.000Z",
     };
     renderWithProviders(<SocialDocumentDialog open onClose={vi.fn()} patientId="p1" patientName="P" type="assessment" document={finalDoc} canWrite />);
-    expect(screen.getByLabelText("Zdravstveno stanje")).toBeDisabled();
+    expect(screen.getByLabelText("Potrebe korisnika")).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Zaključi" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Rizici")).not.toBeInTheDocument();
+    expect(screen.getByText("Uneto u ranijem obliku dokumenta")).toBeInTheDocument();
+    expect(screen.getByText("Dijabetes")).toBeInTheDocument();
+    expect(screen.getByText("II stepen")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Obrazac (Word)" })).toBeInTheDocument();
   });
 });
 

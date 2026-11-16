@@ -17,9 +17,43 @@ export interface SocialContact {
   note: string;
 }
 
+export type ApplicantKind = "" | "self" | "relative" | "guardian" | "other";
+
+/** Podnosilac zahteva / obveznik ugovora (potpisuje zahtev, izjave i ugovor) */
+export interface Applicant {
+  kind: ApplicantKind;
+  name: string;
+  relation: string;
+  sex: "" | "M" | "Ž";
+  address: string;
+  jmbg: string;
+  idCardNumber: string;
+  email: string;
+  phone: string;
+  messenger: string;
+}
+
 export interface SocialProfileInput {
   jmbg: string;
   parentName: string;
+  maidenName: string;
+  fatherName: string;
+  motherName: string;
+  motherMaidenName: string;
+  spouse: { name: string; maidenName: string; address: string };
+  phone: string;
+  email: string;
+  messenger: string;
+  payerNote: string;
+  socialStatus: string;
+  insuranceBasis: string;
+  property: string;
+  diagnosis: string;
+  requestDate: string | null;
+  applicant: Applicant;
+  trustee: { name: string; address: string; idCardNumber: string; phone: string };
+  contract: { roomType: "" | "single" | "double" | "any"; categories: number[]; priceEUR: number | null; bankAccount: string };
+  dischargeReason: number;
   birthPlace: string;
   sex: "" | "M" | "Ž";
   citizenship: string;
@@ -77,9 +111,29 @@ export interface DossierPatient {
   contactPerson?: string;
 }
 
+export const EMPTY_APPLICANT: Applicant = { kind: "", name: "", relation: "", sex: "", address: "", jmbg: "", idCardNumber: "", email: "", phone: "", messenger: "" };
+
 export const EMPTY_PROFILE: SocialProfileInput = {
   jmbg: "",
   parentName: "",
+  maidenName: "",
+  fatherName: "",
+  motherName: "",
+  motherMaidenName: "",
+  spouse: { name: "", maidenName: "", address: "" },
+  phone: "",
+  email: "",
+  messenger: "",
+  payerNote: "",
+  socialStatus: "",
+  insuranceBasis: "",
+  property: "",
+  diagnosis: "",
+  requestDate: null,
+  applicant: { ...EMPTY_APPLICANT },
+  trustee: { name: "", address: "", idCardNumber: "", phone: "" },
+  contract: { roomType: "", categories: [], priceEUR: null, bankAccount: "" },
+  dischargeReason: 0,
   birthPlace: "",
   sex: "",
   citizenship: "",
@@ -123,12 +177,32 @@ export function profileToInput(p: SocialProfile | null): SocialProfileInput {
     trustedPerson: { ...EMPTY_PROFILE.trustedPerson, ...p.trustedPerson },
     contractDate: d(p.contractDate),
     csrDecisionDate: d(p.csrDecisionDate),
+    requestDate: d(p.requestDate),
+    spouse: { ...EMPTY_PROFILE.spouse, ...p.spouse },
+    applicant: { ...EMPTY_APPLICANT, ...p.applicant },
+    trustee: { ...EMPTY_PROFILE.trustee, ...p.trustee },
+    contract: { ...EMPTY_PROFILE.contract, ...p.contract, categories: [...(p.contract?.categories ?? [])] },
     contacts: (p.contacts ?? []).map((c) => ({ ...c })),
     assignedStaff: p.assignedStaff?._id ?? null,
   };
 }
 
 export const SEX_LABEL: Record<string, string> = { M: "muški", Ž: "ženski" };
+export const APPLICANT_LABEL: Record<string, string> = { self: "sam korisnik", relative: "srodnik", guardian: "staratelj", other: "drugo lice" };
+/** Ugovor čl. 2 */
+export const ROOM_LABEL: Record<string, string> = { single: "jednokrevetna soba", double: "dvokrevetna soba", any: "nevezano za kategoriju sobe" };
+/** Ugovor čl. 3 — redom kao u ugovoru (1–10) */
+export const USER_CATEGORIES = ["Pokretan", "Polupokretan", "Nepokretan", "Dementan", "Dezorijentisan", "Hronično oboleo", "Orijentisan", "Zavisan", "Poluzavisan", "Nezavisan"];
+/** Odluka o prestanku smeštaja — osnovi redom kao u obrascu 14 (1–7) */
+export const DISCHARGE_REASONS = [
+  "Neizmirena obaveza plaćanja ili druge ugovorne obaveze",
+  "Nepoštovanje pravila ponašanja u Domu",
+  "Namerna ili nepažnjom naneta materijalna šteta / narušen ugled Doma",
+  "Pad psiho-fizičkih sposobnosti koji ugrožava korisnika i druge",
+  "Nema sredstava za dalji boravak u Domu",
+  "Izričita volja korisnika / zastupnika",
+  "Smrt korisnika",
+];
 export const MARITAL_LABEL: Record<string, string> = {
   single: "neoženjen / neudata",
   married: "u braku",
@@ -232,7 +306,7 @@ export const DOSSIER_CHECKS = 8;
 
 // ── Dokumenti ───────────────────────────────────────────────────────────
 
-export type DocType = "intake" | "assessment" | "reassessment" | "plan" | "plan_review";
+export type DocType = "intake" | "anamnesis" | "assessment" | "support_scale" | "plan" | "plan_review" | "reassessment";
 
 export interface PlanGoal {
   _id?: string;
@@ -257,6 +331,8 @@ export interface SocialDocument {
   participants: string;
   goals: PlanGoal[];
   nextReview: string | null;
+  /** Skala podrške (obrazac 11): ocena stanja na prijemu i očekivanog ishoda, 1–4 */
+  scale?: Record<string, ScaleScore>;
   author: StaffRef;
   finalizedBy: StaffRef | null;
   finalizedAt: string | null;
@@ -269,6 +345,12 @@ export interface DocumentInput {
   participants: string;
   goals: PlanGoal[];
   nextReview: string | null;
+  scale: Record<string, ScaleScore>;
+}
+
+export interface ScaleScore {
+  now: number | null;
+  expected: number | null;
 }
 
 interface SectionMeta {
@@ -277,88 +359,206 @@ interface SectionMeta {
   hint: string;
 }
 
-// Delovi dokumenata (ključevi su isti kao na serveru i u budućim šablonima)
-const S = (key: string, label: string, hint: string): SectionMeta => ({ key, label, hint });
-const ASSESSMENT_SECTIONS: SectionMeta[] = [
-  S("socialHistory", "Socijalna anamneza", "Život pre prijema: porodica, rad, stanovanje, zašto je došlo do smeštaja."),
-  S("health", "Zdravstveno stanje", "Dijagnoze, terapija, pomagala — prema medicinskoj dokumentaciji i lekaru."),
-  S("selfCare", "Briga o sebi", "Ishrana, higijena, oblačenje, kretanje, kontrola sfinktera; koliko pomoći je potrebno."),
-  S("mental", "Kognitivno i psihičko stanje", "Orijentacija, pamćenje, raspoloženje, ponašanje."),
-  S("communication", "Komunikacija", "Vid, sluh, govor, jezik; kako je najbolje razgovarati sa korisnikom."),
-  S("socialTies", "Porodica i socijalne veze", "Ko su bliski ljudi, koliko često dolaze, odnosi u porodici."),
-  S("interests", "Interesovanja i navike", "Šta voli da radi, dnevni ritam, hobiji."),
-  S("strengths", "Snage", "Šta korisnik može sam, na šta se može osloniti."),
-  S("risks", "Rizici", "Pad, lutanje, dekubitus, neuhranjenost, zanemarivanje, zloupotreba, usamljenost."),
-  S("needs", "Potrebe", "Šta korisniku treba od doma i u kojoj meri."),
-  S("culture", "Kulturne i lične posebnosti", "Maternji jezik, vera, običaji, ishrana — čl. 13 st. 6."),
-  S("userView", "Mišljenje korisnika i porodice", "Kako korisnik vidi svoje potrebe i boravak u domu."),
-  S("conclusion", "Zaključak", "Sažetak procene i preporuke za individualni plan."),
-];
+// Delovi dokumenata — TAČNO kao na obrascima doma (isti ključevi na serveru i u Word obrascima)
+const S = (key: string, label: string, hint = ""): SectionMeta => ({ key, label, hint });
 
-export const DOC_TYPES: Record<
-  DocType,
-  { label: string; short: string; article: string; description: string; sections: SectionMeta[]; levels?: boolean; goals?: boolean }
-> = {
+export interface DocTypeMeta {
+  label: string;
+  short: string;
+  /** Broj obrasca doma */
+  form: string;
+  article: string;
+  description: string;
+  sections: SectionMeta[];
+  /** Raniji oblik: stepen podrške se birao ručno */
+  levels?: boolean;
+  /** Raniji oblik plana: ciljevi kao lista */
+  goals?: boolean;
+  /** Datum u obrascu posle datuma dokumenta (npr. planirani datum evaluacije) */
+  nextDate?: { label: string; hint: string; months: number };
+  /** Skala za procenu stepena podrške (obrazac 11) */
+  scale?: boolean;
+  /** Ne nudi se za novi dokument (samo postojeći zapisi) */
+  legacy?: boolean;
+}
+
+export const DOC_TYPES: Record<DocType, DocTypeMeta> = {
   intake: {
     label: "Prijemna procena",
-    short: "Prijemna",
+    short: "Prijemna procena",
+    form: "2",
     article: "čl. 12",
-    description: "Pre početka korišćenja usluge, u roku od 15 dana od zahteva: da li dom može da odgovori na potrebe korisnika.",
+    description: "Pre početka korišćenja usluge: da li dom može da odgovori na potrebe korisnika.",
     sections: [
-      S("request", "Zahtev", "Ko je podneo zahtev, kada i zašto se traži smeštaj."),
-      S("userAttitude", "Stav korisnika", "Da li korisnik želi smeštaj i šta očekuje."),
-      S("eligibility", "Podobnost", "Da li korisnik ispunjava uslove za uslugu."),
-      S("capacity", "Mogućnosti doma", "Može li dom da odgovori na potrebe (nega, prostor, osoblje)."),
-      S("priority", "Prioritet", "Hitnost prijema, lista čekanja."),
-      S("alternatives", "Druge usluge u zajednici", "Da li bi korisniku odgovarala neka druga usluga."),
-      S("outcome", "Ishod", "Prijem, lista čekanja ili razlozi za odbijanje (obaveštenje u roku od 7 dana)."),
+      S("attitude", "Stav korisnika i drugih značajnih lica i njihova očekivanja od usluge", "npr. Stav srodnice prema prijemu: saglasna. Očekivanja: nega i nadzor medicinskog osoblja."),
+      S("eligibility", "Podobnost korisnika za korišćenje usluge", "npr. Korisnik se smatra podobnim za korišćenje usluge domskog smeštaja."),
+      S("priority", "Prioritet za prijem — datum korišćenja usluge", "npr. Bez liste čekanja, prijem realizovan … godine."),
+      S("abilities", "Sposobnosti i prioritetne potrebe potencijalnog korisnika"),
+      S("capacity", "Kapacitet pružaoca usluge da zadovolji potrebe korisnika", "npr. Po obavljenom intervjuu i uvidu u spise… Dom trenutno ispunjava tražene uslove."),
+    ],
+  },
+  anamnesis: {
+    label: "Socijalno-anamnestički list",
+    short: "Anamnestički list",
+    form: "4",
+    article: "DS-2",
+    description: "Opšti podaci se uzimaju iz kartona; ovde se upisuju zdravstveno i porodično stanje, podaci o smeštaju i mišljenje komisije.",
+    sections: [
+      S("mobility", "II.1 Pokretljivost"),
+      S("selfCare", "II.2 Sposobnost za brigu o sebi"),
+      S("communication", "II.3 Sposobnost komunikacije"),
+      S("chronicIllness", "II.4 Hronične bolesti"),
+      S("healthOther", "II.5 Ostalo (zdravstveno stanje)"),
+      S("family", "III.1 Porodica i porodični odnosi"),
+      S("familyOther", "III.7 Ostalo (porodično stanje)"),
+      S("requestedBy", "IV.1 Po čijem zahtevu je tražen smeštaj"),
+      S("reasons", "IV.2 Razlozi smeštaja"),
+      S("userAttitude", "IV.3 Stav stare osobe o smeštaju"),
+      S("relativesAttitude", "IV.4 Stav najbližih srodnika o smeštaju"),
+      S("circumstances", "IV.5 Posebne okolnosti (lečenje, režim života, navike)"),
+      S("commission", "V. Mišljenje i odluka komisije za prijem"),
     ],
   },
   assessment: {
     label: "Procena",
     short: "Procena",
-    article: "čl. 13–15",
-    description: "Počinje odmah po prijemu i završava se u roku od 10 dana: potrebe, snage, rizici, sposobnosti i interesovanja, i stepen podrške.",
-    sections: ASSESSMENT_SECTIONS,
-    levels: true,
-  },
-  reassessment: {
-    label: "Ponovna procena",
-    short: "Ponovna procena",
+    form: "10",
     article: "čl. 13",
-    description: "Periodično, u rokovima iz individualnog plana, ili kad se stanje korisnika promeni.",
-    sections: [
-      S("changes", "Šta se promenilo", "Razlog za ponovnu procenu i promene od prethodne."),
-      ...ASSESSMENT_SECTIONS.filter((s) => ["socialHistory", "health", "selfCare", "mental", "socialTies", "risks", "needs", "userView", "conclusion"].includes(s.key)),
-    ],
-    levels: true,
+    description: "Potrebe, snage, rizici, sposobnosti i interesovanja korisnika — u roku od 10 dana od prijema.",
+    sections: [S("needs", "Potrebe korisnika"), S("priorityNeeds", "Prioritetne potrebe"), S("strengths", "Snage"), S("risks", "Rizici"), S("abilities", "Sposobnosti"), S("interests", "Interesovanja")],
+  },
+  support_scale: {
+    label: "Određivanje stepena potrebne podrške",
+    short: "Stepen podrške",
+    form: "11",
+    article: "čl. 14",
+    description: "Skala od 25 stavki; zbirove i stepen podrške aplikacija računa sama. Zaključen stepen prelazi u karton.",
+    sections: [S("duration", "Vremensko trajanje usluge", "npr. neodređeno"), S("otherProblems", "Drugi problemi"), S("observations", "Zapažanja")],
+    scale: true,
+    nextDate: { label: "Datum ponovne procene", hint: "Obično za 12 meseci.", months: 12 },
   },
   plan: {
     label: "Individualni plan usluge",
     short: "Individualni plan",
+    form: "12",
     article: "čl. 16",
-    description: "U roku od 10 dana od procene: ciljevi, očekivani ishodi, aktivnosti, rokovi, odgovorna lica i rok za ponovni pregled. Korisnik dobija primerak.",
+    description: "U roku od 10 dana od procene. Korisnik dobija primerak.",
     sections: [
-      S("summary", "Osnov plana", "Sažetak procene na kojoj se plan zasniva."),
-      S("adaptation", "Period prilagođavanja", "Aktivnosti u prvim nedeljama boravka."),
+      S("otherProblems", "Drugi problemi"),
+      S("goals", "Ciljevi koji se žele postići pružanjem usluge", "Svaki cilj u novom redu: 1. … 2. …"),
+      S("activities", "Aktivnosti, usluge i mere"),
+      S("outcomes", "Očekivani ishodi"),
+      S("timeframe", "Vremenski okvir u kojem se realizuje plan usluge", "npr. Godinu dana."),
+      S("evaluationMethod", "Način evaluacije", "npr. Izveštaj — ponovni pregled, evaluacija."),
+      S("responsible", "Odgovorna osoba zadužena za korisnika", "npr. socijalni radnik"),
+      S("implementers", "Imena lica odgovornih za realizaciju plana usluge", "npr. Svi zaposleni iz delokruga svog posla."),
     ],
-    goals: true,
+    nextDate: { label: "Planirani datum evaluacije", hint: "Najkasnije 12 meseci (čl. 17).", months: 12 },
   },
   plan_review: {
-    label: "Pregled individualnog plana",
-    short: "Pregled plana",
+    label: "Ponovni pregled individualnog plana",
+    short: "Ponovni pregled",
+    form: "13",
     article: "čl. 17",
-    description: "Najkasnije jednom u 12 meseci (ili ranije, po roku iz plana): šta je ostvareno i šta se menja.",
+    description: "Evaluacija — procena uspešnosti realizacije individualnog plana usluge.",
     sections: [
-      S("progress", "Šta je ostvareno", "Napredak po ciljevima plana."),
-      S("changes", "Izmene plana", "Novi ili promenjeni ciljevi i aktivnosti."),
-      S("conclusion", "Zaključak", ""),
+      S("otherProblems", "Drugi problemi"),
+      S("selfCare", "Sposobnosti neposredne brige o sebi i kretanja u objektu doma i spoljnoj sredini"),
+      S("communication", "Komunikacija i orijentacija"),
+      S("social", "Socijalni odnosi u domu i učešće u organizovanim aktivnostima"),
+      S("family", "Odnos sa porodicom, srodnicima i drugim licima značajnim za korisnika"),
+      S("satisfaction", "Zadovoljstvo korisnika i srodnika smeštajem i uslugama"),
+      S("progress", "Oblasti u kojima jeste/nije postignut napredak"),
+      S("adjustments", "Prilagođavanje aktivnosti potrebama korisnika, ciljevima i ostvarenim efektima usluge"),
     ],
-    goals: true,
+  },
+  reassessment: {
+    label: "Ponovna procena (raniji oblik)",
+    short: "Ponovna procena",
+    form: "",
+    article: "čl. 13",
+    description: "Raniji oblik ponovne procene — nova procena se radi kao Procena (obrazac 10).",
+    sections: [
+      S("changes", "Šta se promenilo"),
+      S("socialHistory", "Socijalna anamneza"),
+      S("health", "Zdravstveno stanje"),
+      S("selfCare", "Briga o sebi"),
+      S("mental", "Kognitivno i psihičko stanje"),
+      S("socialTies", "Porodica i socijalne veze"),
+      S("risks", "Rizici"),
+      S("needs", "Potrebe"),
+      S("userView", "Mišljenje korisnika i porodice"),
+      S("conclusion", "Zaključak"),
+    ],
+    levels: true,
+    legacy: true,
   },
 };
 
-export const DOC_ORDER: DocType[] = ["intake", "assessment", "plan", "plan_review", "reassessment"];
+/** Nazivi delova iz ranijeg oblika dokumenata (prikazuju se samo za čitanje) */
+export const LEGACY_SECTION_LABEL: Record<string, string> = {
+  request: "Zahtev",
+  userAttitude: "Stav korisnika",
+  outcome: "Ishod",
+  alternatives: "Druge usluge u zajednici",
+  socialHistory: "Socijalna anamneza",
+  health: "Zdravstveno stanje",
+  selfCare: "Briga o sebi",
+  mental: "Kognitivno i psihičko stanje",
+  communication: "Komunikacija",
+  socialTies: "Porodica i socijalne veze",
+  culture: "Kulturne i lične posebnosti",
+  userView: "Mišljenje korisnika i porodice",
+  conclusion: "Zaključak",
+  summary: "Osnov plana",
+  adaptation: "Period prilagođavanja",
+  changes: "Izmene",
+};
+
+export const DOC_ORDER: DocType[] = ["intake", "anamnesis", "assessment", "support_scale", "plan", "plan_review"];
+
+// ── Skala podrške (obrazac 11) ──────────────────────────────────────────
+// Isto kao na serveru (services/social/supportScale.ts): ocena 1–4 (4 = potpuno zavisan),
+// stepen iz proseka stanja na prijemu: I = najviše podrške, IV = samostalno.
+export const SCALE_GROUPS: Array<{ key: string; label: string; items: Array<[string, string]> }> = [
+  {
+    key: "daily",
+    label: "Svakodnevne životne aktivnosti",
+    items: [["toilet", "Upotreba toaleta"], ["hygiene", "Održavanje lične higijene"], ["dressing", "Oblačenje i svlačenje odeće"], ["footwear", "Obuvanje i izuvanje obuće"], ["meals", "Uzimanje obroka"], ["medication", "Uzimanje propisane terapije"]],
+  },
+  {
+    key: "instrumental",
+    label: "Instrumentalne životne veštine",
+    items: [["transport", "Korišćenje javnog prevoza"], ["services", "Korišćenje javnih službi"], ["shopping", "Kupovina (namirnice i ostalo)"], ["money", "Raspolaganje novcem"], ["housekeeping", "Održavanje higijene ličnog i zajedničkog prostora"], ["cooking", "Pripremanje hrane i napitaka"], ["phone", "Korišćenje telefona"], ["orientationSpace", "Orijentacija u prostoru"]],
+  },
+  {
+    key: "social",
+    label: "Funkcionisanje u socijalnom okruženju",
+    items: [["rules", "Odnos prema pravilima"], ["peers", "Odnos prema vršnjacima"], ["others", "Odnos prema drugim osobama"], ["family", "Održavanje porodičnih odnosa"], ["groups", "Grupne aktivnosti — učešće u zajednici"], ["danger", "Izbegavanje opasnosti"], ["orientationTime", "Orijentacija u vremenu"], ["communication", "Komunikacija"], ["aggression", "Agresivnost"]],
+  },
+  { key: "mobility", label: "Mobilnost", items: [["indoor", "Mobilnost unutar ustanove"], ["outdoor", "Mobilnost u spoljnoj sredini"]] },
+];
+export const SCALE_POINTS: Array<{ value: number; label: string }> = [
+  { value: 1, label: "samostalno" },
+  { value: 2, label: "uz povremenu pomoć / nadzor" },
+  { value: 3, label: "uz stalnu pomoć" },
+  { value: 4, label: "potpuno zavisan" },
+];
+
+export function scaleSummary(scale: Record<string, ScaleScore>) {
+  const sum = (keys: string[], col: keyof ScaleScore) => keys.reduce((s, k) => s + (Number(scale[k]?.[col]) || 0), 0);
+  const groups = SCALE_GROUPS.map((g) => {
+    const keys = g.items.map(([k]) => k);
+    return { key: g.key, label: g.label, now: sum(keys, "now"), expected: sum(keys, "expected") };
+  });
+  const all = SCALE_GROUPS.flatMap((g) => g.items.map(([k]) => k));
+  const rated = all.filter((k) => Number(scale[k]?.now) >= 1).length;
+  const totalNow = sum(all, "now");
+  const avg = rated ? totalNow / rated : 0;
+  // Veća zavisnost = niži stepen (I = najviše podrške, IV = samostalno)
+  const level = !rated ? 0 : avg <= 1.75 ? 4 : avg <= 2.5 ? 3 : avg <= 3.25 ? 2 : 1;
+  return { groups, totalNow, totalExpected: sum(all, "expected"), rated, of: all.length, level };
+}
 
 export const GOAL_STATUS_LABEL: Record<string, string> = { achieved: "ostvaren", partial: "delimično", not_achieved: "nije ostvaren" };
 
@@ -480,6 +680,8 @@ export interface MergeList {
   fields: MergeField[];
 }
 export interface MergeData {
+  /** Izbor u obrascu (soba, kategorija, osnov prestanka) */
+  flags?: Record<string, boolean>;
   fields: Record<string, string>;
   lists: Record<string, Array<Record<string, string>>>;
 }
