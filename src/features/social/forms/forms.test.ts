@@ -48,16 +48,16 @@ describe("popuna", () => {
     expect(toFormScript("Милица", "latin")).toBe("Milica");
   });
 
-  it("zahtev srodnika (1.1): ćirilica, rod korisnice, potpisnik; prazno ostaje linija", async () => {
+  it("zahtev srodnika (1.1): ćirilica, padež i rod korisnice, potpisnik; prazno ostaje linija", async () => {
     const form = formById("f11-zahtev-srodnik")!;
     const out = await textOf(
       await fillForm(
         form,
         template(form.id),
-        data({ ime_prezime: "Milica Jovanović", k_moga: "moju", K_rodjen: "Rođena", k_mu: "joj", k_njegovom: "njenom", datum_rodjenja: "07.08.1947.", podnosilac: "Stevan Jovanović", podnosilac_lk: "009876543" })
+        data({ ime_prezime_akuz: "Milicu Jovanović", k_moga: "moju", K_rodjen: "Rođena", k_mu: "joj", k_njegovom: "njenom", datum_rodjenja: "07.08.1947.", podnosilac: "Stevan Jovanović", podnosilac_lk: "009876543" })
       )
     );
-    expect(out).toContain("моју Милица Јовановић");
+    expect(out).toContain("моју Милицу Јовановић"); // akuzativ
     expect(out).toContain("Рођена је");
     expect(out).toContain("Стеван Јовановић");
     expect(out).toContain("009876543");
