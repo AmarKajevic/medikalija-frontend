@@ -8,6 +8,11 @@ import { todayIso } from "@shared/lib/dateText";
 import { formatDay } from "@shared/lib/calendarDay";
 import { roleLabel } from "@shared/lib/format";
 import {
+  APPLICANT_LABEL,
+  Applicant,
+  DISCHARGE_REASONS,
+  ROOM_LABEL,
+  USER_CATEGORIES,
   jmbgCheck,
   jmbgInfo,
   LEGAL_CAPACITY_LABEL,
@@ -82,6 +87,8 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
     if (info && !basics.dateOfBirth) onBasics({ dateOfBirth: info.birthDate });
   };
   const needsGuardian = profile.legalCapacity === "partial" || profile.legalCapacity === "none";
+  const setApplicant = (patch: Partial<Applicant>) => onProfile({ applicant: { ...profile.applicant, ...patch } });
+  const setContract = (patch: Partial<SocialProfileInput["contract"]>) => onProfile({ contract: { ...profile.contract, ...patch } });
   const firstContact = profile.contacts[0] ?? EMPTY_CONTACT;
   const setFirstContact = (patch: Partial<SocialContact>) =>
     onProfile({ contacts: profile.contacts.length ? profile.contacts.map((c, i) => (i === 0 ? { ...c, ...patch } : c)) : [{ ...EMPTY_CONTACT, emergency: true, ...patch }] });
@@ -239,6 +246,163 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
             )}
             <Field label="Napomena o prihodima" htmlFor={f("incomeNote")}>
               <Input {...text("incomeNote")} placeholder="npr. tuđa nega i pomoć" />
+            </Field>
+          </Group>
+
+          <Group title="Poreklo i porodično stanje" hint="Za obrasce 4 i 4.1 (socijalno-anamnestički list, opšti podaci).">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Prezime i ime oca" htmlFor={f("fatherName")}>
+                <Input {...text("fatherName")} />
+              </Field>
+              <Field label="Prezime pre zaključenja braka" htmlFor={f("maidenName")}>
+                <Input {...text("maidenName")} placeholder="devojačko prezime" />
+              </Field>
+              <Field label="Prezime i ime majke" htmlFor={f("motherName")}>
+                <Input {...text("motherName")} />
+              </Field>
+              <Field label="Devojačko prezime majke" htmlFor={f("motherMaidenName")}>
+                <Input {...text("motherMaidenName")} />
+              </Field>
+              <Field label="Bračni drug — prezime i ime" htmlFor={f("sp-name")}>
+                <Input id={f("sp-name")} value={profile.spouse.name} onChange={(e) => onProfile({ spouse: { ...profile.spouse, name: e.target.value } })} />
+              </Field>
+              <Field label="Bračni drug — adresa" htmlFor={f("sp-address")}>
+                <Input id={f("sp-address")} value={profile.spouse.address} onChange={(e) => onProfile({ spouse: { ...profile.spouse, address: e.target.value } })} />
+              </Field>
+              <Field label="Socijalni status" htmlFor={f("socialStatus")}>
+                <Input {...text("socialStatus")} placeholder="npr. penzioner" />
+              </Field>
+              <Field label="Zdravstveno osiguranje — osnov" htmlFor={f("insuranceBasis")}>
+                <Input {...text("insuranceBasis")} placeholder="npr. penzioner" />
+              </Field>
+              <Field label="Telefon korisnika" htmlFor={f("phone")}>
+                <Input {...text("phone")} inputMode="tel" />
+              </Field>
+              <Field label="E-pošta korisnika" htmlFor={f("email")}>
+                <Input {...text("email")} inputMode="email" />
+              </Field>
+            </div>
+            <Field label="Podaci o imovini koju poseduje" htmlFor={f("property")}>
+              <Input {...text("property")} placeholder="npr. Rešeno stambeno pitanje." />
+            </Field>
+          </Group>
+
+          <Group title="Prijem i podnosilac zahteva" hint="Podnosilac potpisuje zahtev, izjave i ugovor (kao obveznik). Kad zahtev podnosi sam korisnik, koriste se njegovi podaci.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Datum zahteva za prijem" htmlFor={f("requestDate")}>
+                <DateInput id={f("requestDate")} value={profile.requestDate ?? ""} onChange={(v) => onProfile({ requestDate: v || null })} fromYear={2000} />
+              </Field>
+              <Field label="Zahtev podnosi" htmlFor={f("ap-kind")}>
+                <Select id={f("ap-kind")} value={profile.applicant.kind} onChange={(e) => setApplicant({ kind: e.target.value as Applicant["kind"] })}>
+                  {options(APPLICANT_LABEL, "Nije izabrano")}
+                </Select>
+              </Field>
+            </div>
+            {profile.applicant.kind && profile.applicant.kind !== "self" && (
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Ime i prezime" htmlFor={f("ap-name")}>
+                  <Input id={f("ap-name")} value={profile.applicant.name} onChange={(e) => setApplicant({ name: e.target.value })} />
+                </Field>
+                <Field label="Srodstvo" htmlFor={f("ap-relation")}>
+                  <Input id={f("ap-relation")} value={profile.applicant.relation} onChange={(e) => setApplicant({ relation: e.target.value })} placeholder="npr. sin, ćerka" />
+                </Field>
+                <Field label="Pol podnosioca" htmlFor={f("ap-sex")} hint="Za oblik reči u izjavama.">
+                  <Select id={f("ap-sex")} value={profile.applicant.sex} onChange={(e) => setApplicant({ sex: e.target.value as Applicant["sex"] })}>
+                    {options(SEX_LABEL)}
+                  </Select>
+                </Field>
+                <Field label="Adresa" htmlFor={f("ap-address")} className="sm:col-span-2">
+                  <Input id={f("ap-address")} value={profile.applicant.address} onChange={(e) => setApplicant({ address: e.target.value })} />
+                </Field>
+                <Field label="JMBG" htmlFor={f("ap-jmbg")}>
+                  <Input id={f("ap-jmbg")} value={profile.applicant.jmbg} onChange={(e) => setApplicant({ jmbg: e.target.value.replace(/[^\d]/g, "").slice(0, 13) })} inputMode="numeric" />
+                </Field>
+                <Field label="Broj lične karte" htmlFor={f("ap-lk")}>
+                  <Input id={f("ap-lk")} value={profile.applicant.idCardNumber} onChange={(e) => setApplicant({ idCardNumber: e.target.value })} />
+                </Field>
+                <Field label="Telefon" htmlFor={f("ap-phone")}>
+                  <Input id={f("ap-phone")} value={profile.applicant.phone} onChange={(e) => setApplicant({ phone: e.target.value })} inputMode="tel" />
+                </Field>
+                <Field label="E-pošta" htmlFor={f("ap-email")}>
+                  <Input id={f("ap-email")} value={profile.applicant.email} onChange={(e) => setApplicant({ email: e.target.value })} inputMode="email" />
+                </Field>
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Ko snosi troškove (kako piše u zahtevu)" htmlFor={f("payerNote")}>
+                <Input {...text("payerNote")} placeholder="npr. svojom penzijom i sin" />
+              </Field>
+              <Field label="Bolest (za izjavu srodnika)" htmlFor={f("diagnosis")}>
+                <Input {...text("diagnosis")} placeholder="Boluje od …" />
+              </Field>
+            </div>
+          </Group>
+
+          <Group title="Ugovor o smeštaju" hint="Čl. 2 (soba), čl. 3 (kategorija korisnika), čl. 7 (cena), čl. 10 (račun) i čl. 11 (poverenik).">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Soba" htmlFor={f("roomType")}>
+                <Select id={f("roomType")} value={profile.contract.roomType} onChange={(e) => setContract({ roomType: e.target.value as SocialProfileInput["contract"]["roomType"] })}>
+                  {options(ROOM_LABEL)}
+                </Select>
+              </Field>
+              <Field label="Cena smeštaja (EUR, 30 dana)" htmlFor={f("price")}>
+                <Input
+                  id={f("price")}
+                  inputMode="decimal"
+                  value={profile.contract.priceEUR ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(",", ".");
+                    setContract({ priceEUR: v === "" ? null : Number(v) || 0 });
+                  }}
+                  trailing="EUR"
+                />
+              </Field>
+              <Field label="Tekući račun korisnika" htmlFor={f("bank")}>
+                <Input id={f("bank")} value={profile.contract.bankAccount} onChange={(e) => setContract({ bankAccount: e.target.value })} />
+              </Field>
+            </div>
+            <fieldset>
+              <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Kategorija korisnika</legend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                {USER_CATEGORIES.map((label, i) => (
+                  <Checkbox
+                    key={label}
+                    id={f(`cat-${i + 1}`)}
+                    label={label}
+                    checked={profile.contract.categories.includes(i + 1)}
+                    onChange={(e) =>
+                      setContract({ categories: e.target.checked ? [...profile.contract.categories, i + 1].sort((a, b) => a - b) : profile.contract.categories.filter((c) => c !== i + 1) })
+                    }
+                  />
+                ))}
+              </div>
+            </fieldset>
+            <div className="grid gap-4 sm:grid-cols-4">
+              <Field label="Poverenik" htmlFor={f("tr-name")}>
+                <Input id={f("tr-name")} value={profile.trustee.name} onChange={(e) => onProfile({ trustee: { ...profile.trustee, name: e.target.value } })} />
+              </Field>
+              <Field label="Adresa poverenika" htmlFor={f("tr-address")}>
+                <Input id={f("tr-address")} value={profile.trustee.address} onChange={(e) => onProfile({ trustee: { ...profile.trustee, address: e.target.value } })} />
+              </Field>
+              <Field label="L.k. poverenika" htmlFor={f("tr-lk")}>
+                <Input id={f("tr-lk")} value={profile.trustee.idCardNumber} onChange={(e) => onProfile({ trustee: { ...profile.trustee, idCardNumber: e.target.value } })} />
+              </Field>
+              <Field label="Telefon poverenika" htmlFor={f("tr-phone")}>
+                <Input id={f("tr-phone")} value={profile.trustee.phone} onChange={(e) => onProfile({ trustee: { ...profile.trustee, phone: e.target.value } })} />
+              </Field>
+            </div>
+          </Group>
+
+          <Group title="Prestanak smeštaja" hint="Za odluku o prestanku smeštaja (obrazac 14); datum je datum otpusta.">
+            <Field label="Osnov prestanka" htmlFor={f("dischargeReason")}>
+              <Select id={f("dischargeReason")} value={String(profile.dischargeReason || "")} onChange={(e) => onProfile({ dischargeReason: Number(e.target.value) || 0 })}>
+                <option value="">Nije izabran</option>
+                {DISCHARGE_REASONS.map((r, i) => (
+                  <option key={r} value={i + 1}>
+                    {i + 1}. {r}
+                  </option>
+                ))}
+              </Select>
             </Field>
           </Group>
 

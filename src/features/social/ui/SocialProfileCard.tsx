@@ -9,7 +9,11 @@ import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { formatDay } from "@shared/lib/calendarDay";
 import { roleLabel } from "@shared/lib/format";
 import {
+  APPLICANT_LABEL,
   basicsOf,
+  DISCHARGE_REASONS,
+  ROOM_LABEL,
+  USER_CATEGORIES,
   DOSSIER_CHECKS,
   LEGAL_CAPACITY_LABEL,
   MARITAL_LABEL,
@@ -69,6 +73,16 @@ const FIELD_LABEL: Record<string, string> = {
   reassessment: "ponovna procena",
   plan: "individualni plan",
   plan_review: "pregled plana",
+  anamnesis: "socijalno-anamnestički list",
+  support_scale: "stepen podrške",
+  applicant: "podnosilac zahteva",
+  requestDate: "datum zahteva",
+  contract: "ugovor",
+  trustee: "poverenik",
+  spouse: "bračni drug",
+  fatherName: "otac",
+  motherName: "majka",
+  dischargeReason: "osnov prestanka smeštaja",
 };
 
 function HistoryDialog({ open, onClose, patientId }: { open: boolean; onClose: () => void; patientId: string }) {
@@ -162,6 +176,37 @@ export default function SocialProfileCard({ patientId, canWrite }: { patientId: 
               <Item label="Lična karta">{p?.idCardNumber}</Item>
               <Item label="LBO / zdravstvena kartica">{p?.healthInsuranceNumber}</Item>
               <Item label="Izabrani lekar">{p?.chosenDoctor}</Item>
+            </Section>
+
+            <Section title="Poreklo i porodično stanje">
+              <Item label="Otac">{p?.fatherName}</Item>
+              <Item label="Majka">{[p?.motherName, p?.motherMaidenName ? `rođ. ${p.motherMaidenName}` : ""].filter(Boolean).join(", ")}</Item>
+              <Item label="Prezime pre braka">{p?.maidenName}</Item>
+              <Item label="Bračni drug">{[p?.spouse?.name, p?.spouse?.address].filter(Boolean).join(", ")}</Item>
+              <Item label="Socijalni status">{p?.socialStatus}</Item>
+              <Item label="Osnov zdravstvenog osiguranja">{p?.insuranceBasis}</Item>
+              <Item label="Imovina">{p?.property}</Item>
+              <Item label="Telefon / e-pošta">{[p?.phone, p?.email].filter(Boolean).join(" · ")}</Item>
+            </Section>
+
+            <Section title="Prijem">
+              <Item label="Datum zahteva">{formatDay(p?.requestDate)}</Item>
+              <Item label="Podnosilac zahteva">
+                {p?.applicant?.kind === "self"
+                  ? `${patient.name} ${patient.lastName} (sam korisnik)`
+                  : [p?.applicant?.name, p?.applicant?.relation || APPLICANT_LABEL[p?.applicant?.kind ?? ""]].filter(Boolean).join(", ")}
+              </Item>
+              {p?.applicant?.kind && p.applicant.kind !== "self" && (
+                <Item label="Podnosilac — l.k. / telefon">{[p.applicant.idCardNumber, p.applicant.phone].filter(Boolean).join(" · ")}</Item>
+              )}
+              <Item label="Ko snosi troškove">{p?.payerNote || PAYER_LABEL[p?.payer ?? ""]}</Item>
+              <Item label="Bolest (izjava srodnika)">{p?.diagnosis}</Item>
+              <Item label="Soba i kategorija (ugovor)">
+                {[ROOM_LABEL[p?.contract?.roomType ?? ""], (p?.contract?.categories ?? []).map((c) => USER_CATEGORIES[c - 1]).join(", ")].filter(Boolean).join(" · ")}
+              </Item>
+              <Item label="Cena smeštaja">{p?.contract?.priceEUR != null ? `${p.contract.priceEUR} €` : ""}</Item>
+              <Item label="Poverenik (ugovor)">{[p?.trustee?.name, p?.trustee?.phone].filter(Boolean).join(" · ")}</Item>
+              {patient.dischargeDate && <Item label="Osnov prestanka smeštaja">{DISCHARGE_REASONS[(p?.dischargeReason ?? 0) - 1]}</Item>}
             </Section>
 
             <Section title="Smeštaj i prihodi">
