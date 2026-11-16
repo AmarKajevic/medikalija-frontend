@@ -62,9 +62,6 @@ export async function fillFormBuffer(form: SocialForm, template: ArrayBuffer, da
   return zip.generate({ type: "arraybuffer", compression: "DEFLATE" });
 }
 
-/** Podaci koje obrazac traži, a nisu uneti (opisi za upozorenje) */
-export const missingFor = (form: SocialForm, data: MergeData | undefined) => (data ? form.requires.filter(([key]) => !data.fields[key]?.trim()).map(([, label]) => label) : []);
-
 /** Naziv fajla: "1.1 Zahtev za prijem — srodnik - Milica Jovanović.docx" */
 export const formFileName = (form: SocialForm, personName: string) => `${`${/^\d/.test(form.number) ? `${form.number} ` : ""}${form.title} - ${personName}`.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim()}.docx`;
 

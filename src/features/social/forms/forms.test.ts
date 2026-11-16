@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 import PizZip from "pizzip";
 import type { MergeData } from "@features/social/dossier";
 import { admissionPackage, formById, formsFor, SOCIAL_FORMS } from "./catalog";
-import { BLANK, fillFormBuffer as fillForm, missingFor, toFormScript } from "./fillForm";
+import { BLANK, fillFormBuffer as fillForm, toFormScript } from "./fillForm";
+import { formStatus, missingFor } from "./status";
+import type { SocialDocument } from "@features/social/dossier";
 
 const template = (id: string) => {
   const buf = readFileSync(resolve(__dirname, "../../../../public/social-forms", `${id}.docx`));
@@ -100,5 +102,42 @@ describe("popuna", () => {
       const out = await textOf(await fillForm(form, template(form.id), data({})));
       expect(out, form.id).not.toMatch(/\{[#/^]?[a-zA-Z_]+\}/);
     }
+  });
+});
+
+describe("stanje obrasca — šta je stvarno spremno", () => {
+  const full = (extra: Record<string, string> = {}) => ({ broj_dosijea: "SR-1", ...extra });
+  const doc = (status: "draft" | "final") => ({ _id: "d", type: "intake", status, date: "2026-09-02T00:00:00.000Z" }) as SocialDocument;
+
+  it("list praćenja nije spreman dok radnik ne upiše aktivnosti", () => {
+    const form = formById("f00-list-pracenja")!;
+    expect(formStatus(form, { data: data(full()), applicant: "", discharged: false })).toMatchObject({ tone: "warning", label: "nema upisanih aktivnosti", next: "activity" });
+    const withNotes = data(full(), {}, { beleske: [{ beleska_datum: "05.09.2026.", beleska_tekst: "Prijem" }, { beleska_datum: "06.09.2026.", beleska_tekst: "Razgovor" }] });
+    expect(formStatus(form, { data: withNotes, applicant: "", discharged: false })).toMatchObject({ tone: "info", label: "2 aktivnosti" });
+  });
+
+  it("stručni dokument: nije napisano → nacrt → zaključeno", () => {
+    const form = formById("f20-prijemna-procena")!;
+    const d = data({ ime_roditelja: "Marko", datum_rodjenja: "1.1.1940.", datum_prijema: "5.9.2026." });
+    expect(formStatus(form, { data: d, applicant: "", doc: null, discharged: false })).toMatchObject({ label: "nije napisano", next: "write" });
+    expect(formStatus(form, { data: d, applicant: "", doc: doc("draft"), discharged: false }).label).toBe("nacrt 02.09.2026.");
+    expect(formStatus(form, { data: d, applicant: "", doc: doc("final"), discharged: false })).toMatchObject({ tone: "success", label: "zaključeno 02.09.2026." });
+  });
+
+  it("ugovor: soba i kategorija moraju biti izabrane; podaci obveznika samo kad zahtev podnosi srodnik", () => {
+    const form = formById("f900-ugovor-o-smestaju")!;
+    const d = data({ jmbg: "1", broj_licne_karte: "2", adresa: "Beograd", cena_eur: "900" });
+    expect(missingFor(form, d, "self")).toEqual(["kategorija sobe (čl. 2)", "kategorija korisnika (čl. 3)"]);
+    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true }), "self")).toEqual([]);
+    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true }), "relative")).toEqual(["JMBG obveznika", "lična karta obveznika", "adresa obveznika", "telefon obveznika"]);
+  });
+
+  it("prestanak smeštaja: odluka važi tek posle otpusta, izjava nakon smrti samo uz taj osnov", () => {
+    const decision = formById("f140-odluka-o-prestanku")!;
+    const death = formById("f150-izjava-nakon-smrti")!;
+    expect(formStatus(decision, { data: data({}), applicant: "", discharged: false })).toMatchObject({ inactive: true, label: "važi posle otpusta" });
+    expect(formStatus(decision, { data: data({ datum_otpusta: "1.11.2026." }), applicant: "", discharged: true }).missing).toEqual(["osnov prestanka smeštaja"]);
+    expect(formStatus(death, { data: data({ datum_otpusta: "1.11.2026." }, { prestanak_6: true }), applicant: "", discharged: true }).inactive).toBe(true);
+    expect(formStatus(death, { data: data({ datum_otpusta: "1.11.2026." }, { prestanak_7: true }), applicant: "", discharged: true })).toMatchObject({ tone: "success", label: "spremno" });
   });
 });

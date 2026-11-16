@@ -23,7 +23,8 @@ import {
   useSaveDocument,
 } from "@features/social/dossier";
 import { formForDoc } from "@features/social/forms/catalog";
-import { fetchFormTemplate, fillForm, formFileName, missingFor } from "@features/social/forms/fillForm";
+import { fetchFormTemplate, fillForm, formFileName } from "@features/social/forms/fillForm";
+import { missingFor } from "@features/social/forms/status";
 import SupportScaleTable from "./SupportScaleTable";
 import DocxPreviewDialog from "./DocxPreview";
 
