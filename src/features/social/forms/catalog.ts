@@ -33,8 +33,8 @@ export interface SocialForm {
   docType?: DocType;
   /** Podaci bez kojih obrazac ostaje sa praznom linijom: [polje, opis] */
   requires: Array<[string, string]>;
-  /** Podaci obveznika — traže se samo kad zahtev podnosi srodnik/staratelj/drugo lice */
-  requiresRelative?: Array<[string, string]>;
+  /** Podaci obveznika ugovora — traže se samo kad obveznik postoji (oznaka obveznik_postoji) */
+  requiresObligor?: Array<[string, string]>;
   /** Izbor u obrascu: bar jedna oznaka mora biti postavljena (npr. soba u ugovoru) */
   choices?: Array<{ flags: string[]; label: string }>;
   /** Kada obrazac važi: uvek, posle otpusta ili samo u slučaju smrti */
@@ -160,7 +160,7 @@ export const SOCIAL_FORMS: SocialForm[] = [
     script: "latin",
     source: "data",
     requires: [["jmbg", "JMBG korisnika"], ["broj_licne_karte", "broj lične karte korisnika"], ["adresa", "adresa korisnika"], ["cena_eur", "cena smeštaja (EUR)"]],
-    requiresRelative: [["podnosilac_jmbg", "JMBG obveznika"], ["podnosilac_lk", "lična karta obveznika"], ["podnosilac_adresa", "adresa obveznika"], ["podnosilac_telefon", "telefon obveznika"]],
+    requiresObligor: [["obveznik", "ime i prezime obveznika"], ["obveznik_jmbg", "JMBG obveznika"], ["obveznik_lk", "lična karta obveznika"], ["obveznik_adresa", "adresa obveznika"], ["obveznik_telefon", "telefon obveznika"]],
     choices: [
       { flags: flags("soba_", 3), label: "kategorija sobe (čl. 2)" },
       { flags: flags("kat_", 10), label: "kategorija korisnika (čl. 3)" },

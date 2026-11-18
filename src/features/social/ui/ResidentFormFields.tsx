@@ -11,6 +11,8 @@ import {
   APPLICANT_LABEL,
   Applicant,
   DISCHARGE_REASONS,
+  Obligor,
+  OBLIGOR_LABEL,
   ROOM_LABEL,
   USER_CATEGORIES,
   jmbgCheck,
@@ -88,6 +90,9 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
   };
   const needsGuardian = profile.legalCapacity === "partial" || profile.legalCapacity === "none";
   const setApplicant = (patch: Partial<Applicant>) => onProfile({ applicant: { ...profile.applicant, ...patch } });
+  const setObligor = (patch: Partial<Obligor>) => onProfile({ obligor: { ...profile.obligor, ...patch } });
+  // Ko je obveznik kad je izabrano "isti kao podnosilac" (za objašnjenje ispod izbora)
+  const applicantIsObligor = profile.applicant.kind && profile.applicant.kind !== "self";
   const setContract = (patch: Partial<SocialProfileInput["contract"]>) => onProfile({ contract: { ...profile.contract, ...patch } });
   const firstContact = profile.contacts[0] ?? EMPTY_CONTACT;
   const setFirstContact = (patch: Partial<SocialContact>) =>
@@ -336,6 +341,56 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
                 <Input {...text("diagnosis")} placeholder="Boluje od …" />
               </Field>
             </div>
+          </Group>
+
+          <Group title="Obveznik ugovora" hint="Srodnik ili drugo lice koje uz korisnika potpisuje ugovor o smeštaju i plaća smeštaj (kolona „Obveznik ugovora“ i potpis „2. Srodnik“).">
+            <Field
+              label="Obveznik"
+              htmlFor={f("ob-source")}
+              hint={
+                profile.obligor.source === ""
+                  ? applicantIsObligor
+                    ? `U ugovor se upisuju podaci podnosioca zahteva${profile.applicant.name ? ` (${profile.applicant.name})` : ""}.`
+                    : "Zahtev podnosi sam korisnik — izaberite „Drugo lice“ ako ugovor potpisuje i srodnik."
+                  : undefined
+              }
+            >
+              <Select id={f("ob-source")} value={profile.obligor.source} onChange={(e) => setObligor({ source: e.target.value as Obligor["source"] })}>
+                {(Object.keys(OBLIGOR_LABEL) as Obligor["source"][]).map((k) => (
+                  <option key={k} value={k}>
+                    {OBLIGOR_LABEL[k]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            {profile.obligor.source === "other" && (
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Ime i prezime" htmlFor={f("ob-name")}>
+                  <Input id={f("ob-name")} value={profile.obligor.name} onChange={(e) => setObligor({ name: e.target.value })} />
+                </Field>
+                <Field label="Srodstvo" htmlFor={f("ob-relation")}>
+                  <Input id={f("ob-relation")} value={profile.obligor.relation} onChange={(e) => setObligor({ relation: e.target.value })} placeholder="npr. sin, ćerka" />
+                </Field>
+                <Field label="JMBG" htmlFor={f("ob-jmbg")}>
+                  <Input id={f("ob-jmbg")} value={profile.obligor.jmbg} onChange={(e) => setObligor({ jmbg: e.target.value.replace(/[^\d]/g, "").slice(0, 13) })} inputMode="numeric" />
+                </Field>
+                <Field label="Adresa stanovanja (mesto/grad)" htmlFor={f("ob-address")} className="sm:col-span-2">
+                  <Input id={f("ob-address")} value={profile.obligor.address} onChange={(e) => setObligor({ address: e.target.value })} />
+                </Field>
+                <Field label="Broj lične karte" htmlFor={f("ob-lk")}>
+                  <Input id={f("ob-lk")} value={profile.obligor.idCardNumber} onChange={(e) => setObligor({ idCardNumber: e.target.value })} />
+                </Field>
+                <Field label="Mobilni telefon" htmlFor={f("ob-phone")}>
+                  <Input id={f("ob-phone")} value={profile.obligor.phone} onChange={(e) => setObligor({ phone: e.target.value })} inputMode="tel" />
+                </Field>
+                <Field label="Viber / WhatsApp / SMS" htmlFor={f("ob-messenger")}>
+                  <Input id={f("ob-messenger")} value={profile.obligor.messenger} onChange={(e) => setObligor({ messenger: e.target.value })} inputMode="tel" />
+                </Field>
+                <Field label="E-pošta" htmlFor={f("ob-email")}>
+                  <Input id={f("ob-email")} value={profile.obligor.email} onChange={(e) => setObligor({ email: e.target.value })} inputMode="email" />
+                </Field>
+              </div>
+            )}
           </Group>
 
           <Group title="Ugovor o smeštaju" hint="Čl. 2 (soba), čl. 3 (kategorija korisnika), čl. 7 (cena), čl. 10 (račun) i čl. 11 (poverenik).">

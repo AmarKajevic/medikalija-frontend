@@ -199,6 +199,15 @@ export default function SocialProfileCard({ patientId, canWrite }: { patientId: 
               {p?.applicant?.kind && p.applicant.kind !== "self" && (
                 <Item label="Podnosilac — l.k. / telefon">{[p.applicant.idCardNumber, p.applicant.phone].filter(Boolean).join(" · ")}</Item>
               )}
+              <Item label="Obveznik ugovora">
+                {p?.obligor?.source === "none"
+                  ? "nema (korisnik potpisuje sam)"
+                  : p?.obligor?.source === "other"
+                    ? [p.obligor.name, p.obligor.relation, p.obligor.phone].filter(Boolean).join(", ")
+                    : p?.applicant?.kind && p.applicant.kind !== "self"
+                      ? `${p.applicant.name || "podnosilac zahteva"} (podnosilac zahteva)`
+                      : ""}
+              </Item>
               <Item label="Ko snosi troškove">{p?.payerNote || PAYER_LABEL[p?.payer ?? ""]}</Item>
               <Item label="Bolest (izjava srodnika)">{p?.diagnosis}</Item>
               <Item label="Soba i kategorija (ugovor)">
