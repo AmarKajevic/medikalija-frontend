@@ -77,7 +77,7 @@ export default function SocialFormsPanel({ patientId, patientName, canWrite, act
     setBusy(form.id);
     try {
       const [template, data] = await Promise.all([fetchFormTemplate(form), fetchMergeData(patientId, form.title)]);
-      setPreview({ form, file: await fillForm(form, template, data), missing: missingFor(form, data, applicant) });
+      setPreview({ form, file: await fillForm(form, template, data), missing: missingFor(form, data) });
     } catch (err) {
       notify.error(err, "Obrazac nije napravljen.");
     } finally {

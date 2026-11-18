@@ -67,23 +67,24 @@ describe("popuna", () => {
     expect(out).not.toMatch(/\{|\}/);
   });
 
-  it("ugovor (latinica): izabrana soba i kategorija su označene, ostale ne; obveznik samo kad je srodnik", async () => {
+  it("ugovor (latinica): izabrana soba i kategorija su označene, ostale ne; obveznik samo kad postoji", async () => {
     const form = formById("f900-ugovor-o-smestaju")!;
     const xml = async (flags: Record<string, boolean>) => {
-      const zip = new PizZip(await fillForm(form, template(form.id), data({ ime: "Milica", podnosilac_ime: "Stevan" }, flags)));
+      const zip = new PizZip(await fillForm(form, template(form.id), data({ ime: "Milica", obveznik_ime: "Stevan", obveznik_jmbg: "1203975710018" }, flags)));
       return zip.file("word/document.xml")!.asText();
     };
-    const marked = await xml({ soba_2: true, kat_3: true, podnosilac_srodnik: true });
+    const marked = await xml({ soba_2: true, kat_3: true, obveznik_postoji: true });
     const text = marked.replace(/<[^>]+>/g, "");
     expect(text.match(/Dvokrevetnoj sobi\./g)).toHaveLength(1);
     expect(text).toContain("Stevan");
+    expect(text.match(/1203975710018/g)).toHaveLength(2); // kolona obveznika i potpis "2.Srodnik"
     expect(text).toContain("PIB:106082895");
     // Izabrano je podebljano i podvučeno, ostale stavke nisu
     const para = (needle: string) => marked.split("</w:p>").find((p) => p.replace(/<[^>]+>/g, "").includes(needle)) ?? "";
     expect(para("Dvokrevetnoj sobi.")).toContain("<w:b/>");
     expect(para("Dvokrevetnoj sobi.")).toContain('<w:u w:val="single"/>');
     expect(para("Jednokrevetnoj sobi.")).not.toContain("<w:b/>");
-    const self = (await xml({ podnosilac_srodnik: false })).replace(/<[^>]+>/g, "");
+    const self = (await xml({ obveznik_postoji: false })).replace(/<[^>]+>/g, "");
     expect(self).not.toContain("Stevan");
   });
 
@@ -124,12 +125,18 @@ describe("stanje obrasca — šta je stvarno spremno", () => {
     expect(formStatus(form, { data: d, applicant: "", doc: doc("final"), discharged: false })).toMatchObject({ tone: "success", label: "zaključeno 02.09.2026." });
   });
 
-  it("ugovor: soba i kategorija moraju biti izabrane; podaci obveznika samo kad zahtev podnosi srodnik", () => {
+  it("ugovor: soba i kategorija moraju biti izabrane; podaci obveznika samo kad obveznik postoji", () => {
     const form = formById("f900-ugovor-o-smestaju")!;
     const d = data({ jmbg: "1", broj_licne_karte: "2", adresa: "Beograd", cena_eur: "900" });
-    expect(missingFor(form, d, "self")).toEqual(["kategorija sobe (čl. 2)", "kategorija korisnika (čl. 3)"]);
-    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true }), "self")).toEqual([]);
-    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true }), "relative")).toEqual(["JMBG obveznika", "lična karta obveznika", "adresa obveznika", "telefon obveznika"]);
+    expect(missingFor(form, d)).toEqual(["kategorija sobe (čl. 2)", "kategorija korisnika (čl. 3)"]);
+    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true }))).toEqual([]);
+    expect(missingFor(form, data(d.fields, { soba_1: true, kat_2: true, obveznik_postoji: true }))).toEqual([
+      "ime i prezime obveznika",
+      "JMBG obveznika",
+      "lična karta obveznika",
+      "adresa obveznika",
+      "telefon obveznika",
+    ]);
   });
 
   it("prestanak smeštaja: odluka važi tek posle otpusta, izjava nakon smrti samo uz taj osnov", () => {

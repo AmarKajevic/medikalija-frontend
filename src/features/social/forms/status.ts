@@ -27,10 +27,9 @@ export interface StatusContext {
 }
 
 /** Podaci i izbori iz kartona koji nedostaju (opisi za upozorenje) */
-export function missingFor(form: SocialForm, data: MergeData | undefined, applicant: ApplicantKind = ""): string[] {
+export function missingFor(form: SocialForm, data: MergeData | undefined): string[] {
   if (!data) return [];
-  const relative = !!applicant && applicant !== "self";
-  const fields = [...form.requires, ...(relative ? (form.requiresRelative ?? []) : [])];
+  const fields = [...form.requires, ...(data.flags?.obveznik_postoji ? (form.requiresObligor ?? []) : [])];
   const missing = fields.filter(([key]) => !data.fields[key]?.trim()).map(([, label]) => label);
   for (const choice of form.choices ?? []) if (!choice.flags.some((f) => data.flags?.[f])) missing.push(choice.label);
   return missing;
@@ -44,7 +43,7 @@ export function formStatus(form: SocialForm, ctx: StatusContext): FormStatus {
   if (form.when === "discharged" && !discharged) return { tone: "light", label: "važi posle otpusta", missing: [], inactive: true };
   if (form.when === "death" && !(discharged && data?.flags?.prestanak_7)) return { tone: "light", label: "samo u slučaju smrti", missing: [], inactive: true };
 
-  const missing = missingFor(form, data, ctx.applicant);
+  const missing = missingFor(form, data);
 
   if (form.source === "document") {
     if (!doc) return { tone: "warning", label: "nije napisano", missing, next: "write" };

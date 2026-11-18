@@ -33,6 +33,20 @@ export interface Applicant {
   messenger: string;
 }
 
+/** Obveznik ugovora: "" = isti kao podnosilac zahteva, "other" = drugo lice, "none" = nema obveznika */
+export type ObligorSource = "" | "other" | "none";
+export interface Obligor {
+  source: ObligorSource;
+  name: string;
+  relation: string;
+  address: string;
+  jmbg: string;
+  idCardNumber: string;
+  email: string;
+  phone: string;
+  messenger: string;
+}
+
 export interface SocialProfileInput {
   jmbg: string;
   parentName: string;
@@ -51,6 +65,7 @@ export interface SocialProfileInput {
   diagnosis: string;
   requestDate: string | null;
   applicant: Applicant;
+  obligor: Obligor;
   trustee: { name: string; address: string; idCardNumber: string; phone: string };
   contract: { roomType: "" | "single" | "double" | "any"; categories: number[]; priceEUR: number | null; bankAccount: string };
   dischargeReason: number;
@@ -112,6 +127,7 @@ export interface DossierPatient {
 }
 
 export const EMPTY_APPLICANT: Applicant = { kind: "", name: "", relation: "", sex: "", address: "", jmbg: "", idCardNumber: "", email: "", phone: "", messenger: "" };
+export const EMPTY_OBLIGOR: Obligor = { source: "", name: "", relation: "", address: "", jmbg: "", idCardNumber: "", email: "", phone: "", messenger: "" };
 
 export const EMPTY_PROFILE: SocialProfileInput = {
   jmbg: "",
@@ -131,6 +147,7 @@ export const EMPTY_PROFILE: SocialProfileInput = {
   diagnosis: "",
   requestDate: null,
   applicant: { ...EMPTY_APPLICANT },
+  obligor: { ...EMPTY_OBLIGOR },
   trustee: { name: "", address: "", idCardNumber: "", phone: "" },
   contract: { roomType: "", categories: [], priceEUR: null, bankAccount: "" },
   dischargeReason: 0,
@@ -180,6 +197,7 @@ export function profileToInput(p: SocialProfile | null): SocialProfileInput {
     requestDate: d(p.requestDate),
     spouse: { ...EMPTY_PROFILE.spouse, ...p.spouse },
     applicant: { ...EMPTY_APPLICANT, ...p.applicant },
+    obligor: { ...EMPTY_OBLIGOR, ...p.obligor },
     trustee: { ...EMPTY_PROFILE.trustee, ...p.trustee },
     contract: { ...EMPTY_PROFILE.contract, ...p.contract, categories: [...(p.contract?.categories ?? [])] },
     contacts: (p.contacts ?? []).map((c) => ({ ...c })),
@@ -189,6 +207,7 @@ export function profileToInput(p: SocialProfile | null): SocialProfileInput {
 
 export const SEX_LABEL: Record<string, string> = { M: "muški", Ž: "ženski" };
 export const APPLICANT_LABEL: Record<string, string> = { self: "sam korisnik", relative: "srodnik", guardian: "staratelj", other: "drugo lice" };
+export const OBLIGOR_LABEL: Record<ObligorSource, string> = { "": "Isti kao podnosilac zahteva", other: "Drugo lice (upisati podatke)", none: "Nema obveznika — korisnik potpisuje sam" };
 /** Ugovor čl. 2 */
 export const ROOM_LABEL: Record<string, string> = { single: "jednokrevetna soba", double: "dvokrevetna soba", any: "nevezano za kategoriju sobe" };
 /** Ugovor čl. 3 — redom kao u ugovoru (1–10) */
