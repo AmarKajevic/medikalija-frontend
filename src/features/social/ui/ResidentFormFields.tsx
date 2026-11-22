@@ -28,8 +28,10 @@ import {
   SocialProfileInput,
   StaffRef,
 } from "@features/social/dossier";
+import SocialHealthFields from "./SocialHealthFields";
 
-export type FormMode = "basic" | "detailed";
+/** Kartice unosa: osnovni, detaljni i socijalno-zdravstveni podaci (obrazac 4) */
+export type FormMode = "basic" | "detailed" | "social";
 
 interface Props {
   mode: FormMode;
@@ -95,6 +97,7 @@ export default function ResidentFormFields({ mode, basics, onBasics, profile, on
   const applicantIsObligor = profile.applicant.kind && profile.applicant.kind !== "self";
   const setContract = (patch: Partial<SocialProfileInput["contract"]>) => onProfile({ contract: { ...profile.contract, ...patch } });
   const firstContact = profile.contacts[0] ?? EMPTY_CONTACT;
+  if (mode === "social") return <SocialHealthFields basics={basics} onBasics={onBasics} profile={profile} onProfile={onProfile} errors={errors} />;
   const setFirstContact = (patch: Partial<SocialContact>) =>
     onProfile({ contacts: profile.contacts.length ? profile.contacts.map((c, i) => (i === 0 ? { ...c, ...patch } : c)) : [{ ...EMPTY_CONTACT, emergency: true, ...patch }] });
 

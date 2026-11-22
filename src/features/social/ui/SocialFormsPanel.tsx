@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { currentStayFrom } from "@entities/patient/hooks/usePatient";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LuCircleAlert, LuCircleCheck, LuFileArchive, LuFileText, LuNotebookPen, LuPencilLine, LuPlus, LuUserPen } from "react-icons/lu";
@@ -61,17 +62,22 @@ export default function SocialFormsPanel({ patientId, patientName, canWrite, act
   const discharged = !!profile.data?.patient?.dischargeDate;
   const forms = formsFor(applicant);
   const next = deadlines.find((d) => d.patient._id === patientId);
+  // Posle ponovnog prijema važe samo dokumenti tekućeg boravka (raniji ostaju u istoriji)
+  const stayFrom = currentStayFrom(profile.data?.patient);
   // Poslednji dokument svake vrste (zaključen ima prednost), kao i za popunu obrasca
   const latestByType = useMemo(() => {
     const map = new Map<string, SocialDocument>();
-    for (const d of [...(docs.data ?? [])].sort((a, b) => Number(b.status === "final") - Number(a.status === "final") || b.date.localeCompare(a.date))) {
+    const inStay = (docs.data ?? []).filter((d) => !stayFrom || d.date.slice(0, 10) >= stayFrom);
+    for (const d of [...inStay].sort((a, b) => Number(b.status === "final") - Number(a.status === "final") || b.date.localeCompare(a.date))) {
       if (!map.has(d.type)) map.set(d.type, d);
     }
     return map;
-  }, [docs.data]);
+  }, [docs.data, stayFrom]);
   const legacyDocs = (docs.data ?? []).filter((d) => DOC_TYPES[d.type].legacy);
   const statusOf = (form: SocialForm) => formStatus(form, { data: merge.data, applicant, doc: form.docType ? (latestByType.get(form.docType) ?? null) : null, discharged });
   const profileLink = `${paths.patient(patientId)}?tab=social&social=profile`;
+  // "Dopuni karton" otvara izmenu na kartici gde se ti podaci unose
+  const editLink = (form: SocialForm) => `${profileLink}&edit=${form.profileTab ?? "detailed"}`;
 
   const fill = async (form: SocialForm) => {
     setBusy(form.id);
@@ -210,7 +216,7 @@ export default function SocialFormsPanel({ patientId, patientName, canWrite, act
                           </Button>
                         )}
                         {status.next === "profile" && canWrite && form.source === "data" && (
-                          <Link to={profileLink} className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/5">
+                          <Link to={editLink(form)} className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/5">
                             <LuUserPen className="h-3.5 w-3.5" /> Dopuni karton
                           </Link>
                         )}

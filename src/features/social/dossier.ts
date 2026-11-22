@@ -47,6 +47,26 @@ export interface Obligor {
   messenger: string;
 }
 
+/** Socijalno-zdravstveni podaci — obrazac 4 (list o socijalno-anamnestičkim podacima), delovi II–V */
+export interface SocialHealth {
+  /** Datum lista ("U Beogradu, ___ godine"); prazno = datum prijema */
+  date: string | null;
+  mobility: string;
+  selfCare: string;
+  communication: string;
+  chronicIllness: string;
+  healthOther: string;
+  family: string;
+  familyOther: string;
+  requestedBy: string;
+  reasons: string;
+  userAttitude: string;
+  relativesAttitude: string;
+  circumstances: string;
+  commission: string;
+}
+export const EMPTY_SOCIAL_HEALTH: SocialHealth = { date: null, mobility: "", selfCare: "", communication: "", chronicIllness: "", healthOther: "", family: "", familyOther: "", requestedBy: "", reasons: "", userAttitude: "", relativesAttitude: "", circumstances: "", commission: "" };
+
 export interface SocialProfileInput {
   jmbg: string;
   parentName: string;
@@ -66,6 +86,7 @@ export interface SocialProfileInput {
   requestDate: string | null;
   applicant: Applicant;
   obligor: Obligor;
+  socialHealth: SocialHealth;
   trustee: { name: string; address: string; idCardNumber: string; phone: string };
   contract: { roomType: "" | "single" | "double" | "any"; categories: number[]; priceEUR: number | null; bankAccount: string };
   dischargeReason: number;
@@ -88,7 +109,7 @@ export interface SocialProfileInput {
   incomeNote: string;
   payer: "" | "resident" | "family" | "csr" | "mixed" | "other";
   legalCapacity: "" | "full" | "partial" | "none";
-  guardian: { name: string; relation: string; phone: string; decisionNumber: string; decisionDate: string | null; authority: string };
+  guardian: { name: string; relation: string; address: string; phone: string; decisionNumber: string; decisionDate: string | null; authority: string };
   trustedPerson: { name: string; relation: string; phone: string };
   placementBasis: "" | "contract" | "csr";
   contractNumber: string;
@@ -124,6 +145,7 @@ export interface DossierPatient {
   admissionDate: string;
   dischargeDate?: string | null;
   contactPerson?: string;
+  previousStays?: Array<{ admissionDate: string; dischargeDate: string }>;
 }
 
 export const EMPTY_APPLICANT: Applicant = { kind: "", name: "", relation: "", sex: "", address: "", jmbg: "", idCardNumber: "", email: "", phone: "", messenger: "" };
@@ -148,6 +170,7 @@ export const EMPTY_PROFILE: SocialProfileInput = {
   requestDate: null,
   applicant: { ...EMPTY_APPLICANT },
   obligor: { ...EMPTY_OBLIGOR },
+  socialHealth: { ...EMPTY_SOCIAL_HEALTH },
   trustee: { name: "", address: "", idCardNumber: "", phone: "" },
   contract: { roomType: "", categories: [], priceEUR: null, bankAccount: "" },
   dischargeReason: 0,
@@ -170,7 +193,7 @@ export const EMPTY_PROFILE: SocialProfileInput = {
   incomeNote: "",
   payer: "",
   legalCapacity: "",
-  guardian: { name: "", relation: "", phone: "", decisionNumber: "", decisionDate: null, authority: "" },
+  guardian: { name: "", relation: "", address: "", phone: "", decisionNumber: "", decisionDate: null, authority: "" },
   trustedPerson: { name: "", relation: "", phone: "" },
   placementBasis: "",
   contractNumber: "",
@@ -198,6 +221,7 @@ export function profileToInput(p: SocialProfile | null): SocialProfileInput {
     spouse: { ...EMPTY_PROFILE.spouse, ...p.spouse },
     applicant: { ...EMPTY_APPLICANT, ...p.applicant },
     obligor: { ...EMPTY_OBLIGOR, ...p.obligor },
+    socialHealth: { ...EMPTY_SOCIAL_HEALTH, ...p.socialHealth, date: d(p.socialHealth?.date) },
     trustee: { ...EMPTY_PROFILE.trustee, ...p.trustee },
     contract: { ...EMPTY_PROFILE.contract, ...p.contract, categories: [...(p.contract?.categories ?? [])] },
     contacts: (p.contacts ?? []).map((c) => ({ ...c })),
@@ -421,7 +445,8 @@ export const DOC_TYPES: Record<DocType, DocTypeMeta> = {
     short: "Anamnestički list",
     form: "4",
     article: "DS-2",
-    description: "Opšti podaci se uzimaju iz kartona; ovde se upisuju zdravstveno i porodično stanje, podaci o smeštaju i mišljenje komisije.",
+    description: "Raniji zapis. List se sada popunjava u kartonu (kartica „Socijalno-zdravstveni podaci“).",
+    legacy: true,
     sections: [
       S("mobility", "II.1 Pokretljivost"),
       S("selfCare", "II.2 Sposobnost za brigu o sebi"),

@@ -41,6 +41,8 @@ export interface SocialForm {
   when?: "discharged" | "death";
   /** Šta se dopisuje rukom posle štampe (prikazuje se kao napomena) */
   byHand?: string;
+  /** Kartica kartona na kojoj se dopunjuju podaci ("Dopuni karton") */
+  profileTab?: "detailed" | "social";
 }
 
 const IDENTITY: Array<[string, string]> = [
@@ -94,8 +96,9 @@ export const SOCIAL_FORMS: SocialForm[] = [
     title: "List o socijalno-anamnestičkim podacima",
     group: "admission",
     script: "cyrillic",
-    source: "document",
-    docType: "anamnesis",
+    // Ceo list se unosi u kartonu, kartica "Socijalno-zdravstveni podaci"
+    source: "data",
+    profileTab: "social",
     requires: [
       ["otac", "ime oca"],
       ["majka", "ime majke"],
@@ -106,6 +109,10 @@ export const SOCIAL_FORMS: SocialForm[] = [
       ["socijalni_status", "socijalni status"],
       ["osiguranje_osnov", "osnov osiguranja"],
       ["hitni_kontakt", "koga obavestiti (hitni kontakt)"],
+      ["an_mobility", "pokretljivost (II.1)"],
+      ["an_family", "porodica i porodični odnosi (III.1)"],
+      ["an_reasons", "razlozi smeštaja (IV.2)"],
+      ["an_commission", "mišljenje komisije (V)"],
     ],
   },
   {

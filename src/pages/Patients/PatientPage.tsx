@@ -30,10 +30,11 @@ import SpecificationSummaryCard from "@features/patients/ui/profile/Specificatio
 import PatientActivity from "@features/patients/ui/profile/PatientActivity";
 import FamilyStockDialog from "@features/patients/ui/profile/FamilyStockDialog";
 import DischargeDialog from "@features/patients/ui/profile/DischargeDialog";
+import ReadmitDialog from "@features/patients/ui/profile/ReadmitDialog";
 import PhysioEntryForm from "@features/physio/ui/PhysioEntryForm";
 import AddPatientDialog from "@features/patients/ui/AddPatientDialog";
 
-type OpenDialog = "family" | "discharge" | "socialNote" | "edit" | null;
+type OpenDialog = "family" | "discharge" | "readmit" | "socialNote" | "edit" | null;
 type TabKey = "overview" | "care" | "medical" | "social" | "physio";
 
 const TAB_LABELS: Record<TabKey, string> = { overview: "Pregled", care: "Nega", medical: "Lekarski izvestaj", social: "Socijalno", physio: "fizikalna terapija" };
@@ -162,6 +163,7 @@ export default function PatientPage() {
         onOpenSpecification={openSpecification}
         onOpenFamilyStock={hasRole(role, CARE_ROLES) ? () => setDialog("family") : undefined}
         onDischarge={canEdit ? () => setDialog("discharge") : undefined}
+        onReadmit={canEdit ? () => setDialog("readmit") : undefined}
         onEdit={canEdit ? () => setDialog("edit") : undefined}
         actions={headerActions}
       />
@@ -257,6 +259,7 @@ export default function PatientPage() {
       )}
 
       {canEdit && <DischargeDialog open={dialog === "discharge"} onClose={close} patient={patient} />}
+      {canEdit && patient.dischargeDate && <ReadmitDialog open={dialog === "readmit"} onClose={close} patient={patient} />}
       {canEdit && <AddPatientDialog open={dialog === "edit"} onClose={close} patient={patient} />}
       {hasRole(role, CARE_ROLES) && <FamilyStockDialog open={dialog === "family"} onClose={close} patientId={patient._id} />}
       {canWriteSocial && <SocialNoteDialog open={dialog === "socialNote"} onClose={close} patientId={patient._id} />}

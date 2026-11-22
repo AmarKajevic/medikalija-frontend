@@ -1,4 +1,5 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { LuHistory, LuIdCard, LuPencil, LuPhone } from "react-icons/lu";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
 import Button from "@shared/ui/button/Button";
@@ -117,8 +118,23 @@ function HistoryDialog({ open, onClose, patientId }: { open: boolean; onClose: (
 // Socijalni dosije: lični i pravni podaci korisnika, osnov smeštaja i kontakti.
 export default function SocialProfileCard({ patientId, canWrite }: { patientId: string; canWrite: boolean }) {
   const { data, isLoading, isError, refetch } = useSocialProfile(patientId);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<false | "detailed" | "social">(false);
   const [history, setHistory] = useState(false);
+  const [params, setParams] = useSearchParams();
+  // "Dopuni karton" iz liste obrazaca otvara izmenu na kartici koja nedostaje (?edit=social|detailed)
+  const editParam = params.get("edit");
+  useEffect(() => {
+    if (!canWrite || !data || (editParam !== "social" && editParam !== "detailed")) return;
+    setEditing(editParam);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("edit");
+        return next;
+      },
+      { replace: true }
+    );
+  }, [canWrite, data, editParam, setParams]);
   const p = data?.profile ?? null;
   const patient = data?.patient;
   const level = SUPPORT_LEVELS.find((l) => l.value === p?.supportLevel);
@@ -137,7 +153,7 @@ export default function SocialProfileCard({ patientId, canWrite }: { patientId: 
               Istorija
             </Button>
             {canWrite && (
-              <Button size="xs" variant="outline" startIcon={<LuPencil className="h-3.5 w-3.5" />} onClick={() => setEditing(true)} disabled={!data}>
+              <Button size="xs" variant="outline" startIcon={<LuPencil className="h-3.5 w-3.5" />} onClick={() => setEditing("detailed")} disabled={!data}>
                 {p ? "Izmeni" : "Dopuni podatke"}
               </Button>
             )}
@@ -275,7 +291,7 @@ export default function SocialProfileCard({ patientId, canWrite }: { patientId: 
           </>
         )}
       </CardBody>
-      {canWrite && patient && <SocialProfileDialog open={editing} onClose={() => setEditing(false)} patient={patient} profile={p} />}
+      {canWrite && patient && <SocialProfileDialog open={!!editing} onClose={() => setEditing(false)} patient={patient} profile={p} initialMode={editing || "detailed"} />}
       <HistoryDialog open={history} onClose={() => setHistory(false)} patientId={patientId} />
     </Card>
   );
