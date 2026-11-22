@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lineCount, onLine, textUnits } from "./lines";
+import { lineCount, onLine, padFor, textUnits } from "./lines";
 
 describe("vrednosti na linijama obrazaca", () => {
   it("prazno polje je linija iz originala (crtica kraće, da ne pređe u novi red)", () => {
@@ -18,6 +18,11 @@ describe("vrednosti na linijama obrazaca", () => {
   it("vrednost duža od linije ili u više redova se ne dopunjuje", () => {
     expect(onLine("средња стручна спрема и још много текста", 12)).toBe("средња стручна спрема и још много текста");
     expect(onLine("1. Prvi cilj\n2. Drugi cilj", 80)).toBe("1. Prvi cilj\n2. Drugi cilj");
+  });
+
+  it("linija: prazno polje je cela linija iz originala, upisana vrednost stoji bez dopune", () => {
+    expect(padFor("", 40)).toBe("_".repeat(39));
+    expect(padFor("Илић Марко", 40)).toBe("");
   });
 
   it("broj redova: prelom po rečima i novi redovi", () => {

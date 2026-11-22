@@ -4,7 +4,7 @@
 import { toCyrillic, toLatin } from "@shared/lib/script";
 import type { MergeData } from "@features/social/dossier";
 import type { SocialForm } from "./catalog";
-import { LINE_TAG, lineCount, onLine, ROW_TAG } from "./lines";
+import { LINE_TAG, lineCount, PAD_TAG, padFor, ROW_TAG } from "./lines";
 
 /** Prazna linija za ručni upis kad podatak nije unet (datumi kraća, da raspored ostane kao u originalu) */
 export const BLANK = "______________________";
@@ -52,7 +52,8 @@ export async function fillFormBuffer(form: SocialForm, template: ArrayBuffer, da
     // {polje|linija:N} — vrednost na liniji od N crtica; {#polje|red:K:N} — K-ti red opisnog dela
     const line = LINE_TAG.exec(tag);
     const row = ROW_TAG.exec(tag);
-    const key = line?.[1] ?? row?.[1] ?? tag;
+    const pad = PAD_TAG.exec(tag);
+    const key = line?.[1] ?? row?.[1] ?? pad?.[1] ?? tag;
     const script = (v: string) => (KEEP_SCRIPT.test(key) ? v : toFormScript(v, form.script));
     return {
       get(ctxScope: Record<string, unknown> | undefined, context?: { meta?: { part?: { module?: string } } }) {
@@ -63,7 +64,9 @@ export async function fillFormBuffer(form: SocialForm, template: ArrayBuffer, da
           // Uslov ili lista: nepostavljena oznaka je "netačno" (inače bi prazna linija bila "tačno")
           return value ?? false;
         }
-        if (line) return onLine(typeof value === "string" ? script(value) : "", Number(line[2]));
+        // Vrednost na liniji (podvučena) i posebno ostatak linije običnim crticama, kao u originalu
+        if (line) return typeof value === "string" ? script(value) : "";
+        if (pad) return padFor(typeof value === "string" ? script(value) : "", Number(pad[2]));
         if (value === undefined || value === null || value === "") return isDateField(key) ? BLANK_DATE : BLANK;
         if (typeof value !== "string") return value;
         return script(value);

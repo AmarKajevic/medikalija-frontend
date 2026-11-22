@@ -2,8 +2,13 @@
 // liniji, a ostatak linije se dopunjava crticama do dužine iz originala, da red ostane iste dužine.
 // Širina se meri u crticama (crtica ≈ pola visine slova u Times New Roman / Calibri).
 
-/** Oznake u šablonu: {polje|linija:N} (vrednost na liniji od N crtica) i {#polje|red:K:N} (K-ti red opisnog dela) */
+/**
+ * Oznake u šablonu: {polje|linija:N} (vrednost na liniji od N crtica, podvučena),
+ * {polje|dopuna:N:R} (ostatak linije običnim crticama; R = odnos slova vrednosti i linije u %)
+ * i {#polje|red:K:N} (K-ti red opisnog dela)
+ */
 export const LINE_TAG = /^(.+)\|linija:(\d+)$/;
+export const PAD_TAG = /^(.+)\|dopuna:(\d+):(\d+)$/;
 export const ROW_TAG = /^(.+)\|red:(\d+):(\d+)$/;
 
 const NARROW_PUNCT = /[.,:;'!|]/;
@@ -43,6 +48,14 @@ export function lineCount(text: string, width: number): number {
     }
   }
   return lines;
+}
+
+/**
+ * Linija kad podatak nije unet: cela linija iz originala. Upisana vrednost stoji sama (podvučena),
+ * bez dopune crticama — popunjen dokument izgleda kao uredno otkucan, a ne kao formular.
+ */
+export function padFor(text: string, width: number): string {
+  return text ? "" : "_".repeat(Math.max(3, width - 1));
 }
 
 /** Vrednost na liniji: dopunjena crticama do dužine linije (prazno = cela linija; duže ili više redova = bez dopune) */
