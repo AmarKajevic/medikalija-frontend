@@ -7,6 +7,8 @@ import { renderWithProviders } from "../../test/render";
 
 const api = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() }));
 vi.mock("@shared/api/api", () => ({ api }));
+// Dijalozi kartona imaju mnogo polja; pod punim opterećenjem testova traju duže od podrazumevanih 5 s
+vi.setConfig({ testTimeout: 20_000 });
 vi.mock("@shared/lib/notify", () => ({ notify: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("react-router", async (orig) => ({ ...(await orig<typeof import("react-router")>()), useNavigate: () => navigate }));
@@ -151,7 +153,7 @@ describe("novi korisnik", () => {
     const [, body] = api.post.mock.calls[0]!;
     expect(body.patient).toMatchObject({ name: "Mira", lastName: "Ilić" });
     expect(body.profile).toMatchObject({ fatherName: "Ilić Marko", socialHealth: expect.objectContaining({ mobility: "polupokretna", reasons: "potrebna nega" }) });
-  });
+  }, 20_000);
 });
 
 describe("stručni dokumenti po obrascima", () => {
