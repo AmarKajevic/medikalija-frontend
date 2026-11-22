@@ -130,6 +130,28 @@ describe("novi korisnik", () => {
     expect(screen.getByLabelText("Ime")).toHaveValue("Mira");
     expect(screen.getByRole("tab", { name: "Detaljni podaci" })).toHaveAttribute("aria-selected", "true");
   });
+
+  it("socijalno-zdravstveni podaci: stavke redom kao obrazac 4, opšti podaci zajednički sa detaljnim", async () => {
+    api.post.mockResolvedValue({ data: { patient: { _id: "p9", name: "Mira", lastName: "Ilić" }, profile: {} } });
+    const { user } = renderWithProviders(<NewResidentDialog open onClose={vi.fn()} />);
+    await user.click(screen.getByRole("tab", { name: "Socijalno-zdravstveni podaci" }));
+    for (const part of ["I. Opšti podaci:", "II. Zdravstveno stanje:", "III. Porodično stanje:", "IV. Podaci u vezi smeštaja u dom:", "V. Mišljenje i odluka komisije za prijem:"]) {
+      expect(screen.getByRole("heading", { name: part })).toBeInTheDocument();
+    }
+    await user.type(screen.getByLabelText("Prezime"), "Ilić");
+    await user.type(screen.getByLabelText("Ime"), "Mira");
+    await user.type(screen.getByLabelText("2. Prezime i ime oca:"), "Ilić Marko");
+    await user.type(screen.getByLabelText("1. Pokretljivost:"), "polupokretna");
+    await user.type(screen.getByLabelText("2. Razlozi smeštaja:"), "potrebna nega");
+    // Isti podatak se vidi i u "Detaljnim podacima"
+    await user.click(screen.getByRole("tab", { name: "Detaljni podaci" }));
+    expect(screen.getByLabelText("Prezime i ime oca")).toHaveValue("Ilić Marko");
+    await user.click(screen.getByRole("button", { name: "Sačuvaj korisnika" }));
+
+    const [, body] = api.post.mock.calls[0]!;
+    expect(body.patient).toMatchObject({ name: "Mira", lastName: "Ilić" });
+    expect(body.profile).toMatchObject({ fatherName: "Ilić Marko", socialHealth: expect.objectContaining({ mobility: "polupokretna", reasons: "potrebna nega" }) });
+  });
 });
 
 describe("stručni dokumenti po obrascima", () => {

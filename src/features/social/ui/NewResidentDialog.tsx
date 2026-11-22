@@ -141,12 +141,13 @@ export default function NewResidentDialog({ open, onClose }: { open: boolean; on
           )}
           <Tabs
             variant="pills"
-            className="max-w-sm"
+            className="max-w-2xl"
             value={draft.mode}
             onChange={(mode) => setDraft((d) => ({ ...d, mode }))}
             items={[
               { value: "basic", label: "Osnovni podaci" },
               { value: "detailed", label: "Detaljni podaci" },
+              { value: "social", label: "Socijalno-zdravstveni podaci" },
             ]}
           />
           <ResidentFormFields

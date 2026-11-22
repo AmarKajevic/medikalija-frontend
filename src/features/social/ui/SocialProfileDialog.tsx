@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useId, useState } from "react";
 import Dialog, { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
+import Tabs from "@shared/ui/tabs/Tabs";
 import { notify } from "@shared/lib/notify";
 import {
   basicsOf,
@@ -14,18 +15,20 @@ import {
   useSaveProfile,
   useSocialStaff,
 } from "@features/social/dossier";
-import ResidentFormFields from "./ResidentFormFields";
+import ResidentFormFields, { FormMode } from "./ResidentFormFields";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   patient: DossierPatient;
   profile: SocialProfile | null;
+  /** Kartica pri otvaranju: detaljni ili socijalno-zdravstveni podaci (obrazac 4) */
+  initialMode?: Exclude<FormMode, "basic">;
 }
 
 // Izmena podataka korisnika. Čuva se samo ono što je promenjeno (i delimičan unos), a ako je
 // neko drugi u međuvremenu sačuvao izmene, server to javlja umesto da ih prepiše.
-export default function SocialProfileDialog({ open, onClose, patient, profile }: Props) {
+export default function SocialProfileDialog({ open, onClose, patient, profile, initialMode = "detailed" }: Props) {
   const formId = useId();
   const save = useSaveProfile(patient._id);
   const { data: staff = [] } = useSocialStaff(open);
@@ -33,6 +36,7 @@ export default function SocialProfileDialog({ open, onClose, patient, profile }:
   const [basics, setBasics] = useState<PatientBasics>(initial.basics);
   const [form, setForm] = useState<SocialProfileInput>(initial.profile);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [mode, setMode] = useState<Exclude<FormMode, "basic">>(initialMode);
 
   // Pri otvaranju: trenutni podaci (ne dira formu dok je otvorena, ni kad stignu osveženi podaci)
   useEffect(() => {
@@ -41,6 +45,7 @@ export default function SocialProfileDialog({ open, onClose, patient, profile }:
     setInitial(next);
     setBasics(next.basics);
     setForm(next.profile);
+    setMode(initialMode);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- samo pri otvaranju
   }, [open]);
 
@@ -94,9 +99,19 @@ export default function SocialProfileDialog({ open, onClose, patient, profile }:
           </>
         }
       >
-        <form id={formId} onSubmit={onSubmit} noValidate>
+        <form id={formId} onSubmit={onSubmit} className="space-y-4" noValidate>
+          <Tabs
+            variant="pills"
+            className="max-w-md"
+            value={mode}
+            onChange={setMode}
+            items={[
+              { value: "detailed", label: "Detaljni podaci" },
+              { value: "social", label: "Socijalno-zdravstveni podaci" },
+            ]}
+          />
           <ResidentFormFields
-            mode="detailed"
+            mode={mode}
             basics={basics}
             onBasics={(patch) => setBasics((b) => ({ ...b, ...patch }))}
             profile={form}

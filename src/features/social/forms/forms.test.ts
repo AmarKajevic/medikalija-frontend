@@ -77,7 +77,9 @@ describe("popuna", () => {
     const text = marked.replace(/<[^>]+>/g, "");
     expect(text.match(/Dvokrevetnoj sobi\./g)).toHaveLength(1);
     expect(text).toContain("Stevan");
-    expect(text.match(/1203975710018/g)).toHaveLength(2); // kolona obveznika i potpis "2.Srodnik"
+    // Samo kolona obveznika na prvoj strani — poslednju stranu (potpisi) popunjavaju korisnici rukom
+    expect(text.match(/1203975710018/g)).toHaveLength(1);
+    expect(text).toContain("U Beogradu, dana___.___.20__.godine");
     expect(text).toContain("PIB:106082895");
     // Izabrano je podebljano i podvučeno, ostale stavke nisu
     const para = (needle: string) => marked.split("</w:p>").find((p) => p.replace(/<[^>]+>/g, "").includes(needle)) ?? "";

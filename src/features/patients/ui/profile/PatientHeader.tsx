@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { LuCalendarDays, LuChevronDown, LuClipboardList, LuHistory, LuHouse, LuLogOut, LuPackageOpen, LuPhone, LuPlus, LuUserPen } from "react-icons/lu";
+import { LuCalendarDays, LuChevronDown, LuClipboardList, LuHistory, LuHouse, LuLogIn, LuLogOut, LuPackageOpen, LuPhone, LuPlus, LuUserPen } from "react-icons/lu";
 import Badge from "@shared/ui/badge/Badge";
 import Button from "@shared/ui/button/Button";
 import Avatar from "@shared/ui/avatar/Avatar";
@@ -35,13 +35,15 @@ interface Props {
   onOpenFamilyStock?: () => void;
   /** Uprava i socijalni radnik: otpust; bez njega se stavka ne prikazuje */
   onDischarge?: () => void;
+  /** Uprava i socijalni radnik: ponovni prijem otpuštenog korisnika */
+  onReadmit?: () => void;
   /** Uprava i socijalni radnik: ispravka podataka pacijenta */
   onEdit?: () => void;
   /** Glavne akcije za ulogu (npr. "Nov izveštaj" za doktora) */
   actions?: ReactNode;
 }
 
-export default function PatientHeader({ patient, canManage, canViewSchedule = canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, onEdit, actions }: Props) {
+export default function PatientHeader({ patient, canManage, canViewSchedule = canManage, onOpenSpecification, onOpenFamilyStock, onDischarge, onReadmit, onEdit, actions }: Props) {
   const discharged = !!patient.dischargeDate;
 
   const menu: ActionMenuItem[] = [
@@ -73,6 +75,11 @@ export default function PatientHeader({ patient, canManage, canViewSchedule = ca
             </p>
             <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
               <Meta icon={<LuCalendarDays />} label="Prijem">{formatDay(patient.admissionDate)}</Meta>
+              {!!patient.previousStays?.length && (
+                <Meta icon={<LuHistory />} label="Raniji boravci">
+                  {patient.previousStays.map((s) => `${formatDay(s.admissionDate)} – ${formatDay(s.dischargeDate)}`).join(", ")}
+                </Meta>
+              )}
               <Meta icon={<LuHouse />} label="Adresa">{patient.address || "—"}</Meta>
               {patient.contactPerson && <Meta icon={<LuPhone />} label="Kontakt">{patient.contactPerson}</Meta>}
             </div>
@@ -91,6 +98,11 @@ export default function PatientHeader({ patient, canManage, canViewSchedule = ca
             />
           )}
           {actions}
+          {discharged && onReadmit && (
+            <Button size="sm" onClick={onReadmit} startIcon={<LuLogIn className="h-4 w-4" />}>
+              Ponovni prijem
+            </Button>
+          )}
           {canManage && !discharged && (
             <Button size="sm" onClick={onOpenSpecification} startIcon={<LuPlus className="h-4 w-4" />}>
               Napravi specifikaciju
