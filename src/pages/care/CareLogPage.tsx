@@ -36,7 +36,7 @@ const TYPES: Array<[EntryType | "", string]> = [
   ["", "Sve"],
   ["care", "Nega"],
   ["medicine", "Lekovi"],
-  ["article", "Artikli"],
+  ["article", "Potrošni materijal"],
 ];
 
 const dayStart = (iso: string) => {
@@ -77,7 +77,7 @@ interface StaffUser {
 const when = (iso: string) =>
   new Date(iso).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-// Dnevnik nege: uprava pregleda sve što su sestre unele (nega, lekovi, artikli).
+// Dnevnik nege: uprava pregleda sve što su sestre unele (nega, lekovi, potrošni materijal).
 export default function CareLogPage() {
   const [params, setParams] = useSearchParams();
   const range = (params.get("range") as RangeKey) || "7d";
@@ -225,7 +225,7 @@ export default function CareLogPage() {
     <>
       <PageHeader
         title="Dnevnik nege"
-        description="Sve što su sestre unele za pacijente: urađena nega, dati lekovi i artikli, sa ishodom odobravanja."
+        description="Sve što su sestre unele za pacijente: urađena nega, dati lekovi i potrošni materijal, sa ishodom odobravanja."
         actions={
           <Button variant="outline" startIcon={<LuDownload className="h-4 w-4" />} onClick={exportCsv} disabled={data.length === 0}>
             Izvezi u Excel
@@ -328,7 +328,7 @@ export default function CareLogPage() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">{n.name}</span>
                         <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          nega {n.care} · lekovi i artikli {n.meds}
+                          nega {n.care} · lekovi i materijal {n.meds}
                           {n.pending > 0 && <span className="text-warning-600 dark:text-warning-400"> · čeka {n.pending}</span>}
                         </span>
                       </span>

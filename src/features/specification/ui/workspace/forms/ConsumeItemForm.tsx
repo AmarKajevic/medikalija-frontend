@@ -22,6 +22,9 @@ const PORTIONS = [
 ];
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+// Količina u komadima na 4 decimale (kao na serveru): 7 ml od 250 ml = 0,028
+const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
+const parse = (v: string) => Number(v.replace(",", ".")) || 0;
 
 interface Props {
   kind: "medicine" | "article";
@@ -34,7 +37,7 @@ interface Props {
 
 export default function ConsumeItemForm({ kind, patientId, recordOnly = false, specificationId }: Props) {
   const isMedicine = kind === "medicine";
-  const ids = { item: useId(), amount: useId(), days: useId(), times: useId(), portion: useId() };
+  const ids = { item: useId(), amount: useId(), ml: useId(), days: useId(), times: useId(), portion: useId() };
 
   const medicineOptions = useMedicineOptions(isMedicine ? patientId : "");
   const articleOptions = useArticleOptions(isMedicine ? "" : patientId);
@@ -46,13 +49,19 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false, s
 
   const [itemId, setItemId] = useState("");
   const [amount, setAmount] = useState("");
+  // Potrošeno u ml (samo za stavke sa zapreminom): tada se količina računa iz ml
+  const [ml, setMl] = useState("");
   const [showCalc, setShowCalc] = useState(false);
   const [days, setDays] = useState("");
   const [timesPerDay, setTimesPerDay] = useState("");
   const [portion, setPortion] = useState(1);
 
   const selected = options.find((o) => o.value === itemId);
-  const qty = round2(Number(amount.replace(",", ".")) || 0);
+  const volume = selected?.volume && selected.volume > 0 ? selected.volume : 0;
+  const byMl = volume > 0 && ml.trim() !== "";
+  const qty = byMl ? round4(parse(ml) / volume) : round2(parse(amount));
+  // Sa zapreminom: "0,3 kom. (300 ml)"
+  const qtyText = (n: number) => (volume > 0 ? `${formatQty(n)} kom. (${formatQty(round2(n * volume))} ml)` : formatQty(n));
 
   // Isto pravilo kao na backendu: prvo porodično stanje, ostatak sa stanja doma
   const fromFamily = selected ? Math.min(selected.family, qty) : 0;
@@ -67,6 +76,7 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false, s
 
   const reset = () => {
     setAmount("");
+    setMl("");
     setDays("");
     setTimesPerDay("");
     setPortion(1);
@@ -92,24 +102,28 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false, s
       .catch((err) => notify.error(err));
   };
 
-  const noun = isMedicine ? "lek" : "artikal";
+  const noun = isMedicine ? "lek" : "potrošni materijal";
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <Field label={isMedicine ? "Lek" : "Artikal"} htmlFor={ids.item}>
+      <Field label={isMedicine ? "Lek" : "Potrošni materijal"} htmlFor={ids.item}>
         <StockCombobox
           id={ids.item}
           value={itemId}
-          onChange={setItemId}
+          onChange={(v) => {
+            setItemId(v);
+            setMl("");
+          }}
           options={options}
           loading={isLoading}
-          placeholder={`Pretraži ${isMedicine ? "lekove" : "artikle"}...`}
+          placeholder={`Pretraži ${isMedicine ? "lekove" : "potrošni materijal"}...`}
         />
       </Field>
 
       {selected && (
         <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Na stanju: dom {formatQty(selected.home)} · porodica {formatQty(selected.family)}
+          Na stanju: dom {qtyText(selected.home)} · porodica {qtyText(selected.family)}
+          {volume > 0 && ` · jedan komad = ${formatQty(volume)} ml`}
         </p>
       )}
 
@@ -182,21 +196,37 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false, s
         </div>
       )}
 
-      <Field label="Količina" htmlFor={ids.amount} hint={
-          isMedicine
-            ? "Ukupan broj tableta ili doza. Za pola tablete upišite 0,5."
-            : "Broj komada. Prvo se troši ono što je donela porodica."
-        }>
-        <input
-          id={ids.amount}
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0"
-          className={inputClass}
-        />
-      </Field>
+      <div className={volume > 0 ? "grid grid-cols-2 gap-3" : ""}>
+        <Field
+          label={volume > 0 ? "Količina (kom.)" : "Količina"}
+          htmlFor={ids.amount}
+          hint={
+            volume > 0
+              ? "Ceo komad (boca, tuba)."
+              : isMedicine
+                ? "Ukupan broj tableta ili doza. Za pola tablete upišite 0,5."
+                : "Broj komada. Prvo se troši ono što je donela porodica."
+          }
+        >
+          <input
+            id={ids.amount}
+            type="text"
+            inputMode="decimal"
+            value={byMl ? formatQty(qty) : amount}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setMl("");
+            }}
+            placeholder="0"
+            className={inputClass}
+          />
+        </Field>
+        {volume > 0 && (
+          <Field label="ili potrošeno (ml)" htmlFor={ids.ml} hint={`Naplaćuje se samo potrošeno: ${formatQty(volume)} ml = 1 kom.`}>
+            <input id={ids.ml} type="text" inputMode="decimal" value={ml} onChange={(e) => setMl(e.target.value)} placeholder={`npr. ${Math.round(volume * 0.3)}`} className={inputClass} />
+          </Field>
+        )}
+      </div>
 
       {recordOnly && (
         <p className="flex gap-2 rounded-xl bg-gray-50 p-3 text-xs text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
@@ -216,19 +246,19 @@ export default function ConsumeItemForm({ kind, patientId, recordOnly = false, s
           {notEnough ? (
             <p className="flex gap-2">
               <LuInfo className="mt-0.5 h-4 w-4 shrink-0" />
-              Nema dovoljno na stanju doma: potrebno {formatQty(fromHome)}, dostupno {formatQty(selected.home)}.
+              Nema dovoljno na stanju doma: potrebno {qtyText(fromHome)}, dostupno {qtyText(selected.home)}.
             </p>
           ) : (
             <dl className="space-y-1">
               {fromFamily > 0 && (
                 <div className="flex justify-between">
                   <dt>Sa porodičnog stanja (ne naplaćuje se)</dt>
-                  <dd className="font-medium">{formatQty(fromFamily)}</dd>
+                  <dd className="font-medium">{qtyText(fromFamily)}</dd>
                 </div>
               )}
               <div className="flex justify-between">
                 <dt>Sa stanja doma</dt>
-                <dd className="font-medium">{formatQty(fromHome)}</dd>
+                <dd className="font-medium">{qtyText(fromHome)}</dd>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold text-gray-900 dark:border-gray-700 dark:text-white">
                 <dt>Ulazi u specifikaciju</dt>

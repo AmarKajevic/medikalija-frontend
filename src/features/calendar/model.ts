@@ -334,3 +334,39 @@ export function useDeleteEvent() {
     onSettled: refresh,
   });
 }
+
+// ---------- nazivi događaja (padajući meni; listu pravi admin) ----------
+export interface EventTitle {
+  _id: string;
+  name: string;
+  /** Podrazumevana vrsta (boja) događaja sa ovim nazivom */
+  calendar: string | null;
+}
+
+const TITLES_KEY = ["calendarTitles"] as const;
+
+export function useEventTitles({ enabled = true } = {}) {
+  return useQuery({
+    queryKey: TITLES_KEY,
+    queryFn: async () => ((await api.get("/api/calendar/titles")).data.titles ?? []) as EventTitle[],
+    staleTime: 5 * 60_000,
+    enabled,
+  });
+}
+
+export function useSaveEventTitle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: { id?: string; name: string; calendar: string | null }) =>
+      (id ? (await api.put(`/api/calendar/titles/${id}`, body)).data.title : (await api.post("/api/calendar/titles", body)).data.title) as EventTitle,
+    onSuccess: () => qc.invalidateQueries({ queryKey: TITLES_KEY }),
+  });
+}
+
+export function useDeleteEventTitle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/api/calendar/titles/${id}`)).data as { message: string },
+    onSuccess: () => qc.invalidateQueries({ queryKey: TITLES_KEY }),
+  });
+}

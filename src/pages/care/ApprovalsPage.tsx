@@ -8,7 +8,7 @@ export default function ApprovalsPage() {
     <>
       <PageHeader
         title="Za odobrenje"
-        description="Unosi sestara i vanredna fizikalna terapija. Prihvaćeno ulazi u specifikaciju pacijenta (lekovi i artikli se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje i ne skida sa stanja."
+        description="Unosi sestara i vanredna fizikalna terapija. Prihvaćeno ulazi u specifikaciju pacijenta (lekovi i potrošni materijal se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje i ne skida sa stanja."
       />
       <Card>
         <CardBody>

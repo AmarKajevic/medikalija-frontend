@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { LuArrowRightLeft, LuEllipsis, LuListChecks, LuPackagePlus, LuPencil, LuPill, LuPlus, LuSyringe, LuTrash2 } from "react-icons/lu";
+import { LuChevronDown, LuEllipsis, LuListChecks, LuPackagePlus, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
 import { isManager } from "@app/paths";
 import PageHeader from "@shared/ui/page/PageHeader";
@@ -14,7 +14,7 @@ import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
-import { INVENTORY, InventoryItem, InventoryKind, stockStatus, useDeleteItem, useInventoryList, useSetMedicineForm, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
+import { INVENTORY, InventoryItem, InventoryKind, MEDICINE_FORMS, stockStatus, useDeleteItem, useInventoryList, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
 import SortMedicinesDialog from "@features/inventory/ui/SortMedicinesDialog";
 import { ItemDialog, RestockDialog } from "@features/inventory/ui/InventoryDialogs";
 
@@ -38,10 +38,6 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [formFilter, setFormFilter] = useState<"all" | MedicineForm>("all");
   const [dialog, setDialog] = useState<{ type: "create" | "edit" | "restock" | "delete" | "sort"; item?: InventoryItem; form?: MedicineForm } | null>(null);
-  const setForm = useSetMedicineForm();
-  // Jedan lek jednim klikom u drugu vrstu
-  const moveTo = (i: InventoryItem, form: MedicineForm) =>
-    setForm.mutate({ ids: [i._id], form }, { onSuccess: () => notify.success(`„${i.name}” → ${MEDICINE_FORM_LABEL[form]}`), onError: (e) => notify.error(e) });
 
   const counts = {
     all: data.length,
@@ -68,7 +64,9 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
             <span className="font-medium text-gray-900 dark:text-white">{i.name}</span>
             <StockBadge qty={i.quantity} />
           </div>
-          {i.form && <p className="text-xs text-gray-500 dark:text-gray-400">{MEDICINE_FORM_LABEL[i.form]}</p>}
+          {(i.form || i.volume) && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">{[i.form ? MEDICINE_FORM_LABEL[i.form] : "", i.volume ? `${formatQty(i.volume)} ml` : ""].filter(Boolean).join(" · ")}</p>
+          )}
         </div>
       ),
     },
@@ -111,19 +109,6 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
             align: "right" as const,
             cell: (i: InventoryItem) => (
               <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} className="flex justify-end gap-1">
-                {i.form && (
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    startIcon={<LuArrowRightLeft className="h-3.5 w-3.5" />}
-                    disabled={setForm.isPending}
-                    onClick={() => moveTo(i, i.form === "oral" ? "parenteral" : "oral")}
-                    title={`Prebaci u: ${MEDICINE_FORM_LABEL[i.form === "oral" ? "parenteral" : "oral"]}`}
-                    aria-label={`Prebaci ${i.name} u: ${MEDICINE_FORM_LABEL[i.form === "oral" ? "parenteral" : "oral"]}`}
-                  >
-                    {i.form === "oral" ? "→ Ampule" : "→ Tablete"}
-                  </Button>
-                )}
                 <Button variant="ghost" size="xs" startIcon={<LuPackagePlus className="h-3.5 w-3.5" />} onClick={() => setDialog({ type: "restock", item: i })}>
                   Dopuni
                 </Button>
@@ -160,7 +145,7 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
     <>
       <PageHeader
         title={cfg.title}
-        description={`Stanje ${kind === "medicine" ? "lekova" : "artikala"} doma. Porodične zalihe pacijenata vode se posebno.`}
+        description={`Stanje ${kind === "medicine" ? "lekova" : "potrošnog materijala"} doma. Porodične zalihe pacijenata vode se posebno.`}
         actions={
           manager &&
           (kind === "medicine" ? (
@@ -169,16 +154,18 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
               <Button size="sm" variant="outline" startIcon={<LuListChecks className="h-4 w-4" />} onClick={() => setDialog({ type: "sort" })}>
                 Razvrstaj lekove
               </Button>
-              <Button size="sm" startIcon={<LuPill className="h-4 w-4" />} onClick={() => setDialog({ type: "create", form: "oral" })}>
-                + Tablete, kapsule
-              </Button>
-              <Button size="sm" startIcon={<LuSyringe className="h-4 w-4" />} onClick={() => setDialog({ type: "create", form: "parenteral" })}>
-                + Ampule, rastvori, sol
-              </Button>
+              <ActionMenu
+                trigger={({ toggle }) => (
+                  <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} endIcon={<LuChevronDown className="h-4 w-4" />} onClick={toggle} aria-haspopup="menu">
+                    Novi lek
+                  </Button>
+                )}
+                items={MEDICINE_FORMS.map((f) => ({ label: MEDICINE_FORM_LABEL[f], onClick: () => setDialog({ type: "create", form: f }) }))}
+              />
             </div>
           ) : (
             <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "create" })}>
-              Novi {cfg.singular}
+              Dodaj potrošni materijal
             </Button>
           ))
         }
@@ -203,13 +190,12 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
       {kind === "medicine" && (
         <Tabs
           variant="pills"
-          className="mb-4 max-w-xl"
+          className="mb-4"
           value={formFilter}
           onChange={setFormFilter}
           items={[
             { value: "all", label: "Sve vrste" },
-            { value: "oral", label: MEDICINE_FORM_LABEL.oral, count: data.filter((i) => i.form === "oral").length },
-            { value: "parenteral", label: MEDICINE_FORM_LABEL.parenteral, count: data.filter((i) => i.form === "parenteral").length },
+            ...MEDICINE_FORMS.map((f) => ({ value: f, label: MEDICINE_FORM_LABEL[f], count: data.filter((i) => i.form === f).length })),
           ]}
         />
       )}
@@ -224,14 +210,14 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
           getRowId={(i) => i._id}
           onRowClick={(i) => navigate(cfg.detailPath(i._id))}
           searchText={(i) => i.name}
-          searchPlaceholder={`Pretraži ${kind === "medicine" ? "lekove" : "artikle"}...`}
+          searchPlaceholder={`Pretraži ${kind === "medicine" ? "lekove" : "potrošni materijal"}...`}
           initialSort={{ id: "name", dir: "asc" }}
           empty={{
-            title: filter === "all" ? `Još nema unetih ${kind === "medicine" ? "lekova" : "artikala"}` : "Nema stavki u ovoj grupi",
+            title: filter === "all" ? (kind === "medicine" ? "Još nema unetih lekova" : "Još nema unetog potrošnog materijala") : "Nema stavki u ovoj grupi",
             action:
               manager && filter === "all" ? (
                 <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "create" })}>
-                  Novi {cfg.singular}
+                  {kind === "medicine" ? "Novi lek" : "Dodaj potrošni materijal"}
                 </Button>
               ) : undefined,
           }}
@@ -255,7 +241,7 @@ export default function InventoryListPage({ kind }: { kind: InventoryKind }) {
             onConfirm={confirmDelete}
             loading={remove.isPending}
             title={`Obrisati „${dialog?.item?.name}“?`}
-            description={`${cfg.singularCap} se uklanja iz šifarnika. Postojeće stavke u specifikacijama ostaju, ali novi unosi više neće biti mogući.`}
+            description={`„${dialog?.item?.name ?? ""}“ se uklanja iz šifarnika. Postojeće stavke u specifikacijama ostaju, ali novi unosi više neće biti mogući.`}
             confirmText="Obriši"
           />
         </>

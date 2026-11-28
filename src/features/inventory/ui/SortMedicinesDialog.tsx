@@ -2,18 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { LuSearch } from "react-icons/lu";
 import Dialog from "@shared/ui/dialog/Dialog";
 import Button from "@shared/ui/button/Button";
-import { Input } from "@shared/ui/form/controls";
+import { Input, Select } from "@shared/ui/form/controls";
 import Tabs from "@shared/ui/tabs/Tabs";
 import { notify } from "@shared/lib/notify";
 import { matchesSearch } from "@shared/lib/search";
-import { MEDICINE_FORM_LABEL, type InventoryItem, type MedicineForm, useSetMedicineForm } from "@features/inventory/model";
+import { MEDICINE_FORM_LABEL, MEDICINE_FORMS, type InventoryItem, type MedicineForm, useSetMedicineForm } from "@features/inventory/model";
 
-const other = (f: MedicineForm): MedicineForm => (f === "oral" ? "parenteral" : "oral");
+const firstOther = (f: MedicineForm): MedicineForm => MEDICINE_FORMS.find((x) => x !== f)!;
 
 // Razvrstavanje postojećih lekova: označe se lekovi jedne vrste i prebace u drugu odjednom
-// (svi stari lekovi su podrazumevano "tablete, kapsule", pa se ampule izdvajaju ovde).
+// (svi stari lekovi su podrazumevano "tablete, kapsule", pa se ostale grupe izdvajaju ovde).
 export default function SortMedicinesDialog({ open, onClose, medicines }: { open: boolean; onClose: () => void; medicines: InventoryItem[] }) {
   const [from, setFrom] = useState<MedicineForm>("oral");
+  const [target, setTarget] = useState<MedicineForm>("parenteral");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const save = useSetMedicineForm();
@@ -21,6 +22,7 @@ export default function SortMedicinesDialog({ open, onClose, medicines }: { open
   useEffect(() => {
     if (!open) return;
     setFrom("oral");
+    setTarget("parenteral");
     setQuery("");
     setSelected(new Set());
   }, [open]);
@@ -35,7 +37,6 @@ export default function SortMedicinesDialog({ open, onClose, medicines }: { open
   );
   const visibleIds = list.map((m) => m._id);
   const allVisible = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
-  const target = other(from);
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -63,7 +64,7 @@ export default function SortMedicinesDialog({ open, onClose, medicines }: { open
       onClose={onClose}
       size="lg"
       title="Razvrstaj lekove"
-      description="Označite lekove i prebacite ih u drugu vrstu. U specifikacijama se tablete i ampule vode kao posebne grupe."
+      description="Označite lekove i prebacite ih u drugu vrstu. U specifikacijama je svaka vrsta posebna grupa."
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -81,13 +82,21 @@ export default function SortMedicinesDialog({ open, onClose, medicines }: { open
           value={from}
           onChange={(f) => {
             setFrom(f);
+            if (target === f) setTarget(firstOther(f));
             setSelected(new Set());
           }}
-          items={[
-            { value: "oral", label: MEDICINE_FORM_LABEL.oral, count: medicines.filter((m) => (m.form ?? "oral") === "oral").length },
-            { value: "parenteral", label: MEDICINE_FORM_LABEL.parenteral, count: medicines.filter((m) => m.form === "parenteral").length },
-          ]}
+          items={MEDICINE_FORMS.map((f) => ({ value: f, label: MEDICINE_FORM_LABEL[f], count: medicines.filter((m) => (m.form ?? "oral") === f).length }))}
         />
+        <label className="flex flex-wrap items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          Prebaci izabrane u:
+          <Select aria-label="Prebaci u vrstu" value={target} onChange={(e) => setTarget(e.target.value as MedicineForm)} className="w-48">
+            {MEDICINE_FORMS.filter((f) => f !== from).map((f) => (
+              <option key={f} value={f}>
+                {MEDICINE_FORM_LABEL[f]}
+              </option>
+            ))}
+          </Select>
+        </label>
         <Input leading={<LuSearch className="h-4 w-4" />} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Pretraži lekove..." aria-label="Pretraži lekove" />
         <label className="flex items-center gap-2 px-1 text-sm text-gray-700 dark:text-gray-300">
           <input

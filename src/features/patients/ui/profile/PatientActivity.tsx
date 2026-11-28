@@ -125,7 +125,7 @@ export default function PatientActivity({ patientId, defaultAuthor = "all", canC
     })),
     articles: articles.map((a) => ({
       id: a._id,
-      title: a.article?.name ?? "Obrisan artikal",
+      title: a.article?.name ?? "Obrisan potrošni materijal",
       amount: (
         <>
           × {formatQty(a.amount)} · <span className="font-medium">{formatRSD(a.amount * (a.article?.price ?? 0))}</span>
@@ -160,7 +160,7 @@ export default function PatientActivity({ patientId, defaultAuthor = "all", canC
             { value: "diagnoses", label: "Dijagnoze", icon: <LuStethoscope className="h-4 w-4" />, count: rows.diagnoses.length },
             { value: "medicines", label: "Lekovi", icon: <LuPill className="h-4 w-4" />, count: rows.medicines.length },
             { value: "combinations", label: "Analize", icon: <LuFlaskConical className="h-4 w-4" />, count: rows.combinations.length },
-            { value: "articles", label: "Artikli", icon: <LuPackage className="h-4 w-4" />, count: rows.articles.length },
+            { value: "articles", label: "Potrošni materijal", icon: <LuPackage className="h-4 w-4" />, count: rows.articles.length },
           ]}
         />
       </div>
@@ -196,7 +196,7 @@ export default function PatientActivity({ patientId, defaultAuthor = "all", canC
         <ActivityList
           rows={rows[tab]}
           empty={
-            { diagnoses: "Nema dijagnoza", medicines: "Nema unetih lekova", combinations: "Nema urađenih analiza", articles: "Nema unetih artikala" }[tab]
+            { diagnoses: "Nema dijagnoza", medicines: "Nema unetih lekova", combinations: "Nema urađenih analiza", articles: "Nema unetog potrošnog materijala" }[tab]
           }
         />
       </div>

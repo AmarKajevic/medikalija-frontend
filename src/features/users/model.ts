@@ -35,8 +35,10 @@ export const ROLES: Array<{ value: string; label: string; login: boolean }> = [
   { value: "doctor", label: "Doktor", login: true },
   { value: "social-worker", label: "Socijalni radnik", login: true },
   { value: "physiotherapist", label: "Fizioterapeut", login: true },
+  { value: "caregiver", label: "Negovateljica", login: true },
   { value: "admin", label: "Direktor / administrator", login: true },
-  { value: "Caregiver", label: "Negovatelj", login: false },
+  // Stari zapis osoblja bez prijave; za pristup aplikaciji pozovite "Negovateljica"
+  { value: "Caregiver", label: "Negovatelj (bez prijave)", login: false },
   // Stari zapis osoblja bez prijave; za pristup aplikaciji pozovite "Fizioterapeut"
   { value: "Physiotherapist", label: "Fizioterapeut (bez prijave)", login: false },
   { value: "Occupational Therapist", label: "Radni terapeut", login: false },
@@ -52,8 +54,8 @@ export const canLogin = (r: string) => ROLES.find((x) => x.value === r)?.login ?
 
 const KEY = ["users"] as const;
 
-export function useUsers() {
-  return useQuery({ queryKey: KEY, queryFn: async () => ((await api.get("/api/auth/users")).data.users ?? []) as ManagedUser[] });
+export function useUsers({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: KEY, queryFn: async () => ((await api.get("/api/auth/users")).data.users ?? []) as ManagedUser[], enabled });
 }
 
 function useInvalidate() {

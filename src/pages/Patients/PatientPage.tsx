@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { LuClipboardCheck, LuFilePlus, LuPlus } from "react-icons/lu";
 import { useAuth } from "@app/providers/AuthContext";
-import { CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PATIENT_EDIT_ROLES, PERIOD_SCHEDULE_ROLES, PHYSIO_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES, SCHEDULER_ROLES } from "@app/paths";
+import { CARE_ENTRY_ROLES, CARE_ROLES, CLINICAL_ROLES, hasRole, isManager, paths, PATIENT_EDIT_ROLES, PERIOD_SCHEDULE_ROLES, PHYSIO_ROLES, SCHEDULER_ROLES, SOCIAL_READ_ROLES, SOCIAL_WRITE_ROLES } from "@app/paths";
 import usePatient, { type Patient } from "@entities/patient/hooks/usePatient";
 import { Breadcrumbs } from "@shared/ui/page/PageHeader";
 import { Card, CardBody, CardHeader } from "@shared/ui/card/Card";
@@ -45,6 +45,7 @@ function tabsFor(role?: string): TabKey[] {
   if (role === "physiotherapist") return ["physio"];
   if (role === "doctor") return ["medical", "care", "social"];
   if (role === "social-worker") return ["social"];
+  if (role === "caregiver") return ["care"];
   return ["care", "medical"]; // sestra
 }
 
@@ -68,8 +69,9 @@ function SocialCard({ patientId, canWrite, onNew }: { patientId: string; canWrit
   );
 }
 
-// Sestra unosi negu; uprava i doktor vide šta je urađeno
-function CareTab({ patient, canEnter, manager }: { patient: Patient; canEnter: boolean; manager: boolean }) {
+// Sestra i negovateljica unose negu; uprava i doktor vide šta je urađeno.
+// Negovateljica beleži samo usluge nege i ne vidi lekove ni potrošnju.
+function CareTab({ patient, canEnter, manager, careOnly = false }: { patient: Patient; canEnter: boolean; manager: boolean; careOnly?: boolean }) {
   const discharged = !!patient.dischargeDate;
   const list = (
     <Card>
@@ -95,12 +97,12 @@ function CareTab({ patient, canEnter, manager }: { patient: Patient; canEnter: b
         </Card>
       ) : (
         <div className="lg:sticky lg:top-20">
-          <NurseEntryPanel patientId={patient._id} />
+          <NurseEntryPanel patientId={patient._id} careOnly={careOnly} />
         </div>
       )}
       <div className="min-w-0 space-y-6">
         {list}
-        <PatientActivity patientId={patient._id} defaultAuthor="all" />
+        {!careOnly && <PatientActivity patientId={patient._id} defaultAuthor="all" />}
       </div>
     </div>
   );
@@ -198,11 +200,11 @@ export default function PatientPage() {
         </>
       )}
 
-      {tab === "care" && <CareTab patient={patient} canEnter={role === "nurse"} manager={manager} />}
+      {tab === "care" && <CareTab patient={patient} canEnter={hasRole(role, CARE_ENTRY_ROLES)} manager={manager} careOnly={role === "caregiver"} />}
 
       {tab === "medical" && hasRole(role, CLINICAL_ROLES) && (
         <div className="grid items-start gap-6 xl:grid-cols-[1fr_380px]">
-          <PatientReports patientId={patient._id} canWrite={role === "doctor"} />
+          <PatientReports patientId={patient._id} canWrite={role === "doctor" || role === "admin"} />
           <PatientAppointments patientId={patient._id} canEdit={canSchedule} />
         </div>
       )}

@@ -8,7 +8,7 @@ import { formatDay } from "@shared/lib/calendarDay";
 import { formatEUR, formatRSD } from "@shared/lib/format";
 import { getNextPeriodLabel } from "@features/specification/lib/helpers";
 import { Specification } from "@features/specification/types/types";
-import { categoryOf, itemNameParts, sortSpecItems, type CategoryKey } from "@features/specification/lib/items";
+import { amountLabel, categoryOf, itemNameParts, sortSpecItems, type CategoryKey } from "@features/specification/lib/items";
 import { useBillingState } from "@features/specification/hooks/useBillingState";
 import { useFacility } from "@entities/facility/facility";
 import { useNurseEntries } from "@features/nurse-entries/model";
@@ -99,6 +99,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
         formattedName: itemNameParts(item).text,
         priceList: itemNameParts(item).prices,
         amount: item.amount ?? 1,
+        amountText: amountLabel(item),
         price: item.price ?? 0,
         physio: categoryOf(item) === "physio",
       })),
@@ -197,7 +198,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
             <header className="border-b border-warning-100 bg-warning-50 px-5 py-3.5 dark:border-warning-500/20 dark:bg-warning-500/10">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white/90">Unosi osoblja čekaju odobrenje ({pendingCount})</h3>
               <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-                Unosi sestara i vanredna fizikalna terapija. Prihvaćeno ulazi u specifikaciju (lekovi i artikli se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje.
+                Unosi sestara i vanredna fizikalna terapija. Prihvaćeno ulazi u specifikaciju (lekovi i potrošni materijal se skidaju sa stanja, prvo porodično). Odbijeno se ne naplaćuje.
               </p>
             </header>
             <div className="p-5">
@@ -249,7 +250,7 @@ export default function SpecificationWorkspace({ specification: spec, patientId,
                 description={editable ? "Pogrešno uneto? Uklonite stavku ikonicom korpe." : "Zatvorena specifikacija — samo pregled."}
               >
                 <LodgingRows billing={billing} nextPeriodLabel={nextPeriodLabel} onEdit={() => setLodgingOpen(true)} readOnly={!editable} />
-                {/* Ispod smeštaja: vanredna fizikalna terapija u posebnom bloku (kao na štampi), pa lekovi, artikli, usluge… */}
+                {/* Ispod smeštaja: vanredna fizikalna terapija u posebnom bloku (kao na štampi), pa lekovi, potrošni materijal, usluge… */}
                 {hasPhysio && (
                   <>
                     <h4 className="mb-2 mt-4 border-b border-gray-100 pb-2 text-base font-semibold text-gray-900 first:mt-0 dark:border-gray-800 dark:text-white/90">

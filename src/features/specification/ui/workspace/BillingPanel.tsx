@@ -122,7 +122,7 @@ export default function BillingPanel({ billing, nextPeriodLabel, readOnly = fals
   const titleKnown = titles.some((n) => n.text === fields.earlyTitle);
 
   const rows: Array<[string, string, string, string]> = [
-    ["Lekovi, artikli, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
+    ["Lekovi, potrošni materijal, analize i troškovi", "stavke iz liste", formatRSD(result.specTotalRSD), formatEUR(result.specEUR)],
     ...(fields.includeDebt ? [["Dug iz prethodnog perioda", "uneto gore", formatRSD(result.debtRSD), formatEUR(result.debtEUR)] as [string, string, string, string]] : []),
     ...(fields.includeLodging ? [[`Smeštaj za naredni period${fields.lodgingOption ? ` · ${fields.lodgingOption}` : ""}`, nextPeriodLabel, formatRSD(result.lodgingRSD), formatEUR(result.lodgingEUR)] as [string, string, string, string]] : []),
     ...(fields.includeEarly

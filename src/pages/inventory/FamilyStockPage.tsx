@@ -78,8 +78,8 @@ function AddFamilyStockForm({ patientId }: { patientId: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Tabs variant="pills" value={kind} onChange={setKind} items={[{ value: "medicine", label: "Lek" }, { value: "article", label: "Artikal" }]} />
-      <Field label={kind === "medicine" ? "Lek" : "Artikal"} htmlFor={`${id}-item`} hint="Stavka mora postojati u šifarniku doma.">
+      <Tabs variant="pills" value={kind} onChange={setKind} items={[{ value: "medicine", label: "Lek" }, { value: "article", label: "Potrošni materijal" }]} />
+      <Field label={kind === "medicine" ? "Lek" : "Potrošni materijal"} htmlFor={`${id}-item`} hint="Stavka mora postojati u šifarniku doma.">
         <StockCombobox id={`${id}-item`} value={itemId} onChange={setItemId} options={options} loading={isLoading} />
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -192,7 +192,7 @@ function FamilyArticlesList({ patientId }: { patientId: string }) {
   const { data = [], isLoading } = useGetPatientStockArticles(patientId);
   const rows = (data as Array<{ _id: string; name: string; familyQuantity: number }>).filter((r) => r.familyQuantity > 0);
   if (isLoading) return <Skeleton className="h-32" />;
-  if (rows.length === 0) return <EmptyState compact icon={<LuPackageOpen />} title="Nema porodičnih artikala" />;
+  if (rows.length === 0) return <EmptyState compact icon={<LuPackageOpen />} title="Nema porodičnog potrošnog materijala" />;
   return (
     <ul className="divide-y divide-gray-100 dark:divide-gray-800">
       {rows.map((r) => (
@@ -226,7 +226,7 @@ export default function FamilyStockPage() {
     <>
       <PageHeader
         title="Porodične zalihe"
-        description="Lekovi i artikli koje porodica donosi pacijentu. Troše se prvi i ne naplaćuju se."
+        description="Lekovi i potrošni materijal koje porodica donosi pacijentu. Troše se prvi i ne naplaćuju se."
       />
 
       <Card className="mb-6">
@@ -262,7 +262,7 @@ export default function FamilyStockPage() {
           <Card>
             <CardHeader title="Trenutno porodično stanje" />
             <CardBody>
-              <Tabs className="mb-2" value={tab} onChange={setTab} items={[{ value: "medicine", label: "Lekovi" }, { value: "article", label: "Artikli" }]} />
+              <Tabs className="mb-2" value={tab} onChange={setTab} items={[{ value: "medicine", label: "Lekovi" }, { value: "article", label: "Potrošni materijal" }]} />
               {tab === "medicine" ? <FamilyMedicinesList patientId={patient._id} manager={manager} /> : <FamilyArticlesList patientId={patient._id} />}
             </CardBody>
           </Card>

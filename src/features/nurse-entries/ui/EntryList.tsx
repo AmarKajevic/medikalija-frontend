@@ -8,7 +8,8 @@ import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
 import EmptyState, { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { notify } from "@shared/lib/notify";
-import { formatQty, formatRSD } from "@shared/lib/format";
+import { formatRSD } from "@shared/lib/format";
+import { amountLabel } from "@features/specification/lib/items";
 import { useAuth } from "@app/providers/AuthContext";
 import { isPending, NurseEntry, personName, STATUS_META, useCancelEntry, useNurseEntries, type EntryType } from "@features/nurse-entries/model";
 
@@ -68,7 +69,7 @@ export default function EntryList({ patientId, mine = false, type }: { patientId
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white/90">
                     {withoutExtraTag(e.name)}
-                    <span className="ml-1.5 font-normal text-gray-500">× {formatQty(e.acceptedAmount ?? e.amount)}</span>
+                    <span className="ml-1.5 font-normal text-gray-500">× {amountLabel({ amount: e.acceptedAmount ?? e.amount, volume: e.volume })}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     {formatWhen(e.performedAt)} · {personName(e.createdBy) || "Nepoznato"}

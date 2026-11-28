@@ -15,7 +15,7 @@ import { formatQty, formatRSD } from "@shared/lib/format";
 import { useArticleOptions } from "@features/articles/ui/useArticleOptions";
 import { CareTask, CareTaskInput, isBillableTask, useCareTasks, useDeleteCareTask, useSaveCareTask } from "@features/nurse-entries/model";
 
-// Česte usluge za brz početak; uprava ih posle prilagodi (cena, artikal).
+// Česte usluge za brz početak; uprava ih posle prilagodi (cena, potrošni materijal).
 const SUGGESTED: Array<Pick<CareTaskInput, "name" | "category">> = [
   { name: "Promenjene pelene", category: "Higijena" },
   { name: "Promenjena posteljina", category: "Higijena" },
@@ -62,7 +62,7 @@ export default function CareTasksSection() {
       }
     }
     setSeeding(false);
-    notify.success(`Dodato ${added} usluga. Podesite cene i artikle gde je potrebno.`);
+    notify.success(`Dodato ${added} usluga. Podesite cene i potrošni materijal gde je potrebno.`);
   };
 
   const columns: Column<CareTask>[] = [
@@ -126,8 +126,8 @@ export default function CareTasksSection() {
   return (
     <>
       <SectionHeader
-        title="Šabloni nege"
-        description="Lista iz koje sestre biraju šta je urađeno pacijentu. Usluga može da troši artikal sa stanja i/ili da ima svoju cenu. Svaka urađena nega ide na odobrenje i u specifikaciju."
+        title="Šabloni za medicinsko osoblje"
+        description="Lista iz koje osoblje (sestre i negovateljice) bira šta je urađeno pacijentu. Usluga može da troši potrošni materijal sa stanja i/ili da ima svoju cenu. Svaka urađena nega ide na odobrenje i u specifikaciju."
         actions={
           <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", task: null })}>
             Nova usluga nege
@@ -217,8 +217,8 @@ function TaskDialog({ open, task, categories, onClose }: { open: boolean; task: 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return notify.error("Unesite naziv usluge.");
-    if (usesArticle && !article) return notify.error("Izaberite artikal koji usluga troši.");
-    if (usesArticle && !(toNumber(amount) > 0)) return notify.error("Količina artikla mora biti veća od nule.");
+    if (usesArticle && !article) return notify.error("Izaberite potrošni materijal koji usluga troši.");
+    if (usesArticle && !(toNumber(amount) > 0)) return notify.error("Količina potrošnog materijala mora biti veća od nule.");
     if (hasPrice && !(toNumber(price) > 0)) return notify.error("Unesite cenu usluge.");
 
     save.mutate(
@@ -277,14 +277,14 @@ function TaskDialog({ open, task, categories, onClose }: { open: boolean; task: 
           <label className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked={usesArticle} onChange={(e) => setUsesArticle(e.target.checked)} className="mt-0.5 h-4 w-4 accent-brand-600" />
             <span>
-              Troši artikal sa stanja
+              Troši potrošni materijal sa stanja
               <span className="block text-xs text-gray-500">npr. „Promenjene pelene” troši 1 × Pelene</span>
             </span>
           </label>
           {usesArticle && (
             <div className="grid gap-3 pl-6 sm:grid-cols-[1fr_110px]">
-              <Field label="Artikal" htmlFor={ids.article}>
-                <StockCombobox id={ids.article} value={article} onChange={setArticle} options={articles} loading={isLoading} placeholder="Pretraži artikle..." />
+              <Field label="Potrošni materijal" htmlFor={ids.article}>
+                <StockCombobox id={ids.article} value={article} onChange={setArticle} options={articles} loading={isLoading} placeholder="Pretraži potrošni materijal..." />
               </Field>
               <Field label="Količina" htmlFor={ids.amount} hint="po jednom unosu">
                 <Input id={ids.amount} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />

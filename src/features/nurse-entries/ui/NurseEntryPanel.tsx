@@ -7,9 +7,20 @@ import CareTaskPicker from "./CareTaskPicker";
 
 type EntryTab = "care" | "medicine" | "article" | "note";
 
-// Sve što sestra unosi za pacijenta: urađena nega (iz liste), lek, artikal, dijagnoza (iz šablona) / učinak.
-export default function NurseEntryPanel({ patientId, title = "Novi unos" }: { patientId: string; title?: string }) {
+// Sve što sestra unosi za pacijenta: urađena nega (iz liste), lek, potrošni materijal, dijagnoza (iz šablona) / učinak.
+// careOnly: negovateljica — samo usluge nege iz kataloga.
+export default function NurseEntryPanel({ patientId, title = "Novi unos", careOnly = false }: { patientId: string; title?: string; careOnly?: boolean }) {
   const [tab, setTab] = useState<EntryTab>("care");
+  if (careOnly) {
+    return (
+      <Card>
+        <CardHeader title="Urađena nega" description="Označite šta ste uradili. Ono što se naplaćuje ide upravi na odobrenje." />
+        <CardBody>
+          <CareTaskPicker key={patientId} patientId={patientId} />
+        </CardBody>
+      </Card>
+    );
+  }
   return (
     <Card>
       <CardHeader title={title} description="Ono što se naplaćuje ide upravi na odobrenje." />
@@ -22,7 +33,7 @@ export default function NurseEntryPanel({ patientId, title = "Novi unos" }: { pa
           items={[
             { value: "care", label: "Nega" },
             { value: "medicine", label: "Lek" },
-            { value: "article", label: "Artikal" },
+            { value: "article", label: "Materijal" },
             { value: "note", label: "Dijagnoza" },
           ]}
         />

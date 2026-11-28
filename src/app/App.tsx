@@ -4,7 +4,7 @@ import { BrowserRouter, Outlet, Route, Routes, useLocation } from "react-router"
 import ErrorBoundary from "@shared/ui/feedback/ErrorBoundary";
 import AppShell from "@widgets/shell/AppShell";
 import { PageLoader } from "@shared/ui/feedback/Spinner";
-import { CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, PERIOD_SCHEDULE_ROLES, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
+import { ACTIVITY_ROLES, CARE_ROLES, CLINICAL_ROLES, MANAGER_ROLES, paths, PERIOD_SCHEDULE_ROLES, REPORT_READ_ROLES, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 import { LegacyRedirect, RequireAuth, RequireRole } from "@app/routing/guards";
 import SignInPage from "@pages/auth/SignInPage";
 import AcceptLinkPage from "@pages/auth/AcceptLinkPage";
@@ -31,7 +31,6 @@ const NotificationsPage = lazy(pages.NotificationsPage);
 const CalendarPage = lazy(pages.CalendarPage);
 const FacilitySettingsPage = lazy(pages.FacilitySettingsPage);
 const PhysioPage = lazy(pages.PhysioPage);
-const CarePage = lazy(pages.CarePage);
 const ApprovalsPage = lazy(pages.ApprovalsPage);
 const CareLogPage = lazy(pages.CareLogPage);
 const ReportsPage = lazy(pages.ReportsPage);
@@ -54,6 +53,8 @@ const LEGACY: Array<[string, Parameters<typeof LegacyRedirect>[0]["to"]]> = [
   ["/professional-services", paths.professionalServices],
   ["/extra-costs", paths.extraCosts],
   ["/nurseDashboard", paths.home],
+  // Unos nege je na profilu korisnika (kartica "Nega")
+  ["/care", paths.patients],
   ["/patient-list", paths.patients],
   ["/patient-page", paths.patients],
   ["/patient/:patientId", (p) => paths.patient(p.patientId!)],
@@ -124,14 +125,13 @@ export default function App() {
             <Route path="/combinations" element={managers(<CombinationsPage />)} />
 
             <Route path="/users" element={managers(<UsersPage />)} />
-            <Route path="/activity" element={managers(<ActivityPage />)} />
+            <Route path="/activity" element={<RequireRole roles={ACTIVITY_ROLES}><ActivityPage /></RequireRole>} />
             <Route path="/notifications" element={managers(<NotificationsPage />)} />
             <Route path="/calendar" element={staff(<CalendarPage />)} />
             <Route path="/settings" element={admins(<FacilitySettingsPage />)} />
-            <Route path="/care" element={care(<CarePage />)} />
             <Route path="/approvals" element={managers(<ApprovalsPage />)} />
             <Route path="/care-log" element={managers(<CareLogPage />)} />
-            <Route path="/reports" element={<RequireRole roles={["admin", "main-nurse", "doctor"]}><ReportsPage /></RequireRole>} />
+            <Route path="/reports" element={<RequireRole roles={REPORT_READ_ROLES}><ReportsPage /></RequireRole>} />
             <Route path="/reports/:reportId" element={clinical(<ReportPage />)} />
             <Route path="/physio" element={<RequireRole roles={PHYSIO_ROLES}><PhysioPage /></RequireRole>} />
             {/* Šabloni i cene: sekcije unutar jedne stranice; dozvole po sekciji proverava stranica */}

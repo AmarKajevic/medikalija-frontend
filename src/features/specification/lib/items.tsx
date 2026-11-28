@@ -1,11 +1,17 @@
-import { LuActivity, LuBriefcaseMedical, LuFlaskConical, LuHeartHandshake, LuPackage, LuPill, LuReceipt, LuSyringe } from "react-icons/lu";
+import { LuActivity, LuBriefcaseMedical, LuDroplet, LuDroplets, LuFlaskConical, LuFlaskRound, LuHeartHandshake, LuPackage, LuPill, LuPillBottle, LuReceipt, LuSyringe, LuTestTube } from "react-icons/lu";
+import { formatQty } from "@shared/lib/format";
 import { SpecificationItem } from "@features/specification/types/types";
 import { withoutExtraTag } from "@features/physio/name";
 
 export const CATEGORY_META = {
   medicine: { label: "Lekovi — tablete, kapsule", icon: <LuPill /> },
-  medicineParenteral: { label: "Lekovi — ampule, rastvori, sol", icon: <LuSyringe /> },
-  articles: { label: "Artikli", icon: <LuPackage /> },
+  medicineParenteral: { label: "Lekovi — ampule", icon: <LuSyringe /> },
+  medicineOintment: { label: "Lekovi — masti", icon: <LuPillBottle /> },
+  medicineGel: { label: "Lekovi — gelovi", icon: <LuDroplet /> },
+  medicineSyrup: { label: "Lekovi — sirupi", icon: <LuFlaskRound /> },
+  medicineSolution: { label: "Lekovi — rastvori", icon: <LuDroplets /> },
+  medicineSuppository: { label: "Lekovi — supozitorije", icon: <LuTestTube /> },
+  articles: { label: "Potrošni materijal", icon: <LuPackage /> },
   professional: { label: "Stručne usluge", icon: <LuBriefcaseMedical /> },
   combination: { label: "Analize", icon: <LuFlaskConical /> },
   care: { label: "Nega", icon: <LuHeartHandshake /> },
@@ -14,14 +20,47 @@ export const CATEGORY_META = {
 } as const;
 
 export type CategoryKey = keyof typeof CATEGORY_META | "other";
-// Redosled u specifikaciji i na štampi: analize, lekovi (tablete, kapsule), lekovi (ampule,
-// rastvori, sol), artikli, stručne usluge, pa sve ostalo
-export const CATEGORY_ORDER: CategoryKey[] = ["combination", "medicine", "medicineParenteral", "articles", "professional", "care", "physio", "extra", "other"];
+// Redosled u specifikaciji i na štampi: analize, lekovi po grupama (tablete, ampule, masti,
+// gelovi, sirupi, rastvori, supozitorije), potrošni materijal, stručne usluge, pa sve ostalo
+export const CATEGORY_ORDER: CategoryKey[] = [
+  "combination",
+  "medicine",
+  "medicineParenteral",
+  "medicineOintment",
+  "medicineGel",
+  "medicineSyrup",
+  "medicineSolution",
+  "medicineSuppository",
+  "articles",
+  "professional",
+  "care",
+  "physio",
+  "extra",
+  "other",
+];
+
+const MEDICINE_GROUP: Record<string, CategoryKey> = {
+  parenteral: "medicineParenteral",
+  ointment: "medicineOintment",
+  gel: "medicineGel",
+  syrup: "medicineSyrup",
+  solution: "medicineSolution",
+  suppository: "medicineSuppository",
+};
 
 // Lekovi se dele po vrsti zapamćenoj na stavci (starije stavke bez vrste su tablete)
 export const categoryOf = (item: SpecificationItem): CategoryKey => {
-  if (item.category === "medicine" && item.form === "parenteral") return "medicineParenteral";
+  if (item.category === "medicine") return MEDICINE_GROUP[item.form ?? ""] ?? "medicine";
   return (item.category && item.category in CATEGORY_META ? item.category : "other") as CategoryKey;
+};
+
+/**
+ * Količina kako se prikazuje i štampa. Stavka sa zapreminom (npr. fiziološki 1000 ml) se
+ * vodi u komadima (0,3), a prikazuje u ml ("300 ml"); ostalo kao broj komada.
+ */
+export const amountLabel = (item: Pick<SpecificationItem, "amount" | "volume">): string => {
+  const amount = item.amount ?? 1;
+  return item.volume && item.volume > 0 ? `${formatQty(amount * item.volume)} ml` : formatQty(amount);
 };
 
 /** Stavke poređane po kategorijama (redosled dodavanja unutar kategorije ostaje) */

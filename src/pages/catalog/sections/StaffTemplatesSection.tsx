@@ -19,7 +19,7 @@ import {
 
 type DialogState = { type: "edit"; template: DiagnosisTemplate | null } | { type: "delete"; template: DiagnosisTemplate } | null;
 
-// Šabloni za medicinsko osoblje: gotovi tekstovi koje sestre biraju pri unosu učinka rada
+// Šabloni nege: gotovi tekstovi koje sestre biraju pri unosu učinka rada
 // i dijagnoza na profilu pacijenta, da se isti tekst ne kuca ponovo.
 export default function StaffTemplatesSection() {
   const { data = [], isLoading, isError, refetch } = useDiagnosisTemplates();
@@ -60,7 +60,7 @@ export default function StaffTemplatesSection() {
   return (
     <>
       <SectionHeader
-        title="Šabloni za medicinsko osoblje"
+        title="Šabloni nege"
         description="Gotovi tekstovi koje sestre biraju pri unosu učinka rada i dijagnoza na profilu pacijenta."
         actions={
           <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={openNew}>

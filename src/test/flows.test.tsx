@@ -23,6 +23,7 @@ vi.mock("@features/medicine/hooks/useMedicineOptions", () => ({
     options: [
       { value: "andol", label: "Andol 100mg", home: 120, family: 10, price: 12.5 },
       { value: "brufen", label: "Brufen 400mg", home: 8, family: 0, price: 28 },
+      { value: "fizio", label: "Fiziološki rastvor", home: 5, family: 0, price: 200, volume: 1000, form: "solution" },
     ],
   }),
 }));
@@ -116,6 +117,24 @@ describe("ConsumeItemForm", () => {
     expect(medicineMutation.mutateAsync).toHaveBeenCalledWith({ medicineId: "brufen", amount: 0.5 });
     expect(notify.success).toHaveBeenCalledWith("Brufen 400mg: Dodato u specifikaciju.");
     expect(screen.getByLabelText("Količina")).toHaveValue("");
+  });
+
+  it("zapremina: 300 ml od boce od 1000 ml naplaćuje 0,3 komada", async () => {
+    medicineMutation.mutateAsync.mockResolvedValue({ message: "Dodato u specifikaciju." });
+    const { user } = renderWithProviders(<ConsumeItemForm kind="medicine" patientId="p1" />);
+    await pickMedicine(user, /Fiziološki/);
+    await user.type(screen.getByLabelText("ili potrošeno (ml)"), "300");
+    expect(screen.getByLabelText("Količina (kom.)")).toHaveValue("0,3");
+    expect(screen.getByText("Sa stanja doma").nextSibling).toHaveTextContent("0,3 kom. (300 ml)");
+    expect(screen.getByText("Ulazi u specifikaciju").nextSibling).toHaveTextContent("60,00 RSD");
+    await user.click(screen.getByRole("button", { name: "Dodaj lek" }));
+    expect(medicineMutation.mutateAsync).toHaveBeenCalledWith({ medicineId: "fizio", amount: 0.3 });
+  });
+
+  it("lek bez zapremine nema polje za ml", async () => {
+    const { user } = renderWithProviders(<ConsumeItemForm kind="medicine" patientId="p1" />);
+    await pickMedicine(user, /Brufen/);
+    expect(screen.queryByLabelText("ili potrošeno (ml)")).not.toBeInTheDocument();
   });
 
   it("sestra: samo beleženje, bez cene i bez blokade stanja", async () => {

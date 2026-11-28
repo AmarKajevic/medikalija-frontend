@@ -5,6 +5,8 @@ import { renderWithProviders } from "../../test/render";
 
 const api = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@shared/api/api", () => ({ api }));
+const auth = vi.hoisted(() => ({ user: { _id: "a1", name: "Ana", lastName: "Admin", role: "admin" } }));
+vi.mock("@app/providers/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 
 import ActivityPage from "./ActivityPage";
 
@@ -53,5 +55,21 @@ describe("ActivityPage", () => {
     await user.selectOptions(screen.getByLabelText("Vrsta unosa"), "medicine");
     expect(tableRows()).toHaveLength(1);
     expect(screen.getByText(/Andol × 2/)).toBeInTheDocument();
+  });
+
+  it("sestra vidi rad doktora: lekarski izveštaj sa vrstom pregleda i linkom", async () => {
+    auth.user = { _id: "n1", name: "Sanja", lastName: "Sestra", role: "nurse" };
+    api.get.mockResolvedValue({
+      data: {
+        activity: [
+          { id: "r1", kind: "medical", at: at(11), patient: milica, by: { _id: "d1", name: "Petar", lastName: "Doktor", role: "doctor" }, title: "Redovna vizita, Nalog za laboratoriju", detail: "I10 Hipertenzija", status: "note" },
+        ],
+      },
+    });
+    renderWithProviders(<ActivityPage />);
+    expect(await screen.findByRole("heading", { name: "Rad doktora" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Redovna vizita, Nalog za laboratoriju" })).toHaveAttribute("href", "/reports/r1");
+    expect(screen.getByText("I10 Hipertenzija")).toBeInTheDocument();
+    auth.user = { _id: "a1", name: "Ana", lastName: "Admin", role: "admin" };
   });
 });

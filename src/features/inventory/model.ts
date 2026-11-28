@@ -4,12 +4,23 @@ import { paths } from "@app/paths";
 
 export type InventoryKind = "medicine" | "article";
 
-/** Vrsta leka: u specifikaciji se vode kao posebne grupe (tablete pre ampula) */
-export type MedicineForm = "oral" | "parenteral";
+/** Vrsta (grupa) leka: u specifikaciji se vode kao posebne grupe, ovim redom */
+export const MEDICINE_FORMS = ["oral", "parenteral", "ointment", "gel", "syrup", "solution", "suppository"] as const;
+export type MedicineForm = (typeof MEDICINE_FORMS)[number];
 export const MEDICINE_FORM_LABEL: Record<MedicineForm, string> = {
   oral: "Tablete, kapsule",
-  parenteral: "Ampule, rastvori, sol",
+  parenteral: "Ampule",
+  ointment: "Mast",
+  gel: "Gel",
+  syrup: "Sirup",
+  solution: "Rastvor",
+  suppository: "Supozitorije",
 };
+/** Grupe sa zapreminom pakovanja: potrošnja se može uneti u ml */
+export const VOLUME_FORMS: readonly MedicineForm[] = ["ointment", "gel", "syrup", "solution"];
+export const isMedicineForm = (v: unknown): v is MedicineForm => MEDICINE_FORMS.includes(v as MedicineForm);
+/** Da li stavka (lek određene grupe ili potrošni materijal) može da ima zapreminu */
+export const canHaveVolume = (kind: InventoryKind, form?: MedicineForm) => kind === "article" || (!!form && VOLUME_FORMS.includes(form));
 
 export interface InventoryItem {
   _id: string;
@@ -21,6 +32,8 @@ export interface InventoryItem {
   price: number;
   /** Samo lekovi */
   form?: MedicineForm;
+  /** Zapremina jednog komada u ml (opciono; npr. 1000 za fiziološki rastvor) */
+  volume?: number | null;
   updatedAt?: string;
 }
 
@@ -48,10 +61,10 @@ export const INVENTORY = {
     listField: "articles",
     itemField: "article",
     priceField: "price",
-    title: "Artikli",
-    singular: "artikal",
-    singularCap: "Artikal",
-    genitive: "artikla",
+    title: "Potrošni materijal",
+    singular: "potrošni materijal",
+    singularCap: "Potrošni materijal",
+    genitive: "potrošnog materijala",
     unitLabel: "Komada u pakovanju",
     detailPath: paths.article,
     listPath: paths.articles,
@@ -72,7 +85,8 @@ const toItem = (cfg: InventoryConfig, raw: RawItem): InventoryItem => ({
   unitsPerPackage: raw.unitsPerPackage,
   packageCount: raw.packageCount,
   price: Number(raw[cfg.priceField]) || 0,
-  ...(cfg.kind === "medicine" ? { form: raw.form === "parenteral" ? ("parenteral" as const) : ("oral" as const) } : {}),
+  ...(cfg.kind === "medicine" ? { form: isMedicineForm(raw.form) ? raw.form : ("oral" as const) } : {}),
+  volume: Number(raw.volume) > 0 ? Number(raw.volume) : null,
   updatedAt: raw.updatedAt as string | undefined,
 });
 
@@ -116,10 +130,11 @@ export interface StockInput {
 export const useCreateItem = (cfg: InventoryConfig) => {
   const invalidate = useInvalidate(cfg);
   return useMutation({
-    mutationFn: async (v: { name: string; price: number; unitsPerPackage: number; form?: MedicineForm } & StockInput) => {
+    mutationFn: async (v: { name: string; price: number; unitsPerPackage: number; form?: MedicineForm; volume?: number | null } & StockInput) => {
       const { data } = await api.post(`${cfg.endpoint}/add`, {
         name: v.name,
         ...(v.form ? { form: v.form } : {}),
+        ...(v.volume ? { volume: v.volume } : {}),
         [cfg.priceField]: v.price,
         unitsPerPackage: v.unitsPerPackage || undefined,
         packages: v.packages,

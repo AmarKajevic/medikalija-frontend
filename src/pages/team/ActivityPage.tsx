@@ -1,9 +1,10 @@
 import { ReactNode, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LuActivity, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuNotebookPen, LuPackage, LuPill, LuUserCheck } from "react-icons/lu";
+import { LuActivity, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuNotebookPen, LuPackage, LuPill, LuStethoscope, LuUserCheck } from "react-icons/lu";
 import { api } from "@shared/api/api";
-import { paths } from "@app/paths";
+import { isManager, paths } from "@app/paths";
+import { useAuth } from "@app/providers/AuthContext";
 import PageHeader from "@shared/ui/page/PageHeader";
 import DataTable, { Column } from "@shared/ui/data-table/DataTable";
 import Badge, { BadgeColor } from "@shared/ui/badge/Badge";
@@ -11,7 +12,7 @@ import { Select } from "@shared/ui/form/controls";
 import { ErrorState } from "@shared/ui/feedback/EmptyState";
 import { roleLabel } from "@shared/lib/format";
 
-type Kind = "note" | "medicine" | "article" | "care" | "physio" | "analysis" | "social";
+type Kind = "note" | "medicine" | "article" | "care" | "physio" | "analysis" | "social" | "medical";
 type Status = "pending" | "processing" | "accepted" | "rejected" | "logged" | "direct" | "note";
 
 export interface StaffActivity {
@@ -29,11 +30,12 @@ export interface StaffActivity {
 const KIND: Record<Kind, { label: string; icon: ReactNode }> = {
   note: { label: "Učinak rada", icon: <LuNotebookPen /> },
   medicine: { label: "Lek", icon: <LuPill /> },
-  article: { label: "Artikal", icon: <LuPackage /> },
+  article: { label: "Potrošni materijal", icon: <LuPackage /> },
   care: { label: "Nega", icon: <LuHeartHandshake /> },
   physio: { label: "fizikalna terapija", icon: <LuActivity /> },
   analysis: { label: "Analize", icon: <LuFlaskConical /> },
   social: { label: "Socijalna beleška", icon: <LuHandHeart /> },
+  medical: { label: "Lekarski izveštaj", icon: <LuStethoscope /> },
 };
 
 const STATUS: Record<Status, { label: string; color: BadgeColor } | null> = {
@@ -77,6 +79,9 @@ function useStaffActivity(days: number) {
 // Aktivnosti: šta je ko od osoblja dodao pacijentima — unosi sestara i fizioterapeuta (i ono što
 // se ne naplaćuje), učinak rada, ono što je uprava unela direktno i socijalne beleške.
 export default function ActivityPage() {
+  const { user } = useAuth();
+  // Sestre (i doktor) dobijaju samo lekarske izveštaje: šta je doktor radio
+  const manager = isManager(user?.role);
   const [days, setDays] = useState("7");
   const [person, setPerson] = useState("");
   const [kind, setKind] = useState("");
@@ -142,7 +147,7 @@ export default function ActivityPage() {
           <span className="min-w-0">
             <span className="block text-gray-800 dark:text-gray-200">
               <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{KIND[a.kind].label}</span>
-              {a.kind !== "note" && <> · {a.title}</>}
+              {a.kind !== "note" && <> · {a.kind === "medical" ? <Link to={paths.report(a.id)} className="text-brand-600 hover:underline dark:text-brand-400">{a.title}</Link> : a.title}</>}
             </span>
             {a.performedAt && new Date(a.performedAt).toDateString() !== new Date(a.at).toDateString() && (
               <span className="block text-xs text-gray-500 dark:text-gray-400">Urađeno: {stamp(a.performedAt)}</span>
@@ -166,8 +171,12 @@ export default function ActivityPage() {
   return (
     <>
       <PageHeader
-        title="Aktivnosti"
-        description="Šta je ko od osoblja dodao pacijentima: unosi sestara i fizioterapeuta (i ono što se ne naplaćuje), učinak rada, unosi uprave i socijalne beleške."
+        title={manager ? "Aktivnosti" : "Rad doktora"}
+        description={
+          manager
+            ? "Šta je ko od osoblja dodao pacijentima: unosi sestara i fizioterapeuta (i ono što se ne naplaćuje), učinak rada, unosi uprave, socijalne beleške i lekarski izveštaji."
+            : "Potpisani lekarski izveštaji: redovne vizite, kontrole, promene terapije i nalozi za laboratoriju."
+        }
       />
 
       {people.length > 0 && (

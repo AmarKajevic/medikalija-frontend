@@ -9,8 +9,10 @@ export type SpecificationItem = {
   price: number;
   date?: string;
   analyses?: Array<{ _id: string; name: string; price: number }>;
-  /** Lekovi: "oral" tablete/kapsule, "parenteral" ampule/rastvori/sol */
+  /** Lekovi: grupa (oral, parenteral, ointment, gel, syrup, solution, suppository) */
   form?: string;
+  /** Zapremina komada (ml) leka/potrošnog materijala: količina 0,3 = 300 ml */
+  volume?: number | null;
   entries?: Array<{ _id: string; homeAmount?: number; familyAmount?: number; price?: number; date?: string }>;
 };
 

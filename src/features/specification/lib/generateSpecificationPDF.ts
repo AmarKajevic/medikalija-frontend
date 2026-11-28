@@ -26,6 +26,8 @@ interface GeneratePDFParams {
     /** Vanredna fizikalna terapija: štampa se u posebnoj tabeli iznad specifikacije troškova */
     physio?: boolean;
     amount: number;
+    /** Količina kako se štampa (npr. "300 ml"); bez nje broj komada */
+    amountText?: string;
     price: number;
   }>;
   debtEUR: number;
@@ -185,7 +187,7 @@ export const generateSpecificationPDF = async (params: GeneratePDFParams): Promi
           item.priceList
             ? { text: [{ text: item.formattedName }, { text: ` = ${item.priceList}`, fontSize: 9 }] }
             : { text: item.formattedName },
-          { text: qtyFmt.format(item.amount), alignment: "center" },
+          { text: item.amountText ?? qtyFmt.format(item.amount), alignment: "center" },
           { text: money.format(item.price), alignment: "center" },
         ]),
         [

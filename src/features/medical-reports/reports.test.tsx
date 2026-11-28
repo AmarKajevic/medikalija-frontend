@@ -102,6 +102,37 @@ describe("ReportPage", () => {
     expect(notify.success).toHaveBeenCalledWith("Izveštaj je potpisan.");
   }, 15_000);
 
+  it("admin unosi izveštaj u ime doktora: vrsta pregleda i doktor idu na server; bez doktora nema potpisa", async () => {
+    auth.user = { _id: "a1", name: "Ana", lastName: "Admin", role: "admin" };
+    const adminReport = report({ author: { _id: "a1", name: "Ana", lastName: "Admin", role: "admin" } });
+    api.get.mockImplementation(async (url: string) => {
+      if (url.startsWith("/api/patient")) return { data: { patients: [patient] } };
+      if (url.startsWith("/api/auth/users")) return { data: { users: [{ _id: "d1", name: "Petar", lastName: "Lekić", role: "doctor" }] } };
+      if (url.startsWith("/api/medical-reports/r1")) return { data: { report: adminReport } };
+      if (url.startsWith("/api/medical-reports")) return { data: { reports: [] } };
+      return { data: {} };
+    });
+    api.post.mockResolvedValue({ data: { report: adminReport } });
+    api.put.mockResolvedValue({ data: { report: adminReport } });
+
+    const { user } = renderWithProviders(<ReportPage />, { route: "/reports/new?patient=p1", ...routes });
+    expect(await screen.findByText("Nov lekarski izveštaj")).toBeInTheDocument();
+    // Redosled kao na štampi
+    const titles = screen.getAllByRole("heading").map((h) => h.textContent);
+    expect(titles.filter((t) => /^\d\./.test(t ?? ""))).toEqual(["1. Dijagnoza", "2. Anamneza", "3. Objektivni nalaz", "4. Terapija", "5. Doktor i potpis"]);
+
+    await user.click(screen.getByRole("button", { name: "Redovna vizita" }));
+    await user.click(screen.getByRole("button", { name: "Nalog za laboratoriju" }));
+    await waitFor(() => expect(api.post).toHaveBeenCalledWith("/api/medical-reports", expect.objectContaining({ visitKinds: ["regular-visit", "lab-order"] })), { timeout: 4000 });
+
+    await user.click(await screen.findByRole("button", { name: "Potpiši" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Potpisati izveštaj?" })).getByRole("button", { name: "Potpiši" }));
+    expect(notify.error).toHaveBeenCalledWith(expect.stringContaining("Upišite doktora"));
+
+    await user.type(screen.getByLabelText("Doktor"), "dr Petar Lekić");
+    await waitFor(() => expect(api.put).toHaveBeenCalledWith("/api/medical-reports/r1", expect.objectContaining({ doctorName: "dr Petar Lekić" })), { timeout: 4000 });
+  }, 20_000);
+
   it("sestra vidi potpisan izveštaj samo za čitanje", async () => {
     auth.user = { _id: "n1", name: "Sanja", lastName: "Sestra", role: "nurse" };
     api.get.mockImplementation(async (url: string) => {

@@ -90,7 +90,7 @@ export default function CareTaskPicker({ patientId, onSaved, specificationId }: 
   }
 
   if (tasks.length === 0) {
-    return <EmptyState compact title="Lista usluga je prazna" description="Uprava dodaje usluge nege u meniju Usluge nege." />;
+    return <EmptyState compact title="Lista usluga je prazna" description="Uprava dodaje usluge u „Šabloni i cene → Medicinsko osoblje”." />;
   }
 
   return (
