@@ -23,8 +23,8 @@ const today = () =>
 
 const QUICK_ACTIONS = [
   { label: "Pacijenti", description: "Profili, učinak rada i potrošnja", to: paths.patients, icon: <LuUsers /> },
-  { label: "Porodične zalihe", description: "Unos lekova i artikala koje donosi porodica", to: paths.familyStock, icon: <LuPackageOpen /> },
-  { label: "Artikli", description: "Stanje artikala doma", to: paths.articles, icon: <LuPackage /> },
+  { label: "Porodične zalihe", description: "Unos lekova i potrošnog materijala koje donosi porodica", to: paths.familyStock, icon: <LuPackageOpen /> },
+  { label: "Potrošni materijal", description: "Stanje potrošnog materijala doma", to: paths.articles, icon: <LuPackage /> },
 ];
 
 export default function HomePage() {
@@ -109,7 +109,8 @@ function StaffHome() {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {QUICK_ACTIONS.map((a) => (
+            {/* Negovateljica nema pristup zalihama: samo lista korisnika */}
+            {QUICK_ACTIONS.filter((a) => user?.role !== "caregiver" || a.to === paths.patients).map((a) => (
               <Link
                 key={a.to}
                 to={a.to}

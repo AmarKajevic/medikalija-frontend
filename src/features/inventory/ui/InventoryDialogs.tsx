@@ -7,7 +7,7 @@ import { Input } from "@shared/ui/form/controls";
 import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
 import { normalizeSearch } from "@shared/lib/search";
-import { InventoryConfig, InventoryItem, useCreateItem, useInventoryList, useUpdateItem, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
+import { canHaveVolume, InventoryConfig, InventoryItem, MEDICINE_FORMS, useCreateItem, useInventoryList, useUpdateItem, MEDICINE_FORM_LABEL, type MedicineForm } from "@features/inventory/model";
 
 const num = (v: string) => Number(v.replace(",", ".")) || 0;
 
@@ -17,7 +17,7 @@ interface ItemDialogProps {
   onClose: () => void;
   /** Ako je zadat, dijalog menja postojeću stavku */
   item?: InventoryItem | null;
-  /** Novi lek: unapred izabrana vrsta (dugme "Tablete" ili "Ampule") */
+  /** Novi lek: unapred izabrana vrsta (izbor u meniju "Novi lek") */
   defaultForm?: MedicineForm;
 }
 
@@ -36,7 +36,10 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
   const [units, setUnits] = useState("");
   const [correction, setCorrection] = useState("");
   const [form, setForm] = useState<MedicineForm>("oral");
+  const [volume, setVolume] = useState("");
   const isMedicine = cfg.kind === "medicine";
+  // Zapremina: potrošni materijal uvek (opciono), lek samo za mast, gel, sirup i rastvor
+  const withVolume = canHaveVolume(cfg.kind, isMedicine ? form : undefined);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +47,7 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
     setName(item?.name ?? "");
     setPrice(item ? String(item.price) : "");
     setUpp(item?.unitsPerPackage ? String(item.unitsPerPackage) : "");
+    setVolume(item?.volume ? String(item.volume).replace(".", ",") : "");
     setPackages("");
     setUnits("");
     setCorrection("");
@@ -57,9 +61,12 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
     if (!name.trim()) return notify.error("Unesite naziv.");
     if (duplicate) return notify.error(`${cfg.singularCap} „${duplicate.name}“ već postoji.`);
     if (price === "" || num(price) < 0) return notify.error("Unesite cenu.");
+    if (withVolume && volume.trim() && !(num(volume) > 0)) return notify.error("Zapremina mora biti broj mililitara (npr. 1000).");
+    // Grupa bez zapremine (npr. lek prebačen u tablete) briše ranije unetu zapreminu
+    const volumeValue = withVolume && num(volume) > 0 ? num(volume) : null;
 
     if (editing) {
-      const body: Record<string, unknown> = { name: name.trim(), [cfg.priceField]: num(price), unitsPerPackage: num(upp), ...(isMedicine ? { form } : {}) };
+      const body: Record<string, unknown> = { name: name.trim(), [cfg.priceField]: num(price), unitsPerPackage: num(upp), volume: volumeValue ?? "", ...(isMedicine ? { form } : {}) };
       if (correction !== "") body.quantity = num(correction);
       update.mutate(
         { id: item!._id, ...body },
@@ -74,10 +81,10 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
     } else {
       if (initialTotal <= 0) return notify.error("Unesite početno stanje (pakovanja ili komade).");
       create.mutate(
-        { name: name.trim(), price: num(price), unitsPerPackage: num(upp), packages: num(packages), units: num(units), ...(isMedicine ? { form } : {}) },
+        { name: name.trim(), price: num(price), unitsPerPackage: num(upp), packages: num(packages), units: num(units), volume: volumeValue, ...(isMedicine ? { form } : {}) },
         {
           onSuccess: () => {
-            notify.success(`${cfg.singularCap} „${name.trim()}“ je dodat.`);
+            notify.success(`„${name.trim()}“ je dodat.`);
             onClose();
           },
           onError: (err) => notify.error(err),
@@ -93,14 +100,14 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
       open={open}
       onClose={onClose}
       size="md"
-      title={editing ? `Izmena: ${item?.name}` : isMedicine ? `Novi lek — ${MEDICINE_FORM_LABEL[form].toLowerCase()}` : `Novi ${cfg.singular}`}
+      title={editing ? `Izmena: ${item?.name}` : isMedicine ? `Novi lek — ${MEDICINE_FORM_LABEL[form].toLowerCase()}` : "Novi potrošni materijal"}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
             Otkaži
           </Button>
           <Button size="sm" type="submit" form={formId} loading={create.isPending || update.isPending}>
-            {editing ? "Sačuvaj izmene" : `Dodaj ${cfg.singular}`}
+            {editing ? "Sačuvaj izmene" : "Dodaj"}
           </Button>
         </>
       }
@@ -112,8 +119,8 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
         {isMedicine && (
           <fieldset>
             <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Vrsta leka</legend>
-            <div role="radiogroup" className="grid grid-cols-2 gap-2">
-              {(Object.keys(MEDICINE_FORM_LABEL) as MedicineForm[]).map((f) => (
+            <div role="radiogroup" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {MEDICINE_FORMS.map((f) => (
                 <label
                   key={f}
                   className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
@@ -125,7 +132,7 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
                 </label>
               ))}
             </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">U specifikaciji se tablete i ampule vode kao posebne grupe.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Svaka vrsta je posebna grupa u specifikaciji. Mast, gel, sirup i rastvor imaju zapreminu.</p>
           </fieldset>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -136,6 +143,19 @@ export function ItemDialog({ cfg, open, onClose, item, defaultForm = "oral" }: I
             <Input id={id("upp")} inputMode="numeric" value={upp} onChange={(e) => setUpp(e.target.value)} placeholder="npr. 30" />
           </Field>
         </div>
+        {withVolume && (
+          <Field
+            label="Zapremina jednog komada (opciono)"
+            htmlFor={id("volume")}
+            hint={
+              num(volume) > 0 && num(price) > 0
+                ? `Cena važi za ceo komad. Potrošnja se unosi i u ml: 1 ml = ${formatRSD(num(price) / num(volume))}.`
+                : "Npr. fiziološki rastvor 1000 ml. Tada se pri unosu potrošnje može upisati koliko ml je potrošeno."
+            }
+          >
+            <Input id={id("volume")} inputMode="decimal" value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="npr. 1000" trailing="ml" />
+          </Field>
+        )}
 
         {editing ? (
           <Field

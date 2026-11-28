@@ -14,6 +14,10 @@ export type StockOption = {
   /** porodično stanje ovog pacijenta */
   family: number;
   price?: number;
+  /** Zapremina jednog komada u ml (npr. 1000): potrošnja se tada može uneti i u ml */
+  volume?: number | null;
+  /** Lekovi: grupa (tablete, ampule, sirup...) */
+  form?: string;
 };
 
 interface StockComboboxProps {

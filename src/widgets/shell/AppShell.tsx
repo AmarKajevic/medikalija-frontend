@@ -30,7 +30,6 @@ export default function AppShell() {
       pages.PatientsPage,
       pages.PatientPage,
       ...(isManager(role) ? [loadSpecificationDialog] : []),
-      ...(role === "nurse" ? [pages.CarePage] : []),
       pages.CalendarPage,
     ]);
   }, [user?.role]);

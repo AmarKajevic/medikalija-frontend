@@ -11,7 +11,7 @@ type Result = { _id: string; name: string; type: "patient" | "medicine" | "artic
 const GROUPS = [
   { type: "patient", label: "Pacijenti", icon: <LuUser />, to: paths.patient },
   { type: "medicine", label: "Lekovi", icon: <LuPill />, to: paths.medicine },
-  { type: "article", label: "Artikli", icon: <LuPackage />, to: paths.article },
+  { type: "article", label: "Potrošni materijal", icon: <LuPackage />, to: paths.article },
 ] as const;
 
 // Globalna pretraga u gornjoj traci. Ctrl+K / ⌘K je fokusira.
@@ -101,7 +101,7 @@ export default function GlobalSearch() {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Pretraži pacijente, lekove, artikle..."
+        placeholder="Pretraži pacijente, lekove, materijal..."
         aria-label="Pretraga"
         className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-14 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-brand-300 focus:bg-white focus:outline-hidden focus:ring-3 focus:ring-brand-500/15 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white dark:focus:bg-gray-900"
       />

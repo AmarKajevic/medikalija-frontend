@@ -8,7 +8,11 @@ const labels = (role: string) => navigationFor(role).flatMap((g) => g.items.map(
 
 describe("navigacija po ulogama", () => {
   it("sestra vidi samo stranice kojima ima pristup", () => {
-    expect(labels("nurse")).toEqual(["Početna", "Korisnici", "Unos nege", "Kalendar", "Artikli", "Porodične zalihe"]);
+    expect(labels("nurse")).toEqual(["Početna", "Korisnici", "Rad doktora", "Kalendar", "Lekarski izveštaji", "Potrošni materijali", "Porodične zalihe"]);
+  });
+
+  it("negovateljica: korisnici (unos nege na profilu) i kalendar, bez zaliha i lekova", () => {
+    expect(labels("caregiver")).toEqual(["Početna", "Korisnici", "Kalendar"]);
   });
 
   it("doktor: pacijenti, kalendar i lekarski izveštaji, bez zaliha i nege", () => {
@@ -28,7 +32,9 @@ describe("navigacija po ulogama", () => {
   it("odobravanje unosa i šablone i cene vidi samo uprava", () => {
     expect(labels("nurse")).not.toContain("Za odobrenje");
     expect(labels("nurse")).not.toContain("Šabloni i cene");
-    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Šabloni i cene", "Unos nege", "Dnevnik nege"]));
+    expect(labels("main-nurse")).toEqual(expect.arrayContaining(["Za odobrenje", "Šabloni i cene", "Dnevnik nege"]));
+    // Unos nege više nije posebna stranica (unosi se na profilu korisnika)
+    expect(labels("main-nurse")).not.toContain("Unos nege");
     expect(labels("nurse")).not.toContain("Dnevnik nege");
   });
 
@@ -51,7 +57,7 @@ describe("navigacija po ulogama", () => {
   });
 
   it("prazne grupe se ne prikazuju", () => {
-    expect(navigationFor("nurse").map((g) => g.label)).toEqual([undefined, "Zalihe"]);
+    expect(navigationFor("nurse").map((g) => g.label)).toEqual([undefined, "Ambulanta", "Zalihe"]);
   });
 });
 

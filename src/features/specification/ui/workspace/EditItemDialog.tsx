@@ -8,11 +8,12 @@ import { notify } from "@shared/lib/notify";
 import { formatQty, formatRSD } from "@shared/lib/format";
 import { updateSpecificationItem } from "@features/specification/api/specificationApi";
 import { refreshAfterSpecChange } from "@features/specification/lib/queries";
-import { hasEditablePrice } from "@features/specification/lib/items";
+import { amountLabel, hasEditablePrice } from "@features/specification/lib/items";
 import { SpecificationItem } from "@features/specification/types/types";
 
 const toNumber = (v: string) => Number(v.replace(",", "."));
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
 
 const stockHint = (item: SpecificationItem) => {
   if (item.category === "medicine" || item.category === "articles")
@@ -30,11 +31,13 @@ export default function EditItemDialog({ specId, patientId, item, onClose }: { s
 
   const currentAmount = item?.amount ?? 1;
   const currentUnit = item ? round2(currentAmount > 0 ? (item.price ?? 0) / currentAmount : (item.price ?? 0)) : 0;
+  // Stavka sa zapreminom (npr. fiziološki 1000 ml): količina se menja u ml
+  const volume = item?.volume && item.volume > 0 ? item.volume : 0;
   useEffect(() => {
     if (!item) return;
-    setAmount(String(currentAmount).replace(".", ","));
+    setAmount(String(volume > 0 ? round2(currentAmount * volume) : currentAmount).replace(".", ","));
     setUnitPrice(String(currentUnit).replace(".", ","));
-  }, [item, currentAmount, currentUnit]);
+  }, [item, currentAmount, currentUnit, volume]);
 
   const save = useMutation({
     mutationFn: (payload: { amount: number; unitPrice?: number }) => updateSpecificationItem(specId, item!._id, payload),
@@ -48,7 +51,7 @@ export default function EditItemDialog({ specId, patientId, item, onClose }: { s
 
   if (!item) return null;
   const priced = hasEditablePrice(item);
-  const qty = toNumber(amount);
+  const qty = volume > 0 ? round4(toNumber(amount) / volume) : toNumber(amount);
   const unit = priced ? toNumber(unitPrice) : currentUnit;
   const wholeOnly = item.category === "combination";
   const qtyError = !(qty > 0) ? "Količina mora biti veća od 0 (za uklanjanje obrišite stavku)." : wholeOnly && !Number.isInteger(qty) ? "Unesite ceo broj." : undefined;
@@ -66,7 +69,7 @@ export default function EditItemDialog({ specId, patientId, item, onClose }: { s
       open={!!item}
       onClose={onClose}
       title={`Izmena: ${item.name}`}
-      description={`Sada: ${formatQty(currentAmount)} × ${formatRSD(currentUnit)} = ${formatRSD(item.price)}`}
+      description={`Sada: ${amountLabel(item)} × ${formatRSD(currentUnit)}${volume > 0 ? " po komadu" : ""} = ${formatRSD(item.price)}`}
       size="sm"
       footer={
         <>
@@ -81,8 +84,8 @@ export default function EditItemDialog({ specId, patientId, item, onClose }: { s
     >
       <form id="edit-spec-item" onSubmit={onSubmit} className="space-y-4">
         <div className={`grid gap-3 ${priced ? "grid-cols-2" : ""}`}>
-          <Field label="Količina" htmlFor={ids.amount} error={amount ? qtyError : undefined} hint={stockHint(item)}>
-            <Input id={ids.amount} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
+          <Field label={volume > 0 ? "Potrošeno" : "Količina"} htmlFor={ids.amount} error={amount ? qtyError : undefined} hint={volume > 0 ? `${formatQty(volume)} ml = 1 kom. ${stockHint(item) ?? ""}` : stockHint(item)}>
+            <Input id={ids.amount} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus trailing={volume > 0 ? "ml" : undefined} />
           </Field>
           {priced && (
             <Field label="Cena po komadu" htmlFor={ids.price} error={priceError}>
@@ -92,7 +95,7 @@ export default function EditItemDialog({ specId, patientId, item, onClose }: { s
         </div>
         {!qtyError && !priceError && (
           <p className="rounded-lg bg-gray-50 px-3 py-2 text-sm tabular-nums text-gray-700 dark:bg-white/[0.03] dark:text-gray-300">
-            Novo: {formatQty(qty)} × {formatRSD(unit)} = <strong>{formatRSD(round2(qty * unit))}</strong>
+            Novo: {volume > 0 ? `${formatQty(qty)} kom. (${amountLabel({ amount: qty, volume })})` : formatQty(qty)} × {formatRSD(unit)} = <strong>{formatRSD(round2(qty * unit))}</strong>
           </p>
         )}
       </form>

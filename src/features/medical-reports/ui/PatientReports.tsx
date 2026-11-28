@@ -6,7 +6,7 @@ import Badge from "@shared/ui/badge/Badge";
 import EmptyState from "@shared/ui/feedback/EmptyState";
 import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { paths } from "@app/paths";
-import { reportTypeLabel, useReports } from "@features/medical-reports/model";
+import { reportTitle, useReports } from "@features/medical-reports/model";
 
 // Medicinska dokumentacija pacijenta: potpisani izveštaji (i nacrti autora).
 export default function PatientReports({ patientId, canWrite }: { patientId: string; canWrite: boolean }) {
@@ -50,7 +50,7 @@ export default function PatientReports({ patientId, canWrite }: { patientId: str
               <Link to={paths.report(r._id)} className="flex items-start gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {reportTypeLabel(r.type)}
+                    {reportTitle(r)}
                     <span className="ml-2 text-xs font-normal text-gray-500">
                       {new Date(r.visitDate).toLocaleDateString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric" })} · dr {r.author.name} {r.author.lastName}
                     </span>

@@ -5,7 +5,7 @@ import Button from "@shared/ui/button/Button";
 import Field from "@shared/ui/form/Field";
 import { Textarea } from "@shared/ui/form/controls";
 import { notify } from "@shared/lib/notify";
-import { MedicalReport, useAddAddendum } from "@features/medical-reports/model";
+import { MedicalReport, signerName, useAddAddendum, visitKindLabel } from "@features/medical-reports/model";
 
 const dateTime = (iso: string) =>
   new Date(iso).toLocaleString("sr-Latn-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -56,25 +56,23 @@ export default function ReportView({ report, canAddendum }: { report: MedicalRep
       {report.status === "signed" && (
         <p className="flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2.5 text-sm text-gray-600 dark:bg-white/[0.03] dark:text-gray-400">
           <LuLock className="h-4 w-4 shrink-0" />
-          Potpisao/la dr {person(report.author)} {report.signedAt ? dateTime(report.signedAt) : ""}. Izveštaj je zaključan; ispravke se dodaju kao dopuna.
+          Potpisao/la {signerName(report)} {report.signedAt ? dateTime(report.signedAt) : ""}
+          {report.doctorName && report.author.role === "admin" ? ` (uneo/la ${person(report.author)})` : ""}. Izveštaj je zaključan; ispravke se dodaju kao dopuna.
         </p>
       )}
       <Card>
         <CardBody className="space-y-5">
-          {vitals.length > 0 && (
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {vitals.map(([label, val]) => (
-                <div key={label} className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/[0.03]">
-                  <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
-                  <dd className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{val}</dd>
-                </div>
+          {(report.visitKinds?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {report.visitKinds!.map((k) => (
+                <span key={k} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                  {visitKindLabel(k)}
+                </span>
               ))}
-            </dl>
+            </div>
           )}
-          {report.anamnesis && <Block title="Anamneza">{report.anamnesis}</Block>}
-          {report.findings && <Block title="Objektivni nalaz">{report.findings}</Block>}
           {report.diagnoses.length > 0 && (
-            <Block title="Dijagnoze">
+            <Block title="Dijagnoza">
               <ul className="space-y-1">
                 {report.diagnoses.map((d) => (
                   <li key={`${d.code}-${d.name}`}>
@@ -85,6 +83,22 @@ export default function ReportView({ report, canAddendum }: { report: MedicalRep
               </ul>
             </Block>
           )}
+          {report.anamnesis && <Block title="Anamneza">{report.anamnesis}</Block>}
+          {(report.findings || vitals.length > 0) && (
+            <Block title="Objektivni nalaz">
+              {report.findings}
+              {vitals.length > 0 && (
+                <dl className={`grid grid-cols-2 gap-3 whitespace-normal sm:grid-cols-3 lg:grid-cols-6 ${report.findings ? "mt-3" : ""}`}>
+                  {vitals.map(([label, val]) => (
+                    <div key={label} className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/[0.03]">
+                      <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
+                      <dd className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{val}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </Block>
+          )}
           {report.therapy && <Block title="Terapija">{report.therapy}</Block>}
           {report.conclusion && <Block title="Zaključak i preporuke">{report.conclusion}</Block>}
           {report.followUp?.date && (
@@ -93,6 +107,7 @@ export default function ReportView({ report, canAddendum }: { report: MedicalRep
               {report.followUp.note && ` — ${report.followUp.note}`}
             </Block>
           )}
+          <Block title="Doktor">{signerName(report)}</Block>
         </CardBody>
       </Card>
 
@@ -115,7 +130,7 @@ export default function ReportView({ report, canAddendum }: { report: MedicalRep
             {report.addenda.map((a) => (
               <div key={a._id} className="border-l-2 border-brand-300 pl-3">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {dateTime(a.createdAt)} · dr {person(a.author)}
+                  {dateTime(a.createdAt)} · {person(a.author)}
                 </p>
                 <p className="mt-0.5 whitespace-pre-line text-sm text-gray-800 dark:text-gray-200">{a.text}</p>
               </div>

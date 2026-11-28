@@ -25,6 +25,7 @@ import {
   shiftKey,
   timeKey,
   useDeleteEvent,
+  useEventTitles,
   useSaveEvent,
   validateDraft,
   WEEKDAY_NAMES,
@@ -52,12 +53,14 @@ interface PatientRow {
 
 export default function EventDialog({ draft: initial, onClose, lockPatient }: Props) {
   const formId = useId();
-  const ids = { title: useId(), sd: useId(), st: useId(), ed: useId(), et: useId(), repeat: useId(), patient: useId(), location: useId(), desc: useId(), interval: useId(), until: useId(), count: useId() };
+  const ids = { title: useId(), sd: useId(), st: useId(), repeat: useId(), patient: useId(), location: useId(), desc: useId(), interval: useId(), until: useId(), count: useId() };
   const [d, setD] = useState<Draft | null>(initial);
   const [scopeFor, setScopeFor] = useState<"save" | "delete" | null>(null);
   const save = useSaveEvent();
   const remove = useDeleteEvent();
   const { data: patientsData } = usePatients();
+  // Nazivi događaja iz liste koju pravi admin ("Šabloni i cene → Kalendar")
+  const { data: titles = [], isLoading: titlesLoading } = useEventTitles();
 
   useEffect(() => setD(initial), [initial]);
 
@@ -99,6 +102,18 @@ export default function EventDialog({ draft: initial, onClose, lockPatient }: Pr
     const newEnd = new Date(combine(date, time).getTime() + keep * 60_000);
     set({ startDate: date, startTime: time, endDate: dateKey(newEnd), endTime: timeKey(newEnd) });
   };
+  // Naziv iz liste; stari događaj zadržava svoj naziv i kad ga nema u listi
+  const titleOptions: SearchOption[] = [
+    ...titles.map((t) => ({ value: t.name, label: t.name })),
+    ...(d.title && !titles.some((t) => t.name === d.title) ? [{ value: d.title, label: d.title, description: "nije u listi naziva" }] : []),
+  ];
+  const pickTitle = (name: string) => {
+    const preset = titles.find((t) => t.name === name);
+    set({ title: name, ...(preset?.calendar ? { calendar: preset.calendar } : {}) });
+  };
+  // Dok admin ne napravi listu (i dok se lista učitava), naziv se kuca ručno
+  const freeTitle = titles.length === 0;
+
   const setDuration = (minutes: number) => {
     const e = new Date(start.getTime() + minutes * 60_000);
     set({ endDate: dateKey(e), endTime: timeKey(e) });
@@ -178,14 +193,20 @@ export default function EventDialog({ draft: initial, onClose, lockPatient }: Pr
         }
       >
         <form id={formId} onSubmit={onSubmit} className="space-y-5" noValidate>
-          <Field label="Naziv" htmlFor={ids.title}>
-            <Input id={ids.title} autoFocus value={d.title} onChange={(e) => set({ title: e.target.value })} placeholder="npr. Pregled kardiologa" maxLength={160} />
-          </Field>
+          {freeTitle ? (
+            <Field label="Naziv" htmlFor={ids.title} hint="Admin može da napravi listu naziva za padajući meni („Šabloni i cene → Kalendar”).">
+              <Input id={ids.title} autoFocus value={d.title} onChange={(e) => set({ title: e.target.value })} placeholder="npr. Pregled kardiologa" maxLength={160} />
+            </Field>
+          ) : (
+            <Field label="Naziv" htmlFor={ids.title}>
+              <SearchSelect id={ids.title} value={d.title} onChange={pickTitle} options={titleOptions} loading={titlesLoading} placeholder="Izaberite naziv događaja..." />
+            </Field>
+          )}
 
           {/* Vreme */}
           <div className="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
             <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" checked={d.allDay} onChange={(e) => set({ allDay: e.target.checked, endDate: e.target.checked && d.endDate < d.startDate ? d.startDate : d.endDate })} className="h-4 w-4 accent-brand-600" />
+              <input type="checkbox" checked={d.allDay} onChange={(e) => set({ allDay: e.target.checked, endDate: e.target.checked ? d.startDate : d.endDate })} className="h-4 w-4 accent-brand-600" />
               Ceo dan
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -196,16 +217,6 @@ export default function EventDialog({ draft: initial, onClose, lockPatient }: Pr
                 {!d.allDay && (
                   <Field label="u" htmlFor={ids.st}>
                     <TimeInput id={ids.st} value={d.startTime} onChange={(v) => setStart(d.startDate, v)} />
-                  </Field>
-                )}
-              </div>
-              <div className={`grid gap-2 ${d.allDay ? "" : "grid-cols-[1fr_7rem]"}`}>
-                <Field label="Završava" htmlFor={ids.ed}>
-                  <DateInput id={ids.ed} value={d.endDate} min={d.startDate || undefined} onChange={(v) => set({ endDate: v })} fromYear={2020} />
-                </Field>
-                {!d.allDay && (
-                  <Field label="u" htmlFor={ids.et}>
-                    <TimeInput id={ids.et} value={d.endTime} onChange={(v) => set({ endTime: v })} durationFrom={d.endDate === d.startDate ? d.startTime : undefined} invalid={duration <= 0} />
                   </Field>
                 )}
               </div>

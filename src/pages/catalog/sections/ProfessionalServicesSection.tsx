@@ -20,7 +20,7 @@ import {
 
 type DialogState = { type: "edit"; service: ProfessionalService | null } | { type: "delete"; service: ProfessionalService } | null;
 
-// Cenovnik stručnih usluga: uprava ih dodaje u specifikaciju (posle artikala), sa ovom cenom.
+// Cenovnik stručnih usluga: uprava ih dodaje u specifikaciju (posle potrošnog materijala), sa ovom cenom.
 export default function ProfessionalServicesSection() {
   const { data = [], isLoading, isError, refetch } = useProfessionalServices({ all: true });
   const save = useSaveProfessionalService();
@@ -82,7 +82,7 @@ export default function ProfessionalServicesSection() {
     <>
       <SectionHeader
         title="Stručne usluge"
-        description="Usluge sa cenom koje uprava dodaje u specifikaciju (npr. pregled specijaliste, psiholog). Na štampi su posle artikala."
+        description="Usluge sa cenom koje uprava dodaje u specifikaciju (npr. pregled specijaliste, psiholog). Na štampi su posle potrošnog materijala."
         actions={
           <Button size="sm" startIcon={<LuPlus className="h-4 w-4" />} onClick={() => setDialog({ type: "edit", service: null })}>
             Nova usluga

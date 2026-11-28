@@ -174,15 +174,35 @@ describe("EventDialog", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("promena početka pomera i kraj (trajanje ostaje)", async () => {
-    const draft = newDraft({ start: new Date(2026, 10, 17, 10, 0), end: new Date(2026, 10, 17, 10, 45) });
+  it("nema polja za kraj: promena početka zadržava trajanje", async () => {
+    api.post.mockResolvedValue({ data: {} });
+    const draft = { ...newDraft({ start: new Date(2026, 10, 17, 10, 0), end: new Date(2026, 10, 17, 10, 45) }), title: "Vizita" };
     const { user } = renderWithProviders(<EventDialog draft={draft} onClose={vi.fn()} />);
+    expect(screen.queryByText("Završava")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "u" })).toHaveLength(1);
     const [startTime] = screen.getAllByRole("combobox", { name: "u" });
     await user.clear(startTime!);
     await user.type(startTime!, "1400");
     await user.tab();
-    const [, endTime] = screen.getAllByRole("combobox", { name: "u" });
-    expect(endTime).toHaveValue("14:45");
+    expect(screen.getByRole("button", { name: "45 min" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Sačuvaj" }));
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    expect(api.post.mock.calls[0]![1]).toMatchObject({ start: new Date(2026, 10, 17, 14, 0).toISOString(), end: new Date(2026, 10, 17, 14, 45).toISOString() });
+  });
+
+  it("naziv se bira iz liste koju pravi admin; uz naziv ide i vrsta", async () => {
+    api.post.mockResolvedValue({ data: {} });
+    api.get.mockImplementation(async (url: string) =>
+      url === "/api/calendar/titles" ? { data: { titles: [{ _id: "t1", name: "Pregled kardiologa", calendar: "crvena" }, { _id: "t2", name: "Poseta porodice", calendar: null }] } } : { data: { patients: [] } }
+    );
+    const draft = newDraft({ start: new Date(2026, 10, 17, 10, 0), end: new Date(2026, 10, 17, 11, 0) });
+    const { user } = renderWithProviders(<EventDialog draft={draft} onClose={vi.fn()} />);
+    // Kad se lista učita, polje "Naziv" postaje padajući meni
+    await user.click(await screen.findByPlaceholderText("Izaberite naziv događaja..."));
+    await user.click(await screen.findByRole("option", { name: /Pregled kardiologa/ }));
+    await user.click(screen.getByRole("button", { name: "Sačuvaj" }));
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    expect(api.post.mock.calls[0]![1]).toMatchObject({ title: "Pregled kardiologa", calendar: "crvena" });
   });
 
   it("izmena termina iz niza pita: samo ovaj ili svi", async () => {

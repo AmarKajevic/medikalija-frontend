@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { LuPencil, LuReceipt, LuTrash2 } from "react-icons/lu";
-import { CATEGORY_META, CATEGORY_ORDER, categoryOf, type CategoryKey } from "@features/specification/lib/items";
+import { amountLabel, CATEGORY_META, CATEGORY_ORDER, categoryOf, type CategoryKey } from "@features/specification/lib/items";
 import { Specification, SpecificationItem } from "@features/specification/types/types";
 import { useDeleteSpecificationItem } from "@features/specification/hooks/useDeleteSpecificationItem";
 import { ConfirmDialog } from "@shared/ui/dialog/Dialog";
@@ -8,7 +8,7 @@ import EmptyState from "@shared/ui/feedback/EmptyState";
 import { notify } from "@shared/lib/notify";
 import EditItemDialog from "./EditItemDialog";
 import { withoutExtraTag } from "@features/physio/name";
-import { formatQty, formatRSD } from "@shared/lib/format";
+import { formatRSD } from "@shared/lib/format";
 
 const deleteHint = (item: SpecificationItem) => {
   const tracked = (item.entries?.length ?? 0) > 0;
@@ -85,8 +85,8 @@ export default function SpecificationItems({ specification: spec, patientId, rea
       <EmptyState
         compact={compactEmpty}
         icon={<LuReceipt />}
-        title={compactEmpty ? "Još nema lekova, artikala ni troškova" : "Specifikacija je prazna"}
-        description="Dodajte lekove, artikle, analize ili dodatne troškove iz panela sa leve strane."
+        title={compactEmpty ? "Još nema lekova, potrošnog materijala ni troškova" : "Specifikacija je prazna"}
+        description="Dodajte lekove, potrošni materijal, analize ili dodatne troškove iz panela sa leve strane."
       />
     );
   }
@@ -128,15 +128,15 @@ export default function SpecificationItems({ specification: spec, patientId, rea
                       ) : null}
                     </div>
                     {readOnly ? (
-                      <span className="w-16 shrink-0 text-right text-base tabular-nums text-gray-500 dark:text-gray-400">× {formatQty(item.amount ?? 1)}</span>
+                      <span className="w-20 shrink-0 text-right text-base tabular-nums text-gray-500 dark:text-gray-400">× {amountLabel(item)}</span>
                     ) : (
                     <button
                       type="button"
                       onClick={() => setEditing(item)}
                       title="Izmeni količinu"
-                      className="w-16 shrink-0 rounded-md px-1 py-0.5 text-right text-base tabular-nums text-gray-500 underline decoration-dotted underline-offset-4 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
+                      className="w-20 shrink-0 rounded-md px-1 py-0.5 text-right text-base tabular-nums text-gray-500 underline decoration-dotted underline-offset-4 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
                     >
-                      × {formatQty(item.amount ?? 1)}
+                      × {amountLabel(item)}
                     </button>
                     )}
                     <span className="w-32 shrink-0 text-right text-base font-medium tabular-nums text-gray-800 dark:text-white/90">

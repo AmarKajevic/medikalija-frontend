@@ -18,7 +18,7 @@ export interface AddPreset {
 
 const KINDS: Array<{ value: Kind; label: string; hint: string; icon: ReactNode; tone: string }> = [
   { value: "medicine", label: "Lek", hint: "Tablete, kapi, ampule", icon: <LuPill />, tone: "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400" },
-  { value: "article", label: "Artikal", hint: "Pelene, rukavice, materijal", icon: <LuPackage />, tone: "bg-orange-100 text-orange-500 dark:bg-orange-500/15 dark:text-orange-300" },
+  { value: "article", label: "Potrošni materijal", hint: "Pelene, rukavice, rastvori", icon: <LuPackage />, tone: "bg-orange-100 text-orange-500 dark:bg-orange-500/15 dark:text-orange-300" },
   { value: "professional", label: "Stručne usluge", hint: "Iz cenovnika, sa cenom", icon: <LuBriefcaseMedical />, tone: "bg-blue-light-50 text-blue-light-600 dark:bg-blue-light-500/15 dark:text-blue-light-400" },
   { value: "combination", label: "Analize", hint: "Laboratorija", icon: <LuFlaskConical />, tone: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300" },
   { value: "care", label: "Nega", hint: "Kupanje, previjanje, presvlačenje", icon: <LuHeartHandshake />, tone: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300" },

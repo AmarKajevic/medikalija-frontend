@@ -11,7 +11,7 @@ vi.mock("@shared/lib/notify", () => ({ notify }));
 
 import SortMedicinesDialog from "./SortMedicinesDialog";
 
-const med = (_id: string, name: string, form: "oral" | "parenteral" = "oral"): InventoryItem => ({ _id, name, quantity: 10, price: 1, form });
+const med = (_id: string, name: string, form: InventoryItem["form"] = "oral"): InventoryItem => ({ _id, name, quantity: 10, price: 1, form });
 
 describe("SortMedicinesDialog", () => {
   it("pretraga, izbor i prebacivanje u ampule", async () => {
@@ -23,16 +23,25 @@ describe("SortMedicinesDialog", () => {
     await user.type(screen.getByLabelText("Pretraži lekove"), "cef");
     expect(screen.queryByText("Andol")).not.toBeInTheDocument();
     await user.click(screen.getByLabelText("Izaberi sve prikazane (2)"));
-    await user.click(screen.getByRole("button", { name: /Prebaci izabrane \(2\) u: Ampule, rastvori, sol/ }));
+    await user.click(screen.getByRole("button", { name: /Prebaci izabrane \(2\) u: Ampule/ }));
 
     expect(api.patch).toHaveBeenCalledWith("/api/medicine/form", { ids: ["3", "2"], form: "parenteral" });
-    await waitFor(() => expect(notify.success).toHaveBeenCalledWith("Prebačeno: 2. → Ampule, rastvori, sol"));
+    await waitFor(() => expect(notify.success).toHaveBeenCalledWith("Prebačeno: 2. → Ampule"));
+  });
+
+  it("prebacivanje u novu grupu (sirup) preko izbora ciljne vrste", async () => {
+    api.patch.mockResolvedValue({ data: { message: "Prebačeno: 1.", modified: 1 } });
+    const { user } = renderWithProviders(<SortMedicinesDialog open onClose={vi.fn()} medicines={[med("5", "Prospan")]} />);
+    await user.selectOptions(screen.getByLabelText("Prebaci u vrstu"), "syrup");
+    await user.click(screen.getByLabelText("Prospan"));
+    await user.click(screen.getByRole("button", { name: /u: Sirup/ }));
+    expect(api.patch).toHaveBeenCalledWith("/api/medicine/form", { ids: ["5"], form: "syrup" });
   });
 
   it("iz ampula nazad u tablete", async () => {
     api.patch.mockResolvedValue({ data: { message: "Prebačeno: 1.", modified: 1 } });
     const { user } = renderWithProviders(<SortMedicinesDialog open onClose={vi.fn()} medicines={[med("4", "Fiziološki rastvor", "parenteral")]} />);
-    await user.click(screen.getByRole("tab", { name: /Ampule, rastvori, sol/ }));
+    await user.click(screen.getByRole("tab", { name: /Ampule/ }));
     await user.click(screen.getByLabelText("Fiziološki rastvor"));
     await user.click(screen.getByRole("button", { name: /u: Tablete, kapsule/ }));
     expect(api.patch).toHaveBeenCalledWith("/api/medicine/form", { ids: ["4"], form: "oral" });

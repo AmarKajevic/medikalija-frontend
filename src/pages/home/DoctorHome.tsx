@@ -12,7 +12,7 @@ import { Skeleton } from "@shared/ui/feedback/Spinner";
 import { CalendarOccurrence, Draft, newDraft, timeKey, useCalendarEvents } from "@features/calendar/model";
 import { eventColorClass } from "@features/calendar/colors";
 import EventDialog from "@features/calendar/ui/EventDialog";
-import { reportTypeLabel, reportUrlForAppointment, useReports } from "@features/medical-reports/model";
+import { reportTitle, reportUrlForAppointment, useReports } from "@features/medical-reports/model";
 import { useDashboardStats } from "@features/dashboard/hooks/useDashboardStats";
 
 const dayRange = (offsetDays = 0, lengthDays = 1) => {
@@ -125,7 +125,7 @@ export default function DoctorHome({ greeting, today }: { greeting: string; toda
                         {r.patient.name} {r.patient.lastName}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {reportTypeLabel(r.type)} · {new Date(r.visitDate).toLocaleDateString("sr-Latn-RS")}
+                        {reportTitle(r)} · {new Date(r.visitDate).toLocaleDateString("sr-Latn-RS")}
                       </p>
                     </Link>
                   </li>

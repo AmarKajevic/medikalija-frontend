@@ -31,7 +31,7 @@ export function ActivityFeed({ activity, title = "Nedavne aktivnosti" }: { activ
     <Card>
       <CardHeader title={title} icon={<LuActivity />} />
       {activity.length === 0 ? (
-        <EmptyState compact title="Još nema aktivnosti" description="Unosi lekova, artikala i dijagnoza pojaviće se ovde." />
+        <EmptyState compact title="Još nema aktivnosti" description="Unosi lekova, potrošnog materijala i dijagnoza pojaviće se ovde." />
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
           {activity.map((item, i) => (

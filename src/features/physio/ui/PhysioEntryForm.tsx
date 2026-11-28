@@ -26,6 +26,7 @@ function performedAtIso(date: string, time: string): string | undefined {
 
 // Fizioterapeut beleži kod kog pacijenta i kada je radio terapiju.
 // Redovna se ne naplaćuje (samo se beleži); vanredna ide upravi, koja određuje cenu i odobrava je.
+// Redosled polja: vrsta (redovna/vanredna), pacijent, napomena, terapija, vreme.
 export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId?: string }) {
   const ids = { patient: useId(), note: useId(), date: useId(), time: useId() };
   const { data: patientsData, isLoading: patientsLoading } = usePatients();
@@ -71,31 +72,6 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {!fixedPatient && (
-        <Field label="Pacijent" htmlFor={ids.patient}>
-          <SearchSelect id={ids.patient} value={patientId} onChange={setPatientId} options={patientOptions} loading={patientsLoading} placeholder="Pretraži pacijente..." />
-        </Field>
-      )}
-
-      <fieldset>
-        <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Terapija</legend>
-        <div role="radiogroup" className="space-y-2">
-          {kinds.map(({ kind: k, name }, i) => (
-            <label
-              key={k}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
-                kind === k ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400 dark:border-brand-500/60 dark:bg-brand-500/10" : "border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/[0.03]"
-              }`}
-            >
-              <input type="radio" name={`${ids.patient}-kind`} checked={kind === k} onChange={() => setKind(k)} className="accent-brand-600" />
-              <span className="font-medium text-gray-800 dark:text-white/90">
-                {i + 1}. {name}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Vrsta</legend>
         <div className="grid grid-cols-2 gap-2">
@@ -119,9 +95,34 @@ export default function PhysioEntryForm({ patientId: fixedPatient }: { patientId
         </div>
       </fieldset>
 
+      {!fixedPatient && (
+        <Field label="Pacijent" htmlFor={ids.patient}>
+          <SearchSelect id={ids.patient} value={patientId} onChange={setPatientId} options={patientOptions} loading={patientsLoading} placeholder="Pretraži pacijente..." />
+        </Field>
+      )}
+
       <Field label="Napomena (nije obavezno)" htmlFor={ids.note}>
         <Textarea id={ids.note} rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="npr. vežbe hoda, 30 min" />
       </Field>
+
+      <fieldset>
+        <legend className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Terapija</legend>
+        <div role="radiogroup" className="space-y-2">
+          {kinds.map(({ kind: k, name }, i) => (
+            <label
+              key={k}
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
+                kind === k ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400 dark:border-brand-500/60 dark:bg-brand-500/10" : "border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/[0.03]"
+              }`}
+            >
+              <input type="radio" name={`${ids.patient}-kind`} checked={kind === k} onChange={() => setKind(k)} className="accent-brand-600" />
+              <span className="font-medium text-gray-800 dark:text-white/90">
+                {i + 1}. {name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {customTime ? (
         <div className="grid grid-cols-[1fr_120px] gap-2">

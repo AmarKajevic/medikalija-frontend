@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { LuActivity, LuArchive, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHeartHandshake, LuHouse, LuLayers, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
-import { CARE_ROLES, MANAGER_ROLES, paths, Role, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
+import { LuActivity, LuArchive, LuBell, LuCalendarDays, LuClipboardCheck, LuClipboardList, LuFlaskConical, LuHandHeart, LuHouse, LuLayers, LuNotebookPen, LuPackage, LuPackageOpen, LuPill, LuSettings, LuStethoscope, LuUserCheck, LuUserCog, LuUsers } from "react-icons/lu";
+import { CARE_ROLES, MANAGER_ROLES, paths, REPORT_READ_ROLES, Role, SOCIAL_READ_ROLES, STAFF_ROLES, PHYSIO_ROLES } from "@app/paths";
 
 export interface NavItem {
   label: string;
@@ -28,17 +28,18 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { label: "Početna", to: paths.home, icon: <LuHouse />, roles: STAFF_ROLES, tone: "text-brand-600 dark:text-brand-400" },
       { label: "Korisnici", to: paths.patients, icon: <LuUsers />, roles: STAFF_ROLES, matchPrefix: true, tone: RED_BLUE },
-      { label: "Unos nege", to: paths.care, icon: <LuHeartHandshake />, roles: CARE_ROLES, tone: "text-pink-500 dark:text-pink-400" },
       { label: "Fizikalna terapija", to: paths.physio, icon: <LuActivity />, roles: PHYSIO_ROLES, tone: "text-teal-500 dark:text-teal-400" },
       { label: "Za odobrenje", to: paths.approvals, icon: <LuClipboardCheck />, roles: MANAGER_ROLES, badge: "approvals", tone: "text-warning-500 dark:text-warning-400" },
       { label: "Aktivnosti osoblja", to: paths.activity, icon: <LuUserCheck />, roles: MANAGER_ROLES, tone: "text-violet-500 dark:text-violet-400" },
+      // Sestre vide šta je doktor radio (vizite, promene terapije, nalozi za laboratoriju)
+      { label: "Rad doktora", to: paths.activity, icon: <LuUserCheck />, roles: ["nurse"], tone: "text-violet-500 dark:text-violet-400" },
       { label: "Kalendar", to: paths.calendar, icon: <LuCalendarDays />, roles: STAFF_ROLES, tone: "text-blue-light-600 dark:text-blue-light-400" },
       { label: "Obaveštenja", to: paths.notifications, icon: <LuBell />, roles: MANAGER_ROLES, tone: "text-orange-500 dark:text-orange-300" },
     ],
   },
   {
     label: "Ambulanta",
-    items: [{ label: "Lekarski izveštaji", to: paths.reports, icon: <LuStethoscope />, roles: ["admin", "main-nurse", "doctor"], matchPrefix: true, tone: "text-rose-500 dark:text-rose-400" }],
+    items: [{ label: "Lekarski izveštaji", to: paths.reports, icon: <LuStethoscope />, roles: REPORT_READ_ROLES, matchPrefix: true, tone: "text-rose-500 dark:text-rose-400" }],
   },
   {
     label: "Socijalni rad",
@@ -48,7 +49,7 @@ export const NAVIGATION: NavGroup[] = [
     label: "Zalihe",
     items: [
       { label: "Lekovi", to: paths.medicines, icon: <LuPill />, roles: MANAGER_ROLES, matchPrefix: true, tone: RED_BLUE },
-      { label: "Artikli", to: paths.articles, icon: <LuPackage />, roles: CARE_ROLES, matchPrefix: true, tone: "text-orange-500 dark:text-orange-300" },
+      { label: "Potrošni materijali", to: paths.articles, icon: <LuPackage />, roles: CARE_ROLES, matchPrefix: true, tone: "text-orange-500 dark:text-orange-300" },
       { label: "Porodične zalihe", to: paths.familyStock, icon: <LuPackageOpen />, roles: CARE_ROLES, tone: RED_BLUE },
       { label: "Rezerva lekova", to: paths.reserve, icon: <LuArchive />, roles: MANAGER_ROLES, tone: "text-amber-600 dark:text-amber-400" },
     ],

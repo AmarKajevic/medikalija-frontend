@@ -34,7 +34,7 @@ const renderAt = (url: string) =>
 
 describe("Šabloni i cene", () => {
   it("admin vidi sve sekcije; glavna sestra samo šablone za osoblje i negu", () => {
-    expect(catalogSectionsFor("admin").map((s) => s.id)).toEqual(["staff", "care", "physio", "lodging", "services", "extra"]);
+    expect(catalogSectionsFor("admin").map((s) => s.id)).toEqual(["staff", "care", "physio", "events", "lodging", "services", "extra"]);
     expect(catalogSectionsFor("main-nurse").map((s) => s.id)).toEqual(["staff", "care"]);
     expect(catalogSectionsFor("nurse")).toEqual([]);
   });
@@ -42,7 +42,7 @@ describe("Šabloni i cene", () => {
   it("bez sekcije u adresi otvara prvu; klik na dugme menja sekciju", async () => {
     auth.user.role = "admin";
     renderAt("/templates");
-    expect(await screen.findByRole("heading", { name: "Sekcija Medicinsko osoblje" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Sekcija Nega" })).toBeInTheDocument();
     expect(screen.getByTestId("where")).toHaveTextContent("/templates/staff");
     await userEvent.click(screen.getAllByRole("link", { name: /Fizikalna terapija/ })[0]!);
     expect(await screen.findByRole("heading", { name: "Sekcija Fizikalna terapija" })).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe("Šabloni i cene", () => {
   it("sekcija koju uloga ne sme da vidi preusmerava na dozvoljenu", async () => {
     auth.user.role = "main-nurse";
     renderAt("/templates/lodging");
-    expect(await screen.findByRole("heading", { name: "Sekcija Medicinsko osoblje" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Sekcija Nega" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Smeštaj/ })).not.toBeInTheDocument();
   });
 });

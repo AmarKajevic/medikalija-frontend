@@ -13,6 +13,26 @@ export const REPORT_TYPES: Array<{ value: ReportType; label: string }> = [
 ];
 export const reportTypeLabel = (t: ReportType) => REPORT_TYPES.find((x) => x.value === t)?.label ?? t;
 
+// Šta je doktor uradio (može više); vidi se u aktivnostima uprave i sestara
+export type VisitKind = "regular-visit" | "therapy-change" | "regular-control" | "examined-no-change" | "examined-therapy-change" | "lab-order";
+export const VISIT_KINDS: Array<{ value: VisitKind; label: string }> = [
+  { value: "regular-visit", label: "Redovna vizita" },
+  { value: "therapy-change", label: "Promena terapije" },
+  { value: "regular-control", label: "Redovna kontrola" },
+  { value: "examined-no-change", label: "Pregledan bez promene" },
+  { value: "examined-therapy-change", label: "Pregledan, promena terapije" },
+  { value: "lab-order", label: "Nalog za laboratoriju" },
+];
+export const visitKindLabel = (k: VisitKind) => VISIT_KINDS.find((x) => x.value === k)?.label ?? k;
+
+/** Naslov izveštaja: izabrane vrste pregleda, a za stare izveštaje njihova vrsta */
+export const reportTitle = (r: { visitKinds?: VisitKind[]; type: ReportType }) =>
+  r.visitKinds?.length ? r.visitKinds.map(visitKindLabel).join(", ") : reportTypeLabel(r.type);
+
+/** Ko potpisuje: upisan doktor (admin unosi u ime doktora) ili autor */
+export const signerName = (r: { doctorName?: string; author: { name: string; lastName: string } }) =>
+  r.doctorName?.trim() || `dr ${r.author.name} ${r.author.lastName}`.trim();
+
 export interface Diagnosis {
   code: string;
   name: string;
@@ -39,6 +59,9 @@ export interface MedicalReport {
   patient: Person & { dateOfBirth?: string };
   author: Person;
   type: ReportType;
+  visitKinds?: VisitKind[];
+  /** Doktor koji potpisuje (kad izveštaj unosi admin); prazno = autor */
+  doctorName?: string;
   visitDate: string;
   appointment?: { eventId: string | null; occurrenceStart: string | null };
   vitals: Vitals;
@@ -59,6 +82,8 @@ export interface MedicalReport {
 export interface ReportInput {
   patientId?: string;
   type: ReportType;
+  visitKinds: VisitKind[];
+  doctorName: string;
   visitDate: string;
   appointment?: { eventId: string | null; occurrenceStart: string | null };
   vitals: { bloodPressure: string; pulse: string; temperature: string; spo2: string; glucose: string; weight: string };
@@ -130,9 +155,11 @@ export function reportUrlForAppointment(o: { patient: { _id: string } | null; ev
 
 export const MKB_PATTERN = /^[A-Z]\d{2}(\.\d{1,2})?$/;
 
-export const emptyInput = (patientId = "", visitDate = new Date().toISOString()): ReportInput => ({
+export const emptyInput = (patientId = "", visitDate = new Date().toISOString(), doctorName = ""): ReportInput => ({
   patientId,
   type: "exam",
+  visitKinds: [],
+  doctorName,
   visitDate,
   appointment: { eventId: null, occurrenceStart: null },
   vitals: { bloodPressure: "", pulse: "", temperature: "", spo2: "", glucose: "", weight: "" },
@@ -149,6 +176,8 @@ const str = (v: number | null | undefined) => (v === null || v === undefined ? "
 export const inputFrom = (r: MedicalReport): ReportInput => ({
   patientId: r.patient._id,
   type: r.type,
+  visitKinds: r.visitKinds ?? [],
+  doctorName: r.doctorName ?? "",
   visitDate: r.visitDate,
   appointment: { eventId: r.appointment?.eventId ?? null, occurrenceStart: r.appointment?.occurrenceStart ?? null },
   vitals: {

@@ -36,7 +36,6 @@ export const paths = {
   lodgingPrices: "/templates/lodging",
   professionalServices: "/templates/services",
   extraCosts: "/templates/extra",
-  care: "/care",
   approvals: "/approvals",
   careLog: "/care-log",
 
@@ -47,17 +46,24 @@ export const paths = {
   physio: "/physio",
 } as const;
 
-export type Role = "admin" | "main-nurse" | "nurse" | "doctor" | "social-worker" | "physiotherapist";
+export type Role = "admin" | "main-nurse" | "nurse" | "doctor" | "social-worker" | "physiotherapist" | "caregiver";
 
 export const MANAGER_ROLES: Role[] = ["admin", "main-nurse"];
 /** Sve uloge sa prijavom */
-export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist"];
+export const STAFF_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist", "caregiver"];
 /** Nega i zalihe na odeljenju */
 export const CARE_ROLES: Role[] = ["admin", "main-nurse", "nurse"];
 /** Vide medicinsku dokumentaciju (svi osim socijalnog radnika) */
 export const CLINICAL_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
 /** Zakazuju u kalendaru (uprava menja sve termine, ostali samo svoje) */
-export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist"];
+export const SCHEDULER_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor", "social-worker", "physiotherapist", "caregiver"];
+/** Beleže urađenu negu na profilu korisnika (negovateljica samo usluge nege) */
+export const CARE_ENTRY_ROLES: Role[] = ["nurse", "caregiver"];
+/** Lekarski izveštaji: čitaju (sestre zbog terapije), pišu doktor i admin */
+export const REPORT_READ_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
+export const REPORT_WRITE_ROLES: Role[] = ["admin", "doctor"];
+/** Aktivnosti: uprava vidi sve, sestre i doktor rad doktora (lekarske izveštaje) */
+export const ACTIVITY_ROLES: Role[] = ["admin", "main-nurse", "nurse", "doctor"];
 /** Raspored obračunskih perioda (samo datumi, bez cena) */
 export const PERIOD_SCHEDULE_ROLES: Role[] = ["admin", "main-nurse", "social-worker"];
 /** Fizikalna terapija: fizioterapeut beleži, uprava pregleda i odobrava vanredne */

@@ -3,7 +3,7 @@ import { getPatientStockMedicines } from "@features/medicine/api/getPatientStock
 import { getMedicines } from "@features/medicine/api/getMedicines";
 import { StockOption } from "@shared/ui/combobox/StockCombobox";
 
-type MedicineDto = { _id: string; name: string; quantity: number; pricePerUnit?: number };
+type MedicineDto = { _id: string; name: string; quantity: number; pricePerUnit?: number; volume?: number | null; form?: string };
 type FamilyStockDto = { _id: string; familyQuantity: number };
 
 export const useMedicineOptions = (patientId: string) => {
@@ -20,6 +20,8 @@ export const useMedicineOptions = (patientId: string) => {
     home: m.quantity ?? 0,
     family: ((stock.data ?? []) as FamilyStockDto[]).find((s) => s._id === m._id)?.familyQuantity ?? 0,
     price: m.pricePerUnit ?? 0,
+    volume: Number(m.volume) > 0 ? Number(m.volume) : null,
+    form: m.form,
   }));
 
   return { options, isLoading: medicines.isLoading || stock.isLoading };

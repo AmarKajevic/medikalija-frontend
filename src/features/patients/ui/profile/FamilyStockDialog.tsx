@@ -53,14 +53,14 @@ export default function FamilyStockDialog({ open, onClose, patientId }: { open: 
         onChange={setTab}
         items={[
           { value: "medicines", label: "Lekovi", count: medicineRows.length },
-          { value: "articles", label: "Artikli", count: articleRows.length },
+          { value: "articles", label: "Potrošni materijal", count: articleRows.length },
         ]}
         className="mb-2"
       />
       {tab === "medicines" ? (
         <StockList rows={medicineRows} loading={medicines.isLoading} empty="Nema porodičnih lekova" />
       ) : (
-        <StockList rows={articleRows} loading={articles.isLoading} empty="Nema porodičnih artikala" />
+        <StockList rows={articleRows} loading={articles.isLoading} empty="Nema porodičnog potrošnog materijala" />
       )}
     </Dialog>
   );

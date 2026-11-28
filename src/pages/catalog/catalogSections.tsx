@@ -1,10 +1,10 @@
 import { lazy, type ComponentType, type LazyExoticComponent, type ReactNode } from "react";
-import { LuActivity, LuBedDouble, LuBriefcaseMedical, LuClipboardList, LuHeartHandshake, LuReceipt } from "react-icons/lu";
+import { LuActivity, LuBedDouble, LuBriefcaseMedical, LuCalendarDays, LuClipboardList, LuHeartHandshake, LuReceipt } from "react-icons/lu";
 import { MANAGER_ROLES, type Role } from "@app/paths";
 
 // Sekcije stranice "Šabloni i cene": jedan registar za meni sekcija, rute i preusmerenja starih adresa.
 // Nova sekcija = jedan red ovde (i njena komponenta u ./sections).
-export type CatalogSectionId = "staff" | "care" | "physio" | "lodging" | "services" | "extra";
+export type CatalogSectionId = "staff" | "care" | "physio" | "events" | "lodging" | "services" | "extra";
 
 export interface CatalogSection {
   id: CatalogSectionId;
@@ -24,7 +24,7 @@ export const CATALOG_SECTIONS: CatalogSection[] = [
   {
     id: "staff",
     group: "Šabloni",
-    label: "Medicinsko osoblje",
+    label: "Nega",
     hint: "Tekstovi za učinak rada",
     icon: <LuClipboardList />,
     tone: "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400",
@@ -34,8 +34,8 @@ export const CATALOG_SECTIONS: CatalogSection[] = [
   {
     id: "care",
     group: "Šabloni",
-    label: "Nega",
-    hint: "Usluge nege za sestre",
+    label: "Medicinsko osoblje",
+    hint: "Usluge koje osoblje beleži",
     icon: <LuHeartHandshake />,
     tone: "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300",
     roles: MANAGER_ROLES,
@@ -50,6 +50,16 @@ export const CATALOG_SECTIONS: CatalogSection[] = [
     tone: "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300",
     roles: ADMIN,
     component: lazy(() => import("./sections/PhysioSection")),
+  },
+  {
+    id: "events",
+    group: "Šabloni",
+    label: "Kalendar",
+    hint: "Nazivi događaja",
+    icon: <LuCalendarDays />,
+    tone: "bg-blue-light-50 text-blue-light-600 dark:bg-blue-light-500/15 dark:text-blue-light-400",
+    roles: ADMIN,
+    component: lazy(() => import("./sections/EventTitlesSection")),
   },
   {
     id: "lodging",

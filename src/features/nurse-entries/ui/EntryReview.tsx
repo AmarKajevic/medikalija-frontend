@@ -12,7 +12,7 @@ import { notify } from "@shared/lib/notify";
 import { paths } from "@app/paths";
 import { NurseEntry, personName, TYPE_LABEL, useAcceptEntries, useNurseEntries, useRejectEntries } from "@features/nurse-entries/model";
 import { formatWhen, TYPE_ICON } from "./display";
-import { formatRSD } from "@shared/lib/format";
+import { formatQty, formatRSD } from "@shared/lib/format";
 import { usePhysioPrices } from "@features/physio/model";
 import { withoutExtraTag } from "@features/physio/name";
 
@@ -197,10 +197,13 @@ export default function EntryReview({ patientId, filter }: Props) {
                       onChange={(ev) => setAmounts((a) => ({ ...a, [e._id]: ev.target.value }))}
                       aria-label={`Količina: ${e.name}`}
                       aria-invalid={invalidAmount(e) || undefined}
-                      title={e.type === "care" ? "Broj puta" : "Količina"}
+                      title={e.type === "care" ? "Broj puta" : e.volume ? `Količina u komadima (1 kom. = ${formatQty(e.volume)} ml)` : "Količina"}
                       className={`${inputClass} h-8 !w-16 text-right tabular-nums ${invalidAmount(e) ? "border-error-400" : ""}`}
                     />
                   )}
+                  {!isPhysio(e) && e.volume ? (
+                    <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">kom. = {formatQty(Math.round(toNumber(amountOf(e)) * e.volume * 100) / 100)} ml</span>
+                  ) : null}
                   <Button size="xs" variant="ghost" onClick={() => setRejecting([e._id])} aria-label={`Odbij ${e.name}`} disabled={accept.isPending}>
                     Odbij
                   </Button>
